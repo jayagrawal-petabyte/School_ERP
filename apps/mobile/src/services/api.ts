@@ -12,9 +12,11 @@ export interface ClassInfo {
   studentCount: number;
 }
 
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'earlyOff' | 'festival';
+
 export interface AttendanceRecord {
   studentId: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: AttendanceStatus;
   remarks?: string;
 }
 
@@ -25,117 +27,110 @@ export interface DailyAttendance {
 }
 
 export interface StudentHistoryRecord {
-  date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  date: string; // YYYY-MM-DD
+  status: AttendanceStatus;
 }
 
-// In-Memory Database
-const CLASSES: ClassInfo[] = [
-  { id: '1', name: 'Class 10', section: 'A', studentCount: 15 },
-  { id: '2', name: 'Class 10', section: 'B', studentCount: 12 },
-  { id: '3', name: 'Class 11', section: 'Science-A', studentCount: 10 },
-  { id: '4', name: 'Class 12', section: 'Commerce-B', studentCount: 10 },
-];
-
+// In-Memory Database of Students (matching screenshots names)
 const STUDENTS: Record<string, Student[]> = {
   '1': [
-    { id: '101', name: 'Aarav Sharma', rollNumber: '10A01', gender: 'M' },
-    { id: '102', name: 'Ananya Iyer', rollNumber: '10A02', gender: 'F' },
-    { id: '103', name: 'Arjun Verma', rollNumber: '10A03', gender: 'M' },
-    { id: '104', name: 'Diya Patel', rollNumber: '10A04', gender: 'F' },
-    { id: '105', name: 'Ishaan Gupta', rollNumber: '10A05', gender: 'M' },
-    { id: '106', name: 'Kavya Nair', rollNumber: '10A06', gender: 'F' },
-    { id: '107', name: 'Kabir Singh', rollNumber: '10A07', gender: 'M' },
-    { id: '108', name: 'Meera Reddy', rollNumber: '10A08', gender: 'F' },
-    { id: '109', name: 'Pranav Joshi', rollNumber: '10A09', gender: 'M' },
-    { id: '110', name: 'Riya Sen', rollNumber: '10A10', gender: 'F' },
-    { id: '111', name: 'Rohan Mehta', rollNumber: '10A11', gender: 'M' },
-    { id: '112', name: 'Sanya Malhotra', rollNumber: '10A12', gender: 'F' },
-    { id: '113', name: 'Siddharth Rao', rollNumber: '10A13', gender: 'M' },
-    { id: '114', name: 'Tanvi Bhatia', rollNumber: '10A14', gender: 'F' },
-    { id: '115', name: 'Vivaan Kapoor', rollNumber: '10A15', gender: 'M' },
+    { id: '101', name: 'Lucas Henry', rollNumber: '08C01', gender: 'M' },
+    { id: '102', name: 'Sofia Morales', rollNumber: '08C02', gender: 'F' },
+    { id: '103', name: 'Henry Conaway', rollNumber: '08C03', gender: 'M' },
+    { id: '104', name: 'Daniel Rowell', rollNumber: '08C04', gender: 'M' },
+    { id: '105', name: 'Aarav Sharma', rollNumber: '08C05', gender: 'M' },
+    { id: '106', name: 'Ananya Iyer', rollNumber: '08C06', gender: 'F' },
+    { id: '107', name: 'Ishaan Gupta', rollNumber: '08C07', gender: 'M' },
+    { id: '108', name: 'Kavya Nair', rollNumber: '08C08', gender: 'F' },
+    { id: '109', name: 'Kabir Singh', rollNumber: '08C09', gender: 'M' },
+    { id: '110', name: 'Meera Reddy', rollNumber: '08C10', gender: 'F' },
+    { id: '111', name: 'Siddharth Rao', rollNumber: '08C11', gender: 'M' },
+    { id: '112', name: 'Tanvi Bhatia', rollNumber: '08C12', gender: 'F' },
   ],
   '2': [
     { id: '201', name: 'Aditya Das', rollNumber: '10B01', gender: 'M' },
     { id: '202', name: 'Bhavna Roy', rollNumber: '10B02', gender: 'F' },
     { id: '203', name: 'Devendra Pandey', rollNumber: '10B03', gender: 'M' },
     { id: '204', name: 'Esha Deol', rollNumber: '10B04', gender: 'F' },
-    { id: '205', name: 'Gaurav Gill', rollNumber: '10B05', gender: 'M' },
-    { id: '206', name: 'Harsha Vardhan', rollNumber: '10B06', gender: 'M' },
-    { id: '207', name: 'Ipshita Mishra', rollNumber: '10B07', gender: 'F' },
-    { id: '208', name: 'Jayesh Vyas', rollNumber: '10B08', gender: 'M' },
-    { id: '209', name: 'Komal Preet', rollNumber: '10B09', gender: 'F' },
-    { id: '210', name: 'Manish Pandey', rollNumber: '10B10', gender: 'M' },
-    { id: '211', name: 'Neha Kakkar', rollNumber: '10B11', gender: 'F' },
-    { id: '212', name: 'Piyush Goyal', rollNumber: '10B12', gender: 'M' },
-  ],
-  '3': [
-    { id: '301', name: 'Abhishek Bachchan', rollNumber: '11S01', gender: 'M' },
-    { id: '302', name: 'Deepika Padukone', rollNumber: '11S02', gender: 'F' },
-    { id: '303', name: 'Hrithik Roshan', rollNumber: '11S03', gender: 'M' },
-    { id: '304', name: 'Katrina Kaif', rollNumber: '11S04', gender: 'F' },
-    { id: '305', name: 'Ranbir Kapoor', rollNumber: '11S05', gender: 'M' },
-    { id: '306', name: 'Alia Bhatt', rollNumber: '11S06', gender: 'F' },
-    { id: '307', name: 'Varun Dhawan', rollNumber: '11S07', gender: 'M' },
-    { id: '308', name: 'Shraddha Kapoor', rollNumber: '11S08', gender: 'F' },
-    { id: '309', name: 'Sidharth Malhotra', rollNumber: '11S09', gender: 'M' },
-    { id: '310', name: 'Kiara Advani', rollNumber: '11S10', gender: 'F' },
-  ],
-  '4': [
-    { id: '401', name: 'Karan Johar', rollNumber: '12C01', gender: 'M' },
-    { id: '402', name: 'Ekta Kapoor', rollNumber: '12C02', gender: 'F' },
-    { id: '403', name: 'Sanjay Leela', rollNumber: '12C03', gender: 'M' },
-    { id: '404', name: 'Zoya Akhtar', rollNumber: '12C04', gender: 'F' },
-    { id: '405', name: 'Farhan Akhtar', rollNumber: '12C05', gender: 'M' },
-    { id: '406', name: 'Reema Kagti', rollNumber: '12C06', gender: 'F' },
-    { id: '407', name: 'Anurag Kashyap', rollNumber: '12C07', gender: 'M' },
-    { id: '408', name: 'Guneet Monga', rollNumber: '12C08', gender: 'F' },
-    { id: '409', name: 'Rohit Shetty', rollNumber: '12C09', gender: 'M' },
-    { id: '410', name: 'Farah Khan', rollNumber: '12C10', gender: 'F' },
   ],
 };
 
-// Generate 14 days of historical attendance
+const CLASSES: ClassInfo[] = [
+  { id: '1', name: 'Standard - 8', section: 'C', studentCount: 12 },
+  { id: '2', name: 'Standard - 10', section: 'B', studentCount: 4 },
+];
+
+// Prepopulated static history for Lucas Henry (101) in May 2023 to match Dribbble screenshot exactly
+const LUCAS_HENRY_MAY_2023: Record<number, AttendanceStatus> = {
+  1: 'present', 2: 'present', 3: 'present', 4: 'present', 5: 'present',
+  7: 'present', 8: 'earlyOff', 9: 'present', 10: 'present', 11: 'absent', 12: 'present',
+  14: 'present', 15: 'present', 16: 'festival',
+  21: 'present', 22: 'present', 23: 'present', 24: 'late', 25: 'present', 26: 'festival',
+  28: 'absent', 29: 'present', 30: 'present', 31: 'present'
+};
+
+// Generate randomized mock history for other days/students
 const generateMockHistory = (): DailyAttendance[] => {
   const history: DailyAttendance[] = [];
-  const today = new Date();
+  
+  // 1. First populate the specific May 2023 history for Class 1 (Standard 8 - C)
+  for (let day = 1; day <= 31; day++) {
+    const dateStr = `2023-05-${day.toString().padStart(2, '0')}`;
+    const students = STUDENTS['1'];
+    
+    const records: AttendanceRecord[] = students.map((std) => {
+      let status: AttendanceStatus = 'present';
+      
+      if (std.id === '101') {
+        // Lucas Henry gets the exact dribbble calendar values
+        status = LUCAS_HENRY_MAY_2023[day] || 'present';
+      } else {
+        // Others get random statuses
+        const rand = (std.id.charCodeAt(2) * 3 + day * 7) % 100;
+        if (rand < 5) status = 'absent';
+        else if (rand < 10) status = 'late';
+        else if (rand < 13) status = 'earlyOff';
+        else if (rand < 15) status = 'festival';
+      }
 
-  // Populate for last 14 days (excluding Sundays)
-  for (let i = 1; i <= 14; i++) {
+      return { studentId: std.id, status };
+    });
+
+    history.push({
+      classId: '1',
+      date: dateStr,
+      records
+    });
+  }
+
+  // 2. Add some recent history for class 1 and class 2 (last 7 days from today)
+  const today = new Date();
+  for (let i = 0; i < 7; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() - i);
+    if (date.getDay() === 0) continue; // skip sundays
     
-    // Skip Sunday (0)
-    if (date.getDay() === 0) continue;
-
     const dateStr = date.toISOString().split('T')[0];
+    
+    // Skip if it clashes with May 2023 (unlikely but safe)
+    if (dateStr.startsWith('2023-05-')) continue;
 
     CLASSES.forEach((cls) => {
       const students = STUDENTS[cls.id] || [];
-      const records: AttendanceRecord[] = students.map((std, index) => {
-        // Deterministic status based on indices to create realistic patterns
-        const rand = (index * 7 + i * 13) % 100;
-        let status: 'present' | 'absent' | 'late' | 'excused' = 'present';
+      const records: AttendanceRecord[] = students.map((std, idx) => {
+        const rand = (idx * 11 + i * 17) % 100;
+        let status: AttendanceStatus = 'present';
+        if (rand < 8) status = 'absent';
+        else if (rand < 14) status = 'late';
+        else if (rand < 18) status = 'earlyOff';
         
-        if (rand < 8) {
-          status = 'absent';
-        } else if (rand < 14) {
-          status = 'late';
-        } else if (rand < 16) {
-          status = 'excused';
-        }
-
-        return {
-          studentId: std.id,
-          status,
-          remarks: status !== 'present' ? `Notes for day -${i}` : undefined,
-        };
+        return { studentId: std.id, status };
       });
 
       history.push({
         classId: cls.id,
         date: dateStr,
-        records,
+        records
       });
     });
   }
@@ -143,77 +138,103 @@ const generateMockHistory = (): DailyAttendance[] => {
   return history;
 };
 
-// Active database in memory
 let ATTENDANCE_DB: DailyAttendance[] = generateMockHistory();
-
-// Helper to delay response for realistic network feel
-const delay = (ms: number = 400) => new Promise((resolve) => setTimeout(resolve, ms));
+const delay = (ms: number = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const AttendanceService = {
-  // Fetch list of classes
   getClasses: async (): Promise<ClassInfo[]> => {
-    await delay(300);
+    await delay(200);
     return [...CLASSES];
   },
 
-  // Fetch student roster for a class
   getStudents: async (classId: string): Promise<Student[]> => {
-    await delay(300);
+    await delay(200);
     return STUDENTS[classId] ? [...STUDENTS[classId]] : [];
   },
 
-  // Submit/mark daily attendance for a class
   submitAttendance: async (
     classId: string,
     date: string,
     records: AttendanceRecord[]
   ): Promise<{ success: boolean; message: string }> => {
-    await delay(500);
+    await delay(300);
 
-    // Remove existing entry for the same class and date if it exists
     ATTENDANCE_DB = ATTENDANCE_DB.filter(
       (entry) => !(entry.classId === classId && entry.date === date)
     );
 
-    // Add new entry
     ATTENDANCE_DB.push({
       classId,
       date,
-      records: JSON.parse(JSON.stringify(records)), // Deep clone
+      records: JSON.parse(JSON.stringify(records)),
     });
 
     return { success: true, message: 'Attendance submitted successfully.' };
   },
 
-  // Fetch attendance records for a class on a specific date
   getAttendanceByDate: async (classId: string, date: string): Promise<AttendanceRecord[] | null> => {
-    await delay(200);
+    await delay(150);
     const found = ATTENDANCE_DB.find((entry) => entry.classId === classId && entry.date === date);
     return found ? found.records : null;
   },
 
-  // Fetch logs of attendance dates for history screens
   getClassAttendanceHistory: async (classId: string): Promise<DailyAttendance[]> => {
-    await delay(400);
-    // Sort history by date descending
+    await delay(200);
     return ATTENDANCE_DB.filter((entry) => entry.classId === classId).sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   },
 
-  // Fetch summary reports
+  // Search a student by name and return their attendance records for a specific year and month
+  getStudentMonthlyAttendance: async (
+    studentName: string,
+    classId: string,
+    year: number,
+    month: number
+  ): Promise<StudentHistoryRecord[]> => {
+    await delay(450);
+    
+    // Find student ID
+    const classStudents = STUDENTS[classId] || [];
+    const student = classStudents.find((s) => s.name.toLowerCase().includes(studentName.toLowerCase()));
+    
+    if (!student) {
+      return [];
+    }
+
+    const monthPrefix = `${year}-${month.toString().padStart(2, '0')}-`;
+    
+    // Filter database for records belonging to this student in this month
+    const studentRecords: StudentHistoryRecord[] = [];
+    
+    ATTENDANCE_DB.forEach((session) => {
+      if (session.classId === classId && session.date.startsWith(monthPrefix)) {
+        const studentRec = session.records.find((r) => r.studentId === student.id);
+        if (studentRec) {
+          studentRecords.push({
+            date: session.date,
+            status: studentRec.status,
+          });
+        }
+      }
+    });
+
+    return studentRecords;
+  },
+
   getAttendanceReport: async (
     classId: string
   ): Promise<{
     classId: string;
     className: string;
     totalStudents: number;
-    averageAttendanceRate: number; // percentage
+    averageAttendanceRate: number;
     totalSessions: number;
     presentRate: number;
     absentRate: number;
     lateRate: number;
-    excusedRate: number;
+    earlyOffRate: number;
+    festivalRate: number;
     studentSummaries: {
       studentId: string;
       studentName: string;
@@ -222,11 +243,12 @@ export const AttendanceService = {
       presentCount: number;
       absentCount: number;
       lateCount: number;
-      excusedCount: number;
+      earlyOffCount: number;
+      festivalCount: number;
       percentage: number;
     }[];
   }> => {
-    await delay(500);
+    await delay(350);
     const cls = CLASSES.find((c) => c.id === classId);
     if (!cls) throw new Error('Class not found');
 
@@ -244,7 +266,8 @@ export const AttendanceService = {
         presentRate: 0,
         absentRate: 0,
         lateRate: 0,
-        excusedRate: 0,
+        earlyOffRate: 0,
+        festivalRate: 0,
         studentSummaries: students.map((std) => ({
           studentId: std.id,
           studentName: std.name,
@@ -253,7 +276,8 @@ export const AttendanceService = {
           presentCount: 0,
           absentCount: 0,
           lateCount: 0,
-          excusedCount: 0,
+          earlyOffCount: 0,
+          festivalCount: 0,
           percentage: 0,
         })),
       };
@@ -263,13 +287,15 @@ export const AttendanceService = {
     let grandPresentCount = 0;
     let grandAbsentCount = 0;
     let grandLateCount = 0;
-    let grandExcusedCount = 0;
+    let grandEarlyOffCount = 0;
+    let grandFestivalCount = 0;
 
     const studentSummaries = students.map((std) => {
       let presentCount = 0;
       let absentCount = 0;
       let lateCount = 0;
-      let excusedCount = 0;
+      let earlyOffCount = 0;
+      let festivalCount = 0;
 
       classRecords.forEach((session) => {
         const rec = session.records.find((r) => r.studentId === std.id);
@@ -277,20 +303,21 @@ export const AttendanceService = {
           if (rec.status === 'present') presentCount++;
           else if (rec.status === 'absent') absentCount++;
           else if (rec.status === 'late') lateCount++;
-          else if (rec.status === 'excused') excusedCount++;
+          else if (rec.status === 'earlyOff') earlyOffCount++;
+          else if (rec.status === 'festival') festivalCount++;
         }
       });
 
-      const totalDays = presentCount + absentCount + lateCount + excusedCount;
-      // Late is considered partially present (e.g. 100% or 90% depending on rule, let's treat late as present for percentage but track count)
-      const presentWeight = presentCount + lateCount;
-      const percentage = totalDays > 0 ? Math.round((presentWeight / totalDays) * 100) : 0;
+      const totalDays = presentCount + absentCount + lateCount + earlyOffCount + festivalCount;
+      const attendedCount = presentCount + lateCount + earlyOffCount + festivalCount; // early off/festival are not counts of absence
+      const percentage = totalDays > 0 ? Math.round((attendedCount / totalDays) * 100) : 0;
 
       grandTotalDays += totalDays;
       grandPresentCount += presentCount;
       grandAbsentCount += absentCount;
       grandLateCount += lateCount;
-      grandExcusedCount += excusedCount;
+      grandEarlyOffCount += earlyOffCount;
+      grandFestivalCount += festivalCount;
 
       return {
         studentId: std.id,
@@ -300,13 +327,20 @@ export const AttendanceService = {
         presentCount,
         absentCount,
         lateCount,
-        excusedCount,
+        earlyOffCount,
+        festivalCount,
         percentage,
       };
     });
 
     const averageAttendanceRate =
-      grandTotalDays > 0 ? Math.round(((grandPresentCount + grandLateCount) / grandTotalDays) * 100) : 0;
+      grandTotalDays > 0
+        ? Math.round(
+            ((grandPresentCount + grandLateCount + grandEarlyOffCount + grandFestivalCount) /
+              grandTotalDays) *
+              100
+          )
+        : 0;
 
     return {
       classId,
@@ -317,8 +351,9 @@ export const AttendanceService = {
       presentRate: grandTotalDays > 0 ? Math.round((grandPresentCount / grandTotalDays) * 100) : 0,
       absentRate: grandTotalDays > 0 ? Math.round((grandAbsentCount / grandTotalDays) * 100) : 0,
       lateRate: grandTotalDays > 0 ? Math.round((grandLateCount / grandTotalDays) * 100) : 0,
-      excusedRate: grandTotalDays > 0 ? Math.round((grandExcusedCount / grandTotalDays) * 100) : 0,
-      studentSummaries: studentSummaries.sort((a, b) => a.percentage - b.percentage), // ascending percentage to highlight low attendance students
+      earlyOffRate: grandTotalDays > 0 ? Math.round((grandEarlyOffCount / grandTotalDays) * 100) : 0,
+      festivalRate: grandTotalDays > 0 ? Math.round((grandFestivalCount / grandTotalDays) * 100) : 0,
+      studentSummaries: studentSummaries.sort((a, b) => a.percentage - b.percentage),
     };
   },
 };

@@ -1,37 +1,39 @@
 export const COLORS = {
-  // Brand Colors
-  primary: '#4F46E5',     // Elegant Indigo
-  primaryLight: '#EEF2FF',
-  primaryDark: '#3730A3',
+  // Primary colors from Dribbble design
+  primary: '#344054',     // Dark Slate Blue / Gray (used for buttons, headers, accents)
+  primaryLight: '#F2F4F7',// Light gray-blue for active tabs or secondary fills
+  primaryDark: '#1D2939', // Darker slate
   
-  // Secondary / Accent Colors
-  secondary: '#06B6D4',   // Cyber Teal
-  accent: '#F59E0B',      // Amber
+  // Secondary Colors
+  secondary: '#475467',   // Muted slate
+  accent: '#667085',      // Accent gray
   
-  // Status Colors (Critical for Attendance)
-  present: '#10B981',     // Vibrant Emerald Green
-  presentLight: '#ECFDF5',
-  absent: '#EF4444',      // Vibrant Rose Red
-  absentLight: '#FEF2F2',
-  late: '#F59E0B',        // Vibrant Amber Orange
-  lateLight: '#FEF3C7',
-  excused: '#3B82F6',     // Cool Blue
-  excusedLight: '#EFF6FF',
+  // Dribbble Mockup Status Colors
+  present: '#12B76A',     // Green
+  presentLight: '#ECFDF3',
+  absent: '#F04438',      // Red
+  absentLight: '#FEF3F2',
+  late: '#F79009',        // Yellow / Orange
+  lateLight: '#FFFAEB',
+  earlyOff: '#FD853A',    // Orange
+  earlyOffLight: '#FFF6ED',
+  festival: '#2E90FA',    // Blue
+  festivalLight: '#EFF8FF',
   
-  // Neutral Colors (Backgrounds, Cards, Text)
-  background: '#F9FAFB',  // Soft white / light gray
-  surface: '#FFFFFF',     // Pure White
+  // Layout Colors
+  background: '#F8FAFC',  // Main app background
+  surface: '#FFFFFF',     // Card / container backgrounds
   card: '#FFFFFF',
   
   // Text Colors
-  textPrimary: '#111827',   // Dark Gray / Black
-  textSecondary: '#4B5563', // Slate Gray
-  textMuted: '#9CA3AF',     // Muted Gray
-  textLight: '#FFFFFF',     // White text
+  textPrimary: '#1D2939',   // Dark Gray (slate)
+  textSecondary: '#475467', // Medium Gray
+  textMuted: '#98A2B3',     // Muted Gray
+  textLight: '#FFFFFF',     // White
   
   // Borders
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
+  border: '#E4E7EC',        // Light gray border from design
+  borderLight: '#F2F4F7',   // Very light separator
 };
 
 export const SPACING = {
@@ -62,24 +64,17 @@ export const FONT_WEIGHT = {
 
 export const SHADOWS = {
   sm: {
-    shadowColor: '#000',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 1,
   },
   md: {
-    shadowColor: '#4F46E5',
+    shadowColor: '#101828',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
+    elevation: 3,
   },
 };

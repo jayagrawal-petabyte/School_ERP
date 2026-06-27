@@ -9,11 +9,12 @@ import {
   SafeAreaView,
   Alert,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { AttendanceService, Student, AttendanceRecord } from '../services/api';
+import { AttendanceService, Student, AttendanceRecord, AttendanceStatus } from '../services/api';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type MarkAttendanceScreenRouteProp = RouteProp<RootStackParamList, 'MarkAttendance'>;
@@ -27,16 +28,11 @@ interface Props {
   navigation: MarkAttendanceScreenNavigationProp;
 }
 
-type LocalRecord = {
-  studentId: string;
-  status: 'present' | 'absent' | 'late' | 'excused' | null;
-};
-
 export default function MarkAttendanceScreen({ route, navigation }: Props) {
   const { classId, className } = route.params;
 
   const [students, setStudents] = useState<Student[]>([]);
-  const [records, setRecords] = useState<Record<string, 'present' | 'absent' | 'late' | 'excused'>>({});
+  const [records, setRecords] = useState<Record<string, AttendanceStatus>>({});
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -48,18 +44,12 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         const studentList = await AttendanceService.getStudents(classId);
         setStudents(studentList);
 
-        // Fetch existing attendance for this class and date
         const existingRecords = await AttendanceService.getAttendanceByDate(classId, selectedDate);
         
-        const initialRecords: Record<string, 'present' | 'absent' | 'late' | 'excused'> = {};
+        const initialRecords: Record<string, AttendanceStatus> = {};
         if (existingRecords) {
           existingRecords.forEach((rec) => {
             initialRecords[rec.studentId] = rec.status;
-          });
-        } else {
-          // Default all to null (requires marking)
-          studentList.forEach((std) => {
-            // Alternatively, we can default all to null or let them remain empty
           });
         }
         setRecords(initialRecords);
@@ -72,29 +62,26 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     loadData();
   }, [classId, selectedDate]);
 
-  // Set all students to present (shortcut)
   const handleMarkAllPresent = () => {
-    const updated: Record<string, 'present' | 'absent' | 'late' | 'excused'> = {};
+    const updated: Record<string, AttendanceStatus> = {};
     students.forEach((std) => {
       updated[std.id] = 'present';
     });
     setRecords(updated);
   };
 
-  // Toggle single student status
-  const handleMarkStatus = (studentId: string, status: 'present' | 'absent' | 'late' | 'excused') => {
+  const handleMarkStatus = (studentId: string, status: AttendanceStatus) => {
     setRecords((prev) => ({
       ...prev,
       [studentId]: status,
     }));
   };
 
-  // Calculate live statistics
   const stats = useMemo(() => {
     let present = 0;
     let absent = 0;
     let late = 0;
-    let excused = 0;
+    let earlyOff = 0;
     let unmarked = 0;
 
     students.forEach((std) => {
@@ -102,14 +89,13 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
       if (status === 'present') present++;
       else if (status === 'absent') absent++;
       else if (status === 'late') late++;
-      else if (status === 'excused') excused++;
+      else if (status === 'earlyOff') earlyOff++;
       else unmarked++;
     });
 
-    return { present, absent, late, excused, unmarked, total: students.length };
+    return { present, absent, late, earlyOff, unmarked, total: students.length };
   }, [students, records]);
 
-  // Filter students based on search query
   const filteredStudents = useMemo(() => {
     if (!searchQuery.trim()) return students;
     const query = searchQuery.toLowerCase();
@@ -120,12 +106,11 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     );
   }, [students, searchQuery]);
 
-  // Handle Submission
   const handleSubmit = async () => {
     if (stats.unmarked > 0) {
       Alert.alert(
-        'Incomplete Roster',
-        `You have left ${stats.unmarked} student(s) unmarked. Please mark all students before submitting.`,
+        'Roster Incomplete',
+        `Please mark all ${stats.unmarked} student(s) before submitting.`,
         [{ text: 'OK' }]
       );
       return;
@@ -150,8 +135,8 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         ]);
       }
     } catch (error) {
-      console.error('Error submitting attendance:', error);
-      Alert.alert('Error', 'Failed to save attendance. Please try again.');
+      console.error('Error saving attendance:', error);
+      Alert.alert('Error', 'Failed to save. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +156,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
     return (
       <View style={styles.studentCard}>
-        {/* Profile Avatar / Initials */}
+        {/* Profile initials circle */}
         <View
           style={[
             styles.avatar,
@@ -181,15 +166,15 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
           <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
         </View>
 
-        {/* Student Information */}
+        {/* Info */}
         <View style={styles.studentInfo}>
           <Text style={styles.studentName}>{item.name}</Text>
           <Text style={styles.rollNumber}>Roll No: {item.rollNumber}</Text>
         </View>
 
-        {/* Action Toggles */}
+        {/* Circle status pills */}
         <View style={styles.statusButtonsContainer}>
-          {/* Present Button */}
+          {/* Present (P) */}
           <TouchableOpacity
             style={[
               styles.statusButton,
@@ -207,7 +192,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
-          {/* Late Button */}
+          {/* Late (L) */}
           <TouchableOpacity
             style={[
               styles.statusButton,
@@ -225,7 +210,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
-          {/* Absent Button */}
+          {/* Absent (A) */}
           <TouchableOpacity
             style={[
               styles.statusButton,
@@ -243,18 +228,18 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
-          {/* Excused Button */}
+          {/* Early Off (E) */}
           <TouchableOpacity
             style={[
               styles.statusButton,
-              currentStatus === 'excused' ? styles.btnExcusedActive : styles.btnInactive,
+              currentStatus === 'earlyOff' ? styles.btnEarlyActive : styles.btnInactive,
             ]}
-            onPress={() => handleMarkStatus(item.id, 'excused')}
+            onPress={() => handleMarkStatus(item.id, 'earlyOff')}
           >
             <Text
               style={[
                 styles.statusBtnText,
-                currentStatus === 'excused' ? styles.textActive : styles.textInactiveExcused,
+                currentStatus === 'earlyOff' ? styles.textActive : styles.textInactiveEarly,
               ]}
             >
               E
@@ -269,17 +254,34 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Fetching class roster...</Text>
+        <Text style={styles.loadingText}>Fetching Roster...</Text>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Real-time stats board */}
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      {/* Custom Header */}
+      <View style={styles.customHeader}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{className}</Text>
+        <TouchableOpacity style={styles.bellButton}>
+          <View style={styles.bellOutline}>
+            <View style={styles.bellCap} />
+            <View style={styles.bellBody} />
+            <View style={styles.bellClapper} />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Top dashboard values */}
       <View style={styles.statsBoard}>
         <View style={styles.dateRow}>
-          <Text style={styles.dateLabel}>Date: {selectedDate}</Text>
+          <Text style={styles.dateLabel}>Session Date: {selectedDate}</Text>
           <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllPresent}>
             <Text style={styles.markAllBtnText}>Mark All Present</Text>
           </TouchableOpacity>
@@ -298,9 +300,9 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
             <Text style={styles.statVal}>{stats.absent}</Text>
             <Text style={styles.statLabel}>Absent</Text>
           </View>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.excused }]}>
-            <Text style={styles.statVal}>{stats.excused}</Text>
-            <Text style={styles.statLabel}>Excused</Text>
+          <View style={[styles.statBox, { borderLeftColor: COLORS.earlyOff }]}>
+            <Text style={styles.statVal}>{stats.earlyOff}</Text>
+            <Text style={styles.statLabel}>Early Off</Text>
           </View>
           <View style={[styles.statBox, { borderLeftColor: COLORS.textMuted }]}>
             <Text style={styles.statVal}>{stats.unmarked}</Text>
@@ -309,18 +311,21 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      {/* Search Bar */}
+      {/* Search Input */}
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search student by name or roll no..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor={COLORS.textMuted}
-        />
+        <View style={styles.searchBox}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search students..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor={COLORS.textMuted}
+          />
+        </View>
       </View>
 
-      {/* Roster List */}
+      {/* Student List */}
       <FlatList
         data={filteredStudents}
         keyExtractor={(item) => item.id}
@@ -329,12 +334,12 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No students match your search.</Text>
+            <Text style={styles.emptyText}>Roster is empty.</Text>
           </View>
         }
       />
 
-      {/* Submit Button Bar */}
+      {/* Fixed bottom footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
@@ -369,8 +374,70 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
   },
+  customHeader: {
+    height: 56,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  headerTitle: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary,
+  },
+  bellButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bellOutline: {
+    width: 16,
+    height: 18,
+    alignItems: 'center',
+  },
+  bellCap: {
+    width: 4,
+    height: 2,
+    backgroundColor: COLORS.primary,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+  },
+  bellBody: {
+    width: 14,
+    height: 10,
+    backgroundColor: COLORS.primary,
+    borderTopLeftRadius: 5,
+    borderTopRightRadius: 5,
+    marginTop: 1,
+  },
+  bellClapper: {
+    width: 6,
+    height: 3,
+    backgroundColor: COLORS.primary,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+    marginTop: 1,
+  },
   statsBoard: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     padding: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
@@ -380,93 +447,103 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   dateLabel: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.xs,
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textPrimary,
   },
   markAllBtn: {
     backgroundColor: COLORS.primaryLight,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: 8,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   markAllBtnText: {
     color: COLORS.primary,
-    fontSize: FONT_SIZE.sm,
+    fontSize: 11,
     fontWeight: FONT_WEIGHT.semibold,
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 6,
+    marginTop: SPACING.xs,
   },
   statBox: {
     flex: 1,
     alignItems: 'center',
     backgroundColor: COLORS.background,
     paddingVertical: SPACING.sm,
-    borderRadius: 8,
-    borderLeftWidth: 4,
+    borderRadius: 6,
+    borderLeftWidth: 3,
   },
   statVal: {
-    fontSize: FONT_SIZE.md,
+    fontSize: 13,
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textPrimary,
   },
   statLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: COLORS.textSecondary,
     marginTop: 2,
     fontWeight: FONT_WEIGHT.medium,
   },
   searchContainer: {
-    paddingHorizontal: SPACING.md,
+    paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
   },
-  searchInput: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 10,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 8,
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: COLORS.border,
-    fontSize: FONT_SIZE.sm,
+    borderRadius: 8,
+    paddingHorizontal: SPACING.md,
+    height: 40,
+  },
+  searchIcon: {
+    fontSize: 12,
+    marginRight: SPACING.xs,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: FONT_SIZE.xs,
     color: COLORS.textPrimary,
   },
   listContent: {
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.xl * 2,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl * 3,
   },
   studentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
     padding: SPACING.sm,
-    marginBottom: SPACING.sm,
+    marginBottom: SPACING.xs,
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: SPACING.sm,
   },
   avatarMale: {
-    backgroundColor: '#DBEAFE', // Soft blue
+    backgroundColor: '#E0F2FE',
   },
   avatarFemale: {
-    backgroundColor: '#FCE7F3', // Soft pink
+    backgroundColor: '#FCE7F3',
   },
   avatarText: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: 12,
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textSecondary,
   },
@@ -474,29 +551,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   studentName: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: 13,
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textPrimary,
   },
   rollNumber: {
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.textSecondary,
     marginTop: 2,
   },
   statusButtonsContainer: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 5,
   },
   statusButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
   },
   btnInactive: {
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     borderColor: COLORS.border,
   },
   btnPresentActive: {
@@ -511,12 +588,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.late,
     borderColor: COLORS.late,
   },
-  btnExcusedActive: {
-    backgroundColor: COLORS.excused,
-    borderColor: COLORS.excused,
+  btnEarlyActive: {
+    backgroundColor: COLORS.earlyOff,
+    borderColor: COLORS.earlyOff,
   },
   statusBtnText: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: 11,
     fontWeight: FONT_WEIGHT.bold,
   },
   textActive: {
@@ -531,15 +608,15 @@ const styles = StyleSheet.create({
   textInactiveLate: {
     color: COLORS.late,
   },
-  textInactiveExcused: {
-    color: COLORS.excused,
+  textInactiveEarly: {
+    color: COLORS.earlyOff,
   },
   emptyContainer: {
     paddingVertical: SPACING.xl,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.xs,
     color: COLORS.textSecondary,
   },
   footer: {
@@ -547,15 +624,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#FFFFFF',
     padding: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
   submitButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 8,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -564,7 +641,7 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     color: COLORS.textLight,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm,
     fontWeight: FONT_WEIGHT.bold,
   },
 });
