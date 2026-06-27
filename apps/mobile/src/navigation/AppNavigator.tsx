@@ -20,14 +20,7 @@ export default function AppNavigator() {
     <Stack.Navigator
       initialRouteName="AttendanceList"
       screenOptions={{
-        headerStyle: {
-          backgroundColor: COLORS.primary,
-        },
-        headerTintColor: COLORS.textLight,
-        headerTitleStyle: {
-          fontWeight: '600',
-        },
-        headerTitleAlign: 'center',
+        headerShown: false,
         contentStyle: {
           backgroundColor: COLORS.background,
         },
