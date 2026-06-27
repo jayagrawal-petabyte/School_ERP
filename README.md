@@ -8,7 +8,7 @@ This repository contains the School Management Portal ERP application, featuring
 
 The mobile application is built using **React Native (Expo SDK 56)** and **TypeScript**. It is located in the `apps/mobile/` directory.
 
-### Completed Module: Attendance Module
+### Completed Module: - Attendance Module (Assigned to:  Durgesh Narayan Nayak)
 
 The Attendance Module provides features for teachers to manage student daily attendance, view historic logs, and analyze attendance rates.
 
