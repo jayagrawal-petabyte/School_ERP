@@ -14,20 +14,20 @@ const resultOwnershipContext = async (req) => resultService.getOwnershipContext(
 
 router.post(
   '/',
-  authorize({ roles: ['admin', 'principal', 'teacher'], permissions: ['result:create'] }),
+  authorize({ roles: ['admin', 'principal', 'teacher'] }),
   validateMarks,
   asyncHandler(resultController.createResult)
 );
 
 router.get(
   '/me',
-  authorize({ roles: ['student'], permissions: ['result:view'] }),
+  authorize({ roles: ['student'] }),
   asyncHandler(resultController.getMyResults)
 );
 
 router.get(
   '/',
-  authorize({ roles: ['admin', 'principal', 'teacher', 'parent'], permissions: ['result:view'] }),
+  authorize({ roles: ['admin', 'principal', 'teacher', 'parent'] }),
   asyncHandler(resultController.getAllResults)
 );
 
@@ -35,7 +35,6 @@ router.get(
   '/:id',
   authorize({
     roles: ['admin', 'principal', 'teacher', 'parent', 'student'],
-    permissions: ['result:view'],
     ownership: {
       enabled: true,
       resource: 'result',
@@ -50,7 +49,6 @@ router.put(
   '/:id',
   authorize({
     roles: ['admin', 'principal', 'teacher'],
-    permissions: ['result:update'],
     ownership: {
       enabled: true,
       resource: 'result',

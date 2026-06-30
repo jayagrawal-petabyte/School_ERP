@@ -9,40 +9,22 @@ const normalizeStringArray = (value) => {
 
 const normalizeRole = (role) => (role == null ? '' : String(role).trim().toLowerCase());
 
-const hasRequiredPermissions = (user, requiredPermissions) => {
-  if (!requiredPermissions || requiredPermissions.length === 0) {
-    return true;
-  }
-
-  if (!user || !user.role) {
-    return false;
-  }
-
-  const userRole = normalizeRole(user.role);
-  if (userRole === 'admin' || userRole === 'principal') {
-    return true;
-  }
-
-  const userPermissions = Array.isArray(user.permissions)
-    ? user.permissions.map((permission) => normalizeRole(permission))
-    : [];
-
-  return requiredPermissions.every((permission) => userPermissions.includes(permission));
-};
-
 const checkOwnership = async (user, resourceContext) => {
   if (!resourceContext) {
     return false;
   }
 
   const role = normalizeRole(user.role);
+  const studentId = resourceContext.student_id || resourceContext.studentId;
+  const teacherId = resourceContext.teacher_id || resourceContext.teacherId;
+  const classId = resourceContext.class_id || resourceContext.classId;
 
   if (role === 'student') {
-    return String(resourceContext.studentId) === String(user.id);
+    return String(studentId) === String(user.id);
   }
 
   if (role === 'teacher') {
-    if (String(resourceContext.teacherId) === String(user.id)) {
+    if (String(teacherId) === String(user.id)) {
       return true;
     }
 
@@ -50,23 +32,26 @@ const checkOwnership = async (user, resourceContext) => {
       return resourceContext.assignedTeacherIds.map((id) => String(id)).includes(String(user.id));
     }
 
+    if (classId) {
+      return relationshipService.isTeacherAssignedToClass(user.id, classId);
+    }
+
     return false;
   }
 
   if (role === 'parent') {
-    if (!resourceContext.studentId) {
+    if (!studentId) {
       return false;
     }
 
-    return relationshipService.isParentOfStudent(user.id, resourceContext.studentId);
+    return relationshipService.isParentOfStudent(user.id, studentId);
   }
 
   return false;
 };
 
-const authorize = ({ roles = [], permissions = [], ownership, requireOwnership = false } = {}) => {
+const authorize = ({ roles = [], ownership, requireOwnership = false } = {}) => {
   const allowedRoles = normalizeStringArray(roles);
-  const requiredPermissions = normalizeStringArray(permissions);
   const ownershipConfig = ownership === true
     ? { enabled: true }
     : (ownership || (requireOwnership ? { enabled: true } : {}));
@@ -85,14 +70,6 @@ const authorize = ({ roles = [], permissions = [], ownership, requireOwnership =
       return res.status(403).json({
         success: false,
         message: 'Forbidden: Insufficient role privileges.',
-        details: {},
-      });
-    }
-
-    if (!hasRequiredPermissions(req.user, requiredPermissions)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Forbidden: Insufficient permissions.',
         details: {},
       });
     }
