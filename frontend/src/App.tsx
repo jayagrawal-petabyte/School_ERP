@@ -4,7 +4,7 @@ import Dashboard from "./students/pages/Dashboard";
 import Attendance from "./students/pages/Attendance";
 import Profile from "./students/pages/Profile";
 import StudentSidebar from "./students/components/StudentSidebar";
-
+import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 
 const StudentLayout: React.FC = () => (
   <div className="flex bg-[#F8FAFF] min-h-screen">
@@ -24,7 +24,11 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="assignments" element={<StudentDashboard />} />
         </Route>
+        
+          <Route path="/teacher/assignments" element={<TeacherDashboard />} />
+          <Route path="/teacher/assignments/create" element={<CreateAssignment />} />
       </Routes>
     </BrowserRouter>
   );

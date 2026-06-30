@@ -5,6 +5,7 @@ const StudentSidebar = () => {
     { label: "Dashboard", icon: "📊", active: true },
     { label: "Profile", icon: "👤", active: false },
     { label: "Attendance", icon: "📋", active: false },
+    { label: "Assignments", icon: "📝", active: false }
   ];
 
   return (
