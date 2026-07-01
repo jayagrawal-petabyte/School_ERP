@@ -16,8 +16,7 @@ export const CreateAssignment: React.FC = () => {
       maxMarks,
     };
 
-    console.log('Successfully Created Assignment:', newAssignment);
-    alert('Assignment created successfully! Check your browser console.');
+    alert('Assignment created successfully!');
 
     setTitle('');
     setDescription('');
