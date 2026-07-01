@@ -2,6 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 
+const upload = require("./uploadMiddleware");
+
 const {
     submitAssignment,
     getSubmissionStatus,
