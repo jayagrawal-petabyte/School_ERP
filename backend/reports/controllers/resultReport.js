@@ -2,7 +2,7 @@ const supabase = require('../supabaseClient');
 
 const getResultsReport = async (req, res) => {
     try {
-        let query = supabase.from('results').select('*');
+        let query = supabase.from('exam_marks').select('*');
         
         // Scope the query
         if (req.scopedClasses !== null) {
@@ -17,23 +17,22 @@ const getResultsReport = async (req, res) => {
         // Aggregation logic
         let totalMarks = 0;
         let passCount = 0;
-        // Assuming pass marks threshold is 40 for this aggregate, ideally fetched from a configuration or exams table
         
         data.forEach(result => {
-            totalMarks += Number(result.marks) || 0;
-            if (Number(result.marks) >= 40) passCount++;
+            totalMarks += Number(result.marks_obtained) || 0;
+            if (Number(result.marks_obtained) >= Number(result.passing_marks)) passCount++;
         });
         
         const avgMarks = data.length > 0 ? (totalMarks / data.length).toFixed(2) : 0;
         const passRate = data.length > 0 ? ((passCount / data.length) * 100).toFixed(2) : 0;
         
+        // Return aggregates only — never dump raw student exam rows (data minimization)
         return res.json({
             success: true,
             data: {
                 totalResults: data.length,
                 averageMarks: avgMarks,
-                passRate: `${passRate}%`,
-                results: data
+                passRate: `${passRate}%`
             }
         });
     } catch (error) {
