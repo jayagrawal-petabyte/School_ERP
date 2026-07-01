@@ -1,15 +1,11 @@
-
-
 "use strict";
 
 
-  /**Object.freeze() prevents accidental modification at runtime.*/
- 
 const ROLES = Object.freeze({
-    ADMIN: "Admin",
-    TEACHER: "Teacher",
-    STUDENT: "Student",
-    PARENT: "Parent",
+    ADMIN: "admin",
+    TEACHER: "teacher",
+    STUDENT: "student",
+    PARENT: "parent",
 });
 
 module.exports = ROLES;
