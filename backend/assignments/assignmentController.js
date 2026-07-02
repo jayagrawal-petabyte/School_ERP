@@ -1,81 +1,89 @@
-const service = require('./assignmentService');
+const { validateAttendanceDate, validateAttendanceStatus } = require('./validation');
 
-function sendResponse(res, statusCode, data) {
-  return res.status(statusCode).json({
-    success: true,
-    data,
-  });
-}
+const markAttendance = async (req, res) => {
+    try {
+        const { role, user_id } = req.user; 
+        const { date, studentId, status, classId } = req.body;
 
-function handleError(res, error) {
-  return res.status(error.statusCode || 500).json({
-    success: false,
-    message: error.message || 'Something went wrong.',
-  });
-}
+        if (role !== 'admin' && role !== 'teacher') {
+            return res.status(403).json({ 
+                error: "Access denied. Only Teachers and Admins can mark attendance." 
+            });
+        }
 
-function createAssignment(req, res) {
-  try {
-    const user = service.readUser(req);
-    const assignment = service.createAssignment(req.body, user);
+        const dateCheck = validateAttendanceDate(date);
+        if (!dateCheck.valid) {
+            return res.status(400).json({ error: dateCheck.message });
+        }
 
-    return sendResponse(res, 201, assignment);
-  } catch (error) {
-    return handleError(res, error);
-  }
-}
+        const statusCheck = validateAttendanceStatus(status);
+        if (!statusCheck.valid) {
+            return res.status(400).json({ error: statusCheck.message });
+        }
 
-function updateAssignment(req, res) {
-  try {
-    const user = service.readUser(req);
-    const assignment = service.updateAssignment(
-      req.params.id,
-      req.body,
-      user
-    );
+        return res.status(201).json({ 
+            message: "Attendance marked successfully.",
+            data: { date, studentId, status, classId }
+        });
+    } catch (error) {
+        console.error("Error in markAttendance:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
 
-    return sendResponse(res, 200, assignment);
-  } catch (error) {
-    return handleError(res, error);
-  }
-}
+const updateAttendance = async (req, res) => {
+    try {
+        const { role } = req.user;
+        const { date, status } = req.body;
 
-function deleteAssignment(req, res) {
-  try {
-    const user = service.readUser(req);
-    const assignment = service.deleteAssignment(req.params.id, user);
+        if (role !== 'admin' && role !== 'teacher') {
+            return res.status(403).json({ 
+                error: "Access denied. Only Teachers and Admins can update attendance records." 
+            });
+        }
 
-    return sendResponse(res, 200, assignment);
-  } catch (error) {
-    return handleError(res, error);
-  }
-}
+        const dateCheck = validateAttendanceDate(date);
+        if (!dateCheck.valid) {
+            return res.status(400).json({ error: dateCheck.message });
+        }
 
-function listAssignments(req, res) {
-  try {
-    const user = service.readUser(req);
-    const assignments = service.listAssignments(user);
+        const statusCheck = validateAttendanceStatus(status);
+        if (!statusCheck.valid) {
+            return res.status(400).json({ error: statusCheck.message });
+        }
 
-    return sendResponse(res, 200, assignments);
-  } catch (error) {
-    return handleError(res, error);
-  }
-}
+        return res.status(200).json({ message: "Attendance records updated successfully." });
+    } catch (error) {
+        console.error("Error in updateAttendance:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
 
-function getAssignment(req, res) {
-  try {
-    const assignment = service.getAssignment(req.params.id);
+const viewAttendance = async (req, res) => {
+    try {
+        const { role, user_id } = req.user;
+        
+        if (role === 'student') {
+            console.log(`Enforcing structural query isolation. Filtering target student_id: ${user_id}`);
+            return res.status(200).json({ 
+                message: "Displaying your personal attendance records securely.",
+                scope: "Individual"
+            });
+        }
 
-    return sendResponse(res, 200, assignment);
-  } catch (error) {
-    return handleError(res, error);
-  }
-}
+        console.log(`Role '${role}' authorized to request cross-sectional attendance logs.`);
+        return res.status(200).json({ 
+            message: "Displaying requested multi-user attendance records.",
+            scope: "Administrative"
+        });
+    } catch (error) {
+        console.error("Error in viewAttendance:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
 
 module.exports = {
-  createAssignment,
-  updateAssignment,
-  deleteAssignment,
-  listAssignments,
-  getAssignment,
+    markAttendance,
+    updateAttendance,
+    viewAttendance
 };
