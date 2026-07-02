@@ -24,12 +24,15 @@ const getStudentPerformanceReport = async (req, res) => {
             }
         }
 
-        // Query 1: Fetch attendance records for the student
-        const { data: attendanceData, error: attendanceError } = await supabase
+        // Query 1: Fetch attendance records for the student (scoped to teacher's classes)
+        let attendanceQuery = supabase
             .from('attendance_records')
             .select('status')
             .eq('student_id', studentId);
-            
+        if (req.scopedClasses !== null) {
+            attendanceQuery = attendanceQuery.in('class_id', req.scopedClasses);
+        }
+        const { data: attendanceData, error: attendanceError } = await attendanceQuery;
         if (attendanceError) throw attendanceError;
         
         let presentDays = 0;
@@ -39,12 +42,15 @@ const getStudentPerformanceReport = async (req, res) => {
         });
         const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(2) : 0;
         
-        // Query 2: Fetch exam marks for the student
-        const { data: marksData, error: marksError } = await supabase
+        // Query 2: Fetch exam marks for the student (scoped to teacher's classes)
+        let marksQuery = supabase
             .from('exam_marks')
             .select('marks_obtained, max_marks')
             .eq('student_id', studentId);
-            
+        if (req.scopedClasses !== null) {
+            marksQuery = marksQuery.in('class_id', req.scopedClasses);
+        }
+        const { data: marksData, error: marksError } = await marksQuery;
         if (marksError) throw marksError;
         
         let totalObtained = 0;
@@ -62,7 +68,8 @@ const getStudentPerformanceReport = async (req, res) => {
             success: true,
             data: {
                 studentId,
-                totalAttendanceDays: totalDays,
+                totalRecordedDays: totalDays,
+                attendedDays: presentDays,
                 attendancePercentage: `${attendancePercentage}%`,
                 totalExams: marksData.length,
                 averageMarks: `${averageMarks}%`
