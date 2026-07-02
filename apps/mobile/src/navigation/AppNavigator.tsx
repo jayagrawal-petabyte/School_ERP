@@ -1,5 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from '../screens/HomeScreen';
 import AttendanceListScreen from '../screens/AttendanceListScreen';
 import MarkAttendanceScreen from '../screens/MarkAttendanceScreen';
 import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
@@ -10,6 +11,7 @@ import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
 import { COLORS } from '../constants/theme';
 
 export type RootStackParamList = {
+  Home: undefined;
   AttendanceList: undefined;
   MarkAttendance: { classId: string; className: string };
   AttendanceHistory: { classId: string; className: string };
@@ -24,7 +26,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function AppNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="AttendanceList"
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         contentStyle: {
@@ -32,6 +34,11 @@ export default function AppNavigator() {
         },
       }}
     >
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Home Dashboard' }}
+      />
       <Stack.Screen
         name="AttendanceList"
         component={AttendanceListScreen}
