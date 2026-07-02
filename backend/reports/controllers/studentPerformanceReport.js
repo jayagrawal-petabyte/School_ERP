@@ -24,13 +24,48 @@ const getStudentPerformanceReport = async (req, res) => {
             }
         }
 
-        // STUBBED: Full query logic pending DB RLS patch for exam_marks
+        // Query 1: Fetch attendance records for the student
+        const { data: attendanceData, error: attendanceError } = await supabase
+            .from('attendance_records')
+            .select('status')
+            .eq('student_id', studentId);
+            
+        if (attendanceError) throw attendanceError;
+        
+        let presentDays = 0;
+        const totalDays = attendanceData.length;
+        attendanceData.forEach(record => {
+            if (record.status === 'present' || record.status === 'late') presentDays++;
+        });
+        const attendancePercentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(2) : 0;
+        
+        // Query 2: Fetch exam marks for the student
+        const { data: marksData, error: marksError } = await supabase
+            .from('exam_marks')
+            .select('marks_obtained, max_marks')
+            .eq('student_id', studentId);
+            
+        if (marksError) throw marksError;
+        
+        let totalObtained = 0;
+        let totalMax = 0;
+        marksData.forEach(mark => {
+            totalObtained += Number(mark.marks_obtained) || 0;
+            totalMax += Number(mark.max_marks) || 0;
+        });
+        
+        // Use average of percentages per exam, or total obtained / total max. 
+        // We'll use total obtained / total max for a true weighted average.
+        const averageMarks = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(2) : 0;
+
         return res.json({
             success: true,
-            message: `Stubbed performance report for student ${studentId}`,
             data: {
-                attendancePercentage: '90%',
-                averageMarks: 75
+                studentId,
+                totalAttendanceDays: totalDays,
+                attendancePercentage: `${attendancePercentage}%`,
+                totalExams: marksData.length,
+                averageMarks: `${averageMarks}%`
             }
         });
     } catch (error) {
