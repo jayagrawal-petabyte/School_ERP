@@ -9,12 +9,7 @@ export const CreateAssignment: React.FC = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const newAssignment = {
-      title,
-      description,
-      dueDate,
-      maxMarks,
-    };
+
 
     alert('Assignment created successfully!');
 
