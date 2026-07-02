@@ -5,6 +5,7 @@ const StudentSidebar = () => {
     { label: "Dashboard", icon: "📊", active: true },
     { label: "Profile", icon: "👤", active: false },
     { label: "Attendance", icon: "📋", active: false },
+    { label: "Results", icon: "📝" },
   ];
 
   return (
@@ -19,11 +20,14 @@ const StudentSidebar = () => {
       </div>
 
       {/* Navigation */}
+
       <div className="flex-1 px-4 mt-8 space-y-2">
         {navItems.map((item) => (
           <NavLink
             key={item.label}
-            to={item.label.toLowerCase()}
+            // Change this line to handle "Dashboard" specially 
+            // because your path for dashboard is "/" or "dashboard"
+            to={item.label === "Dashboard" ? "/dashboard" : `/${item.label.toLowerCase()}`}
             className={({ isActive }) =>
               `w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
@@ -33,7 +37,7 @@ const StudentSidebar = () => {
             }
           >
             <span className="text-xl opacity-90">{item.icon}</span>
-            <span>{item.label}</span>
+            <span>{item.label === "Results" ? "Examination & Results" : item.label}</span>
           </NavLink>
         ))}
       </div>

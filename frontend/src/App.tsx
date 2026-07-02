@@ -4,6 +4,7 @@ import Dashboard from "./students/pages/Dashboard";
 import Attendance from "./students/pages/Attendance";
 import Profile from "./students/pages/Profile";
 import StudentSidebar from "./students/components/StudentSidebar";
+import ResultsPage from "./exams/ResultsPage"; 
 
 
 const StudentLayout: React.FC = () => (
@@ -24,6 +25,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="results" element={<ResultsPage />} /> {/* Add this line */}
         </Route>
       </Routes>
     </BrowserRouter>
