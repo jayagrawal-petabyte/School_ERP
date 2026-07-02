@@ -1,11 +1,20 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const StudentSidebar = () => {
+    const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
   const navItems = [
     { label: "Dashboard", icon: "📊", active: true },
     { label: "Profile", icon: "👤", active: false },
     { label: "Attendance", icon: "📋", active: false },
     { label: "Results", icon: "📝" },
+    { label: "Assignments", icon: "📝", active: false }
   ];
 
   return (
@@ -54,7 +63,10 @@ const StudentSidebar = () => {
           </div>
         </div>
         
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-blue-200 hover:text-white transition-colors duration-200 rounded-lg hover:bg-[#3b3e85]">
+        <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-blue-200 hover:text-white transition-colors duration-200 rounded-lg hover:bg-[#3b3e85]"
+          >
           <span className="text-lg opacity-80">🚪</span>
           <span className="text-sm font-medium">Sign Out</span>
         </button>
