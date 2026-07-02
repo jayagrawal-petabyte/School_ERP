@@ -7,6 +7,8 @@ interface AssignmentCardProps {
   maxMarks: number;
   role: 'teacher' | 'student';
   status?: string;
+  onSubmit?: () => void;
+  onViewWork?: () => void;
 }
 
 export const AssignmentCard: React.FC<AssignmentCardProps> = ({
@@ -15,7 +17,9 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
   dueDate,
   maxMarks,
   role,
-  status
+  status,
+  onSubmit,
+  onViewWork
 }) => {
   return (
     <div className="p-5 bg-white rounded-lg shadow-md border border-gray-100 flex flex-col justify-between">
@@ -32,11 +36,15 @@ export const AssignmentCard: React.FC<AssignmentCardProps> = ({
       <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center text-sm">
         <span className="text-gray-500">Due: {dueDate}</span>
         {role === 'teacher' ? (
-          <button className="text-blue-600 hover:underline font-medium">
+          <button type="button" className="text-blue-600 hover:underline font-medium" onClick={onViewWork}>
             View Submissions
           </button>
         ) : (
-          <button className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition">
+          <button
+            type="button"
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition"
+            onClick={onSubmit}
+          >
             {status === 'submitted' ? 'View Work' : 'Submit'}
           </button>
         )}
