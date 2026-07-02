@@ -8,7 +8,7 @@ import AttendanceReportsScreen from '../screens/AttendanceReportsScreen';
 import AssignmentListScreen from '../screens/AssignmentListScreen';
 import AssignmentDetailsScreen from '../screens/AssignmentDetailsScreen';
 import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
-import { COLORS } from '../constants/theme';
+import { theme } from '../theme';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -30,8 +30,22 @@ export default function AppNavigator() {
       screenOptions={{
         headerShown: false,
         contentStyle: {
-          backgroundColor: COLORS.background,
+          backgroundColor: theme.colors.background,
         },
+        // Enable smooth slide transitions across both Android and iOS
+        animation: 'slide_from_right',
+        // Restrict orientation to portrait to maintain layout structure
+        orientation: 'portrait',
+        // Fallback styling configurations for sub-stacks or header activations
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.textPrimary,
+        headerTitleStyle: {
+          fontWeight: theme.fonts.weights.semibold,
+          fontSize: theme.typography.sizes.md,
+        },
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -47,17 +61,24 @@ export default function AppNavigator() {
       <Stack.Screen
         name="MarkAttendance"
         component={MarkAttendanceScreen}
-        options={({ route }) => ({ title: `Mark - ${route.params.className}` })}
+        options={({ route }) => ({ 
+          title: `Mark - ${route.params.className}`,
+          animation: 'slide_from_bottom', // Custom smooth entry for marking sheet
+        })}
       />
       <Stack.Screen
         name="AttendanceHistory"
         component={AttendanceHistoryScreen}
-        options={({ route }) => ({ title: `History - ${route.params.className}` })}
+        options={({ route }) => ({ 
+          title: `History - ${route.params.className}`,
+        })}
       />
       <Stack.Screen
         name="AttendanceReports"
         component={AttendanceReportsScreen}
-        options={({ route }) => ({ title: `Reports - ${route.params.className}` })}
+        options={({ route }) => ({ 
+          title: `Reports - ${route.params.className}`,
+        })}
       />
       <Stack.Screen
         name="AssignmentList"
