@@ -8,7 +8,7 @@ This repository contains the School Management Portal ERP application, featuring
 
 The mobile application is built using **React Native (Expo SDK 56)** and **TypeScript**. It is located in the `apps/mobile/` directory.
 
-### Completed Module: - Attendance Module (Assigned to:  Durgesh Narayan Nayak)
+### Completed Module: Attendance Module (Assigned to: Durgesh Narayan Nayak)
 
 The Attendance Module provides features for teachers to manage student daily attendance, view historic logs, and analyze attendance rates.
 
@@ -29,9 +29,34 @@ The Attendance Module provides features for teachers to manage student daily att
    - Custom graphical breakdown bars showing the distribution rates.
    - **Critical Attendance Warnings** flagging students whose attendance rate drops below 75%.
    - Student leaderboard sorted by attendance percentage.
-5. **Mock Service API Layer (`api.ts`)**:
-   - Built a simulated async service layer with mock database.
-   - Pre-loaded with static attendance history data (including Lucas Henry's mock calendar logs for May 2023 matching design specs) for instant local testing.
+
+---
+
+### Completed Module: Assignments Module (Assigned to: Stuti)
+
+The Assignments Module provides student task-tracking and submission features.
+
+#### Features Implemented:
+1. **Central Dashboard Integration (`HomeScreen.tsx`)**:
+   - Implemented the central hub view with profile greetings, search, and Academics grid.
+   - Integrated plug-and-play triggers for Attendance and Assignments modules.
+2. **Assignment List (`AssignmentListScreen.tsx`)**:
+   - Lists assignments with category filtering tabs (**All**, **Pending**, **Submitted**, **Graded**).
+   - Search bar for quick filtering.
+   - Displays due dates and grades.
+3. **Assignment Details (`AssignmentDetailsScreen.tsx`)**:
+   - Shows teacher name, due dates, description guidelines, and reference files.
+   - Renders visual submission receipts and graded evaluation cards (score and teacher feedback) for completed assignments.
+4. **Submit Assignment (`SubmitAssignmentScreen.tsx`)**:
+   - Interactive remarks input box.
+   - Simulated network file upload interface featuring an animated upload progress bar (0% to 100%).
+   - Validation checks and successful submit alerts that auto-refresh the parent views.
+
+---
+
+### Service API Layer (`api.ts`)
+- Configured a simulated network client database with simulated delay.
+- Pre-loaded with static attendance history (including May 2023 logs) and assignment mock states (algebra, physics reports, chemistry mechanisms) for instant offline testing.
 
 ---
 
