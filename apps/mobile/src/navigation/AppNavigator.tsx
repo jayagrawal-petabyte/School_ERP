@@ -4,6 +4,9 @@ import AttendanceListScreen from '../screens/AttendanceListScreen';
 import MarkAttendanceScreen from '../screens/MarkAttendanceScreen';
 import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
 import AttendanceReportsScreen from '../screens/AttendanceReportsScreen';
+import AssignmentListScreen from '../screens/AssignmentListScreen';
+import AssignmentDetailsScreen from '../screens/AssignmentDetailsScreen';
+import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
 import { COLORS } from '../constants/theme';
 
 export type RootStackParamList = {
@@ -11,6 +14,9 @@ export type RootStackParamList = {
   MarkAttendance: { classId: string; className: string };
   AttendanceHistory: { classId: string; className: string };
   AttendanceReports: { classId: string; className: string };
+  AssignmentList: { classId: string; className: string };
+  AssignmentDetails: { assignmentId: string };
+  SubmitAssignment: { assignmentId: string; title: string; subject: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,6 +52,22 @@ export default function AppNavigator() {
         component={AttendanceReportsScreen}
         options={({ route }) => ({ title: `Reports - ${route.params.className}` })}
       />
+      <Stack.Screen
+        name="AssignmentList"
+        component={AssignmentListScreen}
+        options={{ title: 'Assignments' }}
+      />
+      <Stack.Screen
+        name="AssignmentDetails"
+        component={AssignmentDetailsScreen}
+        options={{ title: 'Assignment Details' }}
+      />
+      <Stack.Screen
+        name="SubmitAssignment"
+        component={SubmitAssignmentScreen}
+        options={{ title: 'Submit Assignment' }}
+      />
     </Stack.Navigator>
   );
 }
+

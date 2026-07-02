@@ -357,3 +357,117 @@ export const AttendanceService = {
     };
   },
 };
+
+export interface Assignment {
+  id: string;
+  classId: string;
+  title: string;
+  subject: string;
+  description: string;
+  dueDate: string;
+  maxMarks: number;
+  assignedBy: string;
+  status: 'pending' | 'submitted' | 'graded';
+  obtainedMarks?: number;
+  feedback?: string;
+  attachmentUrl?: string;
+  submission?: {
+    submittedAt: string;
+    notes: string;
+    fileName: string;
+  };
+}
+
+const ASSIGNMENTS_DB: Assignment[] = [
+  {
+    id: 'a1',
+    classId: '1',
+    title: 'Algebra and Quadratic Equations',
+    subject: 'Mathematics',
+    description: 'Solve exercises 1 to 10 on page 143 of your Math textbook. Write down the detailed step-by-step proofs for questions 5 and 7 on a blank sheet, scan it as a PDF, and attach it to your submission.',
+    dueDate: '2026-07-10',
+    maxMarks: 100,
+    assignedBy: 'Mrs. Shradha Sen',
+    status: 'pending',
+  },
+  {
+    id: 'a2',
+    classId: '1',
+    title: 'Newtonian Mechanics Lab Report',
+    subject: 'Physics',
+    description: 'Write a detailed lab report for the Pendulum experiment conducted last week. Include your observations table, error analysis graph, and answer all questions in the experimental manual.',
+    dueDate: '2026-07-08',
+    maxMarks: 50,
+    assignedBy: 'Mr. Rajesh Rawat',
+    status: 'submitted',
+    submission: {
+      submittedAt: '2026-07-01 10:30 AM',
+      notes: 'I have attached the graph image along with the laboratory observations sheet.',
+      fileName: 'Physics_Lab_Report_Sofia.pdf'
+    }
+  },
+  {
+    id: 'a3',
+    classId: '1',
+    title: 'Organic Chemistry Reactions',
+    subject: 'Chemistry',
+    description: 'Provide the reaction mechanisms for the electrophilic substitution reactions of benzene discussed in yesterday\'s class. Highlight the generation of the electrophile and the intermediate carbocation resonance structures.',
+    dueDate: '2026-06-25',
+    maxMarks: 75,
+    assignedBy: 'Dr. Vivek Kumar',
+    status: 'graded',
+    obtainedMarks: 68,
+    feedback: 'Excellent mechanism diagrams! Make sure to write the catalyst regeneration step next time.',
+    submission: {
+      submittedAt: '2026-06-24 04:15 PM',
+      notes: 'Benzene reactions assignment.',
+      fileName: 'Chemistry_Org_Sofia.pdf'
+    }
+  },
+  {
+    id: 'a4',
+    classId: '1',
+    title: 'Shakespeare Macbeth Character Study',
+    subject: 'English Literature',
+    description: 'Analyze the psychological deterioration of Macbeth from a loyal general to a tyrant. Use quotes from Act I to Act IV to support your thesis. Length should be between 800 and 1200 words.',
+    dueDate: '2026-07-15',
+    maxMarks: 100,
+    assignedBy: 'Mrs. Priya Sharma',
+    status: 'pending',
+  }
+];
+
+export const AssignmentService = {
+  getAssignments: async (classId: string): Promise<Assignment[]> => {
+    await delay(300);
+    return ASSIGNMENTS_DB.filter((a) => a.classId === classId);
+  },
+
+  getAssignmentDetails: async (assignmentId: string): Promise<Assignment | null> => {
+    await delay(200);
+    const assignment = ASSIGNMENTS_DB.find((a) => a.id === assignmentId);
+    return assignment ? { ...assignment } : null;
+  },
+
+  submitAssignment: async (
+    assignmentId: string,
+    notes: string,
+    fileName: string
+  ): Promise<{ success: boolean; message: string }> => {
+    await delay(600);
+    const assignment = ASSIGNMENTS_DB.find((a) => a.id === assignmentId);
+    if (!assignment) {
+      return { success: false, message: 'Assignment not found' };
+    }
+
+    assignment.status = 'submitted';
+    assignment.submission = {
+      submittedAt: new Date().toLocaleString(),
+      notes,
+      fileName,
+    };
+
+    return { success: true, message: 'Assignment submitted successfully!' };
+  },
+};
+
