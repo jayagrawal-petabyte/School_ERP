@@ -7,6 +7,10 @@ import Dashboard from "./students/pages/Dashboard";
 import Attendance from "./students/pages/Attendance";
 import Profile from "./students/pages/Profile";
 import StudentSidebar from "./students/components/StudentSidebar";
+
+import ResultsPage from "./exams/ResultsPage"; 
+
+
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 import TeacherLayout from "./teachers/components/TeacherLayout";
 import Login from "./auth/Login";
@@ -64,8 +68,10 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/results" element={<ResultsPage />} />
           <Route path="/assignments" element={<StudentDashboard />} />
         </Route>
+    
     
         <Route
           element={

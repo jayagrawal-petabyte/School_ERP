@@ -28,6 +28,11 @@ const StudentSidebar = ({ open, onClose }: StudentSidebarProps) => {
       path: "/attendance",
     },
     {
+    label: "Results",
+    icon: "📚",
+    path: "/results",
+    },
+    {
       label: "Assignments",
       icon: "📝",
       path: "/assignments",
@@ -39,7 +44,7 @@ const StudentSidebar = ({ open, onClose }: StudentSidebarProps) => {
     navigate("/", { replace: true });
     onClose();
   };
-
+  
   return (
     <>
       {/* Mobile Overlay */}

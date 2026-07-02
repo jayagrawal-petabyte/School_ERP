@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   School,
+  FileText,
 } from "lucide-react";
 import "./Sidebar.css";
 
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { label: "Students", path: "/students", icon: GraduationCap },
   { label: "Teachers", path: "/teachers", icon: Users },
   { label: "Parents", path: "/parents", icon: UserRound },
+  { label: "Examination & Results", path: "/results", icon: FileText },
 ];
 
 function Sidebar() {
