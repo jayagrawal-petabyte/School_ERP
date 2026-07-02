@@ -2,20 +2,20 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { X, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-type TeacherSidebarProps = {
+type AdminSidebarProps = {
   open: boolean;
   onClose: () => void;
 };
 
-const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
+const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
   const navItems = [
     {
-      label: "Assignments",
-      icon: "📝",
-      path: "/teacher/assignments",
+      label: "Dashboard",
+      icon: "📊",
+      path: "/admin/dashboard",
     },
   ];
 
@@ -27,7 +27,7 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden"
@@ -49,7 +49,6 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
           transform
           transition-transform
           duration-300
-          ease-in-out
 
           ${
             open
@@ -63,30 +62,32 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
           flex-col
         `}
       >
-        {/* Mobile Close Button */}
-        <div className="flex justify-between items-center px-5 pt-5 md:hidden">
+        {/* Mobile Close */}
+        <div className="flex justify-end p-4 md:hidden">
           <button
             onClick={onClose}
-            className="text-white hover:text-red-300 transition"
+            className="hover:text-red-300"
           >
             <X size={28} />
           </button>
         </div>
 
-        {/* Header */}
-        <div className="px-6 pt-2 pb-6 border-b border-[#43479b]">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow">
-              <span className="text-3xl text-[#2f3273]">🎓</span>
+        {/* Logo */}
+        <div className="px-6 pb-6 border-b border-[#44478d]">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center">
+              <span className="text-3xl text-[#2f3273]">
+                🎓
+              </span>
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h1 className="text-3xl font-bold">
                 School ERP
               </h1>
 
-              <p className="mt-1 text-blue-200 text-xs uppercase tracking-[3px]">
-                Teacher Portal
+              <p className="text-xs uppercase tracking-[3px] text-blue-200">
+                Admin Portal
               </p>
             </div>
           </div>
@@ -103,39 +104,41 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
                 className={({ isActive }) =>
                   `flex items-center gap-4 px-5 py-4 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-[#4f53a7] shadow-lg text-white font-semibold"
+                      ? "bg-[#4f53a7] text-white shadow-lg font-semibold"
                       : "text-blue-200 hover:bg-[#3b3e85] hover:text-white"
                   }`
                 }
               >
-                <span className="text-2xl">{item.icon}</span>
+                <span className="text-2xl">
+                  {item.icon}
+                </span>
 
-                <span className="text-base">{item.label}</span>
+                <span className="text-base">
+                  {item.label}
+                </span>
               </NavLink>
             ))}
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-auto border-t border-[#43479b] p-5">
-          {/* Teacher Card */}
-          <div className="flex items-center gap-3 rounded-xl bg-[#24265a] p-4 shadow">
-            <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-lg font-bold">
-              T
+        {/* Bottom */}
+        <div className="mt-auto border-t border-[#44478d] p-5">
+          <div className="flex items-center gap-3 rounded-xl bg-[#24265a] p-4">
+            <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-lg font-bold">
+              A
             </div>
 
             <div>
               <p className="font-semibold text-sm">
-                Teacher
+                Administrator
               </p>
 
               <p className="text-xs text-blue-200">
-                Faculty
+                School ERP
               </p>
             </div>
           </div>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             className="mt-5 w-full flex items-center gap-3 px-4 py-3 rounded-xl text-blue-200 hover:bg-[#3b3e85] hover:text-white transition-all duration-200"
@@ -152,4 +155,4 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
   );
 };
 
-export default TeacherSidebar;
+export default AdminSidebar;

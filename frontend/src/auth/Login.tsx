@@ -113,8 +113,8 @@ function Login() {
             break;
 
         case "admin":
-            navigate("/dashboard");
-            break;
+        navigate("/admin/dashboard");
+        break;
 
         case "parent":
             navigate("/dashboard");
@@ -131,8 +131,15 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <h1 className="title">School ERP</h1>
-        <p className="subtitle">Welcome Back</p>
+        <div className="login-header">
+          <div className="login-logo">🎓</div>
+
+          <h1 className="title">School ERP</h1>
+
+          <p className="subtitle">
+            Welcome Back
+          </p>
+        </div>
 
         <div className="role-container">
           <button
@@ -187,7 +194,7 @@ function Login() {
           />
 
           {errors.email && (
-            <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
+            <p className="error-text">
               {errors.email}
             </p>
           )}
@@ -221,10 +228,10 @@ function Login() {
           </div>
 
           {errors.password && (
-            <p style={{ color: "red", fontSize: "14px", marginTop: "5px" }}>
-              {errors.password}
-            </p>
-          )}
+          <p className="error-text">
+            {errors.password}
+          </p>
+        )}
         </div>
 
         <div className="login-options">
@@ -241,30 +248,24 @@ function Login() {
         </div>
 
         {lockTime > 0 ? (
-        <p
+          <p
             style={{
-            color: "#ff9800",
-            textAlign: "center",
-            marginBottom: "15px",
-            fontWeight: "bold",
+              color: "#ff9800",
+              textAlign: "center",
+              marginBottom: "15px",
+              fontWeight: "bold",
             }}
-        >
+          >
             Too many failed attempts. Try again in {lockTime} seconds.
-        </p>
+          </p>
         ) : (
-        errors.login && (
-            <p
-            style={{
-                color: "red",
-                textAlign: "center",
-                marginBottom: "15px",
-            }}
-            >
-            {errors.login}
+          errors.login && (
+            <p className="error-text login-error">
+              {errors.login}
             </p>
-        )
+          )
         )}
-
+        
         <button
         className="login-btn"
         onClick={handleLogin}

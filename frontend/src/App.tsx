@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useState } from "react";
+import { Menu } from "lucide-react";
+
 // import StudentLayout from "./students/components/StudentLayout"; // removed, using inline layout
 import Dashboard from "./students/pages/Dashboard";
 import Attendance from "./students/pages/Attendance";
@@ -10,11 +13,25 @@ import Login from "./auth/Login";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommonNavbar from "./components/layout/CommonNavbar";
 import Footer from "./components/layout/Footer";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminLayout from "./admin/components/AdminLayout";
 
-const StudentLayout: React.FC = () => (
+const StudentLayout: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
   <div className="flex bg-[#F8FAFF] min-h-screen">
-    <StudentSidebar />
-
+    <StudentSidebar
+      open={sidebarOpen}
+      onClose={() => setSidebarOpen(false)}
+    />
+    {/* Mobile Menu Button */}
+    <button
+      onClick={() => setSidebarOpen(true)}
+      className="md:hidden fixed top-4 left-4 z-50 bg-[#2f3273] text-white p-2 rounded-lg shadow-lg"
+    >
+      <Menu size={22} />
+    </button>
     <main className="flex-1 p-6 overflow-y-auto">
       <CommonNavbar
         title="Student Dashboard"
@@ -25,7 +42,8 @@ const StudentLayout: React.FC = () => (
       <Footer />
     </main>
   </div>
-);
+  );
+};
 
 function App() {
   return (
@@ -48,7 +66,19 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/assignments" element={<StudentDashboard />} />
         </Route>
-
+    
+        <Route
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboard />}
+          />
+        </Route>
         {/* Teacher */}
         {/* Protected Teacher Routes */}
         <Route
