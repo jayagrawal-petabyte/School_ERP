@@ -1,95 +1,93 @@
-// backend/assignment-submission/submissionController.js
-
 const submissionService = require("./submissionService");
 
-const submitAssignment = async (req, res) => {
-    try {
-        const result = await submissionService.submitAssignment(req);
+function sendResponse(res, statusCode, data) {
+    return res.status(statusCode).json({
+        success: true,
+        data
+    });
+}
 
-        return res.status(201).json({
-            success: true,
-            message: "Assignment submitted successfully.",
-            data: result
-        });
+function handleError(res, error) {
+    return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Something went wrong."
+    });
+}
+
+function submitAssignment(req, res) {
+    try {
+        const user = submissionService.readUser(req);
+
+        const submission = submissionService.submitAssignment(
+            req.body,
+            req.file,
+            user
+        );
+
+        return sendResponse(res, 201, submission);
+
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        return handleError(res, error);
     }
-};
+}
 
-const getSubmissionStatus = async (req, res) => {
+function getSubmissionStatus(req, res) {
     try {
-        const result = await submissionService.getSubmissionStatus(
+        const submission = submissionService.getSubmissionStatus(
             req.params.submissionId
         );
 
-        return res.status(200).json({
-            success: true,
-            data: result
-        });
+        return sendResponse(res, 200, submission);
+
     } catch (error) {
-        return res.status(404).json({
-            success: false,
-            message: error.message
-        });
+        return handleError(res, error);
     }
-};
+}
 
-const getStudentSubmissions = async (req, res) => {
+function getStudentSubmissions(req, res) {
     try {
-        const result = await submissionService.getStudentSubmissions(req);
+        const user = submissionService.readUser(req);
 
-        return res.status(200).json({
-            success: true,
-            data: result
-        });
+        const submissions = submissionService.getStudentSubmissions(user);
+
+        return sendResponse(res, 200, submissions);
+
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        return handleError(res, error);
     }
-};
+}
 
-const getAssignmentSubmissions = async (req, res) => {
+function getAssignmentSubmissions(req, res) {
     try {
-        const result = await submissionService.getAssignmentSubmissions(
+        const user = submissionService.readUser(req);
+
+        const submissions = submissionService.getAssignmentSubmissions(
             req.params.assignmentId,
-            req
+            user
         );
 
-        return res.status(200).json({
-            success: true,
-            data: result
-        });
-    } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
+        return sendResponse(res, 200, submissions);
 
-const downloadSubmission = async (req, res) => {
+    } catch (error) {
+        return handleError(res, error);
+    }
+}
+
+function downloadSubmission(req, res) {
     try {
-        const result = await submissionService.downloadSubmission(
+        const user = submissionService.readUser(req);
+
+        const submission = submissionService.downloadSubmission(
             req.params.submissionId,
-            req
+            user
         );
 
-        return res.status(200).json({
-            success: true,
-            data: result
-        });
+        return sendResponse(res, 200, submission);
+
     } catch (error) {
-        return res.status(400).json({
-            success: false,
-            message: error.message
-        });
+        return handleError(res, error);
     }
-};
+}
 
 module.exports = {
     submitAssignment,

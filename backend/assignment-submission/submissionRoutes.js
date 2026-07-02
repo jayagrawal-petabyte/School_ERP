@@ -12,7 +12,11 @@ const {
     downloadSubmission
 } = require("./submissionController");
 
-router.post("/submit", submitAssignment);
+router.post(
+    "/submit",
+    upload.single("file"),
+    submitAssignment
+);
 
 router.get("/status/:submissionId", getSubmissionStatus);
 
