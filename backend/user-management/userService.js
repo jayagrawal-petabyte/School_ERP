@@ -1,7 +1,9 @@
 const store = require('./userStore');
+const ROLES = require('../auth/constants/roles');
+const AUTH_MESSAGES = require('../auth/constants/authMessages');
 
-const adminRoles = ['admin', 'principal'];
-const validRoles = ['admin', 'principal', 'teacher', 'student', 'parent'];
+const adminRoles = [ROLES.ADMIN];
+const validRoles = Object.values(ROLES);
 
 const sensitiveFields = [
   'password',
@@ -46,11 +48,11 @@ function sanitizeUsers(users) {
   return users.map(sanitizeUser);
 }
 
-function requireAdminOrPrincipal(user) {
+function requireAdmin(user) {
   const role = String(user.role || '').toLowerCase();
 
   if (!adminRoles.includes(role)) {
-    const error = new Error('Only admins and principals can manage users.');
+    const error = new Error(AUTH_MESSAGES.FORBIDDEN);
     error.statusCode = 403;
     throw error;
   }
@@ -105,7 +107,7 @@ function validateUser(payload) {
 
   if (!validRoles.includes(role)) {
     const error = new Error(
-      'Role must be one of: admin, principal, teacher, student, parent.'
+      'Role must be one of: ' + validRoles.join(', ') + '.'
     );
     error.statusCode = 400;
     throw error;
@@ -115,7 +117,7 @@ function validateUser(payload) {
 }
 
 function createUser(payload, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+  requireAdmin(currentUser);
 
   const validated = validateUser(payload);
 
@@ -138,7 +140,7 @@ function createUser(payload, currentUser) {
 }
 
 function updateUser(id, payload, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+  requireAdmin(currentUser);
 
   const existing = store.findUser(id);
 
@@ -174,7 +176,7 @@ function updateUser(id, payload, currentUser) {
 }
 
 function deleteUser(id, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+  requireAdmin(currentUser);
 
   const existing = store.findUser(id);
 
@@ -206,7 +208,7 @@ function listUsers(filters) {
 }
 
 function toggleStatus(id, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+  requireAdmin(currentUser);
 
   const existing = store.findUser(id);
 
@@ -229,7 +231,7 @@ module.exports = {
   getUserById,
   listUsers,
   readUser,
-  requireAdminOrPrincipal,
+  requireAdmin,
   sanitizeUser,
   sanitizeUsers,
   toggleStatus,
