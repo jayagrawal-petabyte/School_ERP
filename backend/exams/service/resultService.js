@@ -36,6 +36,61 @@ const validateNumber = (value, name, { min, max, required = true } = {}) => {
   return numberValue;
 };
 
+const normalizeIds = (ids = []) => [...new Set(
+  (Array.isArray(ids) ? ids : [ids])
+    .filter((value) => value !== undefined && value !== null && value !== '')
+    .map((value) => String(value))
+)];
+
+const attachMetadata = (results, exams = [], subjects = []) => {
+  const examMap = new Map((exams || []).map((exam) => [String(exam.id), exam]));
+  const subjectMap = new Map((subjects || []).map((subject) => [String(subject.id), subject]));
+
+  return results.map((result) => {
+    const examId = String(result.exam_id ?? result.examType ?? '');
+    const subjectId = String(result.subject_id ?? result.subject ?? '');
+    const exam = examMap.get(examId) || null;
+    const subject = subjectMap.get(subjectId) || null;
+
+    return {
+      ...result,
+      exam_meta: exam
+        ? {
+            id: exam.id,
+            name: exam.name,
+            term: exam.term,
+            academic_year: exam.academic_year,
+            class_id: exam.class_id,
+          }
+        : null,
+      subject_meta: subject
+        ? {
+            id: subject.id,
+            name: subject.name,
+            class_id: subject.class_id,
+            sub_code: subject.sub_code,
+          }
+        : null,
+    };
+  });
+};
+
+const enrichResultsWithMetadata = async (results) => {
+  if (!Array.isArray(results) || results.length === 0) {
+    return results;
+  }
+
+  const examIds = normalizeIds(results.map((result) => result.exam_id ?? result.examType));
+  const subjectIds = normalizeIds(results.map((result) => result.subject_id ?? result.subject));
+
+  const [exams, subjects] = await Promise.all([
+    examIds.length > 0 ? relationshipService.fetchExamsByIds(examIds) : [],
+    subjectIds.length > 0 ? relationshipService.fetchSubjectsByIds(subjectIds) : [],
+  ]);
+
+  return attachMetadata(results, exams || [], subjects || []);
+};
+
 const deriveStatus = (marksObtained, passingMarks) => {
   if (marksObtained === undefined || marksObtained === null || marksObtained === '') {
     return 'pending';
@@ -90,9 +145,45 @@ const normalizeResultPayload = (data, user, { isUpdate = false } = {}) => {
   };
 };
 
+const ensureExamExists = async (examId) => {
+  if (!examId) {
+    return false;
+  }
+
+  const exams = await relationshipService.fetchExamsByIds([examId]);
+  if (exams === null) {
+    return true;
+  }
+
+  return Array.isArray(exams) && exams.length > 0;
+};
+
+const ensureSubjectExists = async (subjectId) => {
+  if (!subjectId) {
+    return false;
+  }
+
+  const subjects = await relationshipService.fetchSubjectsByIds([subjectId]);
+  if (subjects === null) {
+    return true;
+  }
+
+  return Array.isArray(subjects) && subjects.length > 0;
+};
+
 const createResult = async (data, user) => {
   const resultPayload = normalizeResultPayload(data, user, { isUpdate: false });
-  return resultRepository.create(resultPayload);
+
+  if (!(await ensureExamExists(resultPayload.exam_id))) {
+    throw new AppError('exam_id does not reference an existing exam', 400);
+  }
+
+  if (!(await ensureSubjectExists(resultPayload.subject_id))) {
+    throw new AppError('subject_id does not reference an existing subject', 400);
+  }
+
+  const result = await resultRepository.create(resultPayload);
+  return enrichResultsWithMetadata([result]).then((items) => items[0]);
 };
 
 const updateResult = async (id, data) => {
@@ -123,11 +214,21 @@ const updateResult = async (id, data) => {
     updates.passing_marks = normalizedPayload.passing_marks;
   }
 
-  if (Object.keys(updates).length === 0) {
-    return existingResult;
+  if (updates.exam_id && !(await ensureExamExists(updates.exam_id))) {
+    throw new AppError('exam_id does not reference an existing exam', 400);
   }
 
-  return resultRepository.update(id, updates);
+  if (updates.subject_id && !(await ensureSubjectExists(updates.subject_id))) {
+    throw new AppError('subject_id does not reference an existing subject', 400);
+  }
+
+  if (Object.keys(updates).length === 0) {
+    const [enriched] = await enrichResultsWithMetadata([existingResult]);
+    return enriched;
+  }
+
+  const updatedResult = await resultRepository.update(id, updates);
+  return enrichResultsWithMetadata([updatedResult]).then((items) => items[0]);
 };
 
 const getResultById = async (id) => {
@@ -135,7 +236,9 @@ const getResultById = async (id) => {
   if (!result) {
     throw new AppError('Result not found', 404);
   }
-  return result;
+
+  const [enriched] = await enrichResultsWithMetadata([result]);
+  return enriched;
 };
 
 const getAllResults = async (user) => {
@@ -143,21 +246,23 @@ const getAllResults = async (user) => {
   const allResults = await resultRepository.findAll();
 
   if (role === 'admin' || role === 'principal') {
-    return allResults;
+    return enrichResultsWithMetadata(allResults);
   }
 
   if (role === 'teacher') {
     const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
-    return allResults.filter((result) => {
+    const filteredResults = allResults.filter((result) => {
       const teacherIdMatches = String(result.teacher_id || result.teacherId) === String(user.id);
       const classMatches = teacherClassIds.includes(String(result.class_id || result.classId));
       return teacherIdMatches || classMatches;
     });
+    return enrichResultsWithMetadata(filteredResults);
   }
 
   if (role === 'parent') {
     const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
-    return allResults.filter((result) => parentStudentIds.includes(String(result.student_id || result.studentId)));
+    const filteredResults = allResults.filter((result) => parentStudentIds.includes(String(result.student_id || result.studentId)));
+    return enrichResultsWithMetadata(filteredResults);
   }
 
   if (role === 'student') {
@@ -169,7 +274,8 @@ const getAllResults = async (user) => {
 
 const getMyResults = async (user) => {
   const allResults = await resultRepository.findAll();
-  return allResults.filter((result) => String(result.student_id || result.studentId) === String(user.id));
+  const filteredResults = allResults.filter((result) => String(result.student_id || result.studentId) === String(user.id));
+  return enrichResultsWithMetadata(filteredResults);
 };
 
 const getOwnershipContext = async (id) => {
