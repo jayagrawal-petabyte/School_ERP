@@ -1,320 +1,646 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import MarksTable from "../components/MarksTable";
-import type { MarksRowState } from "../components/MarksTable";
-import ResultFilters from "../components/ResultFilters";
-import examService from "../services/examService";
-import type { Student } from "../types/exam";
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  SafeAreaView,
+  View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Platform,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+} from 'react-native';
 
-// TODO: Replace with backend API — classService.getClasses()
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+import {
+  COLORS,
+  SPACING,
+  FONT_SIZE,
+  FONT_WEIGHT,
+  SHADOWS,
+} from '../constants/theme';
+
+import { ExamService } from '../services/examService';
+
+import {
+  Student,
+  MarksRowState,
+} from '../types/exam';
+
+type NavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'TeacherMarksEntry'
+>;
+
+interface Props {
+  navigation: NavigationProp;
+}
+
 const CLASS_OPTIONS = [
-  { id: "c1", label: "Class 6 - A" },
-  { id: "c2", label: "Class 7 - A" },
+  { id: 'c1', label: 'Class 6 - A' },
+  { id: 'c2', label: 'Class 7 - A' },
 ];
 
-// TODO: Replace with backend API — subjectService.getSubjects()
 const SUBJECT_OPTIONS = [
-  { id: "s1", label: "Mathematics" },
-  { id: "s2", label: "Science" },
-  { id: "s3", label: "English" },
+  { id: 's1', label: 'Mathematics' },
+  { id: 's2', label: 'Science' },
+  { id: 's3', label: 'English' },
 ];
 
-// TODO: Replace with backend API — examService.getExams()
 const EXAM_OPTIONS = [
-  { id: "e1", label: "Mid Term" },
-  { id: "e2", label: "Final Term" },
+  { id: 'e1', label: 'Mid Term' },
+  { id: 'e2', label: 'Final Term' },
 ];
 
-// TODO: Replace with backend API — studentService.getStudentsByClass(classId)
-async function fetchStudentsByClass(_classId: string): Promise<Student[]> {
-  return [
-    {
-      id: "1",
-      name: "Rahul Sharma",
-      rollNo: "101",
-    },
-    {
-      id: "2",
-      name: "Priya Singh",
-      rollNo: "102",
-    },
-    {
-      id: "3",
-      name: "Amit Kumar",
-      rollNo: "103",
-    },
-    {
-      id: "4",
-      name: "Neha Gupta",
-      rollNo: "104",
-    },
-  ];
-}
+const MAX_MARKS = 100;
+const PASSING_MARKS = 33;
 
-const MAX_MARKS_DEFAULT = 100;
-const PASSING_MARKS_DEFAULT = 33;
-
-// Validates a raw input string against backend rules:
-// required, numeric, >= 0, <= maxMarks
-function validateMarks(value: string, maxMarks: number): string | null {
-  const trimmed = value.trim();
-  if (trimmed === "") return null; // empty = not yet entered, not an error
-  const num = Number(trimmed);
-  if (Number.isNaN(num)) return "Enter a valid number";
-  if (num < 0) return "Marks cannot be negative";
-  if (num > maxMarks) return `Marks cannot exceed ${maxMarks}`;
-  return null;
-}
-
-export default function TeacherMarksEntry() {
-  const [classId, setClassId] = useState("");
-  const [subject, setSubject] = useState("");
-  const [examType, setExamType] = useState("");
+export default function TeacherMarksEntry({
+  navigation,
+}: Props) {
+  const [classId, setClassId] = useState('c1');
+  const [subject, setSubject] = useState('s1');
+  const [examType, setExamType] = useState('e1');
 
   const [students, setStudents] = useState<Student[]>([]);
-  const [rows, setRows] = useState<Record<string, MarksRowState>>({});
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [savingStudentId, setSavingStudentId] = useState<string | null>(null);
+  const [rows, setRows] =
+    useState<Record<string, MarksRowState>>({});
+
+  const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // Used inside handleSaveAll to suppress per-row success toasts during a batch save
-  const isBatchSaving = useRef(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const filtersComplete = Boolean(classId && subject && examType);
-
-  // Auto-dismiss toast after 3.5 s
   useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(timer);
-  }, [toast]);
+    loadStudents();
+  }, [classId]);
 
-  // Reload students whenever all three filters are selected
-  useEffect(() => {
-    if (!classId || !subject || !examType) {
-      setStudents([]);
-      setRows({});
-      return;
-    }
-
-    let isMounted = true;
-    setLoadingStudents(true);
-
-    fetchStudentsByClass(classId)
-      .then((list) => {
-        if (!isMounted) return;
-        setStudents(list);
-        setRows(
-          Object.fromEntries(
-            list.map((s) => [
-              s.id,
-              { studentId: s.id, marks: "", error: null, isExisting: false },
-            ])
-          )
-        );
-      })
-      .catch(() => {
-        if (isMounted) setToast({ type: "error", text: "Failed to load students" });
-      })
-      .finally(() => {
-        if (isMounted) setLoadingStudents(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [classId, subject, examType]);
-
-  function handleMarksChange(studentId: string, value: string) {
-    const error = validateMarks(value, MAX_MARKS_DEFAULT);
-    setRows((prev) => ({
-      ...prev,
-      [studentId]: { ...prev[studentId], marks: value, error },
-    }));
-  }
-
-  // Returns true on success, false on failure — used by handleSaveAll to tally results
-  async function handleSaveRow(studentId: string): Promise<boolean> {
-    const row = rows[studentId];
-    if (!row || row.error || row.marks.trim() === "") return false;
-
-    setSavingStudentId(studentId);
+  async function loadStudents() {
     try {
-      const payload = {
-        studentId,
-        subject,
-        examType,
-        classId,
-        marks: Number(row.marks),
-        maxMarks: MAX_MARKS_DEFAULT,
-        passingMarks: PASSING_MARKS_DEFAULT,
-      };
+      setLoading(true);
 
-      if (row.isExisting && row.resultId) {
-        await examService.updateMarks(row.resultId, payload);
-        if (!isBatchSaving.current) {
-          setToast({ type: "success", text: "Marks updated successfully" });
-        }
-      } else {
-        const created = await examService.uploadMarks(payload);
-        setRows((prev) => ({
-          ...prev,
-          [studentId]: {
-            ...prev[studentId],
-            isExisting: true,
-            resultId: created?.id ?? prev[studentId]?.resultId,
-          },
-        }));
-        if (!isBatchSaving.current) {
-          setToast({ type: "success", text: "Marks saved successfully" });
-        }
-      }
+      const list =
+        await ExamService.getStudentsByClass(classId);
 
-      return true;
-    } catch {
-      if (!isBatchSaving.current) {
-        setToast({ type: "error", text: "Failed to save marks. Please try again." });
-      }
-      return false;
-    } finally {
-      setSavingStudentId(null);
-    }
-  }
+      setStudents(list);
 
-  async function handleSaveAll() {
-    const validStudentIds = students
-      .map((s) => s.id)
-      .filter((id) => rows[id]?.marks.trim() !== "" && !rows[id]?.error);
+      const initialRows: Record<
+        string,
+        MarksRowState
+      > = {};
 
-    if (validStudentIds.length === 0) {
-      setToast({ type: "error", text: "Enter valid marks before saving" });
-      return;
-    }
-
-    setSavingAll(true);
-    isBatchSaving.current = true;
-
-    let failCount = 0;
-
-    for (const studentId of validStudentIds) {
-      // eslint-disable-next-line no-await-in-loop
-      const succeeded = await handleSaveRow(studentId);
-      if (!succeeded) failCount += 1;
-    }
-
-    isBatchSaving.current = false;
-    setSavingAll(false);
-
-    if (failCount === 0) {
-      setToast({ type: "success", text: "All marks saved successfully" });
-    } else if (failCount < validStudentIds.length) {
-      setToast({
-        type: "error",
-        text: `${failCount} student(s) could not be saved. Please review and try again.`,
+      list.forEach((student) => {
+        initialRows[student.id] = {
+          studentId: student.id,
+          marks: '',
+          error: null,
+          isExisting: false,
+        };
       });
-    } else {
-      setToast({ type: "error", text: "Failed to save marks. Please try again." });
+
+      setRows(initialRows);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  function handleReset() {
-    setRows(
-      Object.fromEntries(
-        students.map((s) => [
-          s.id,
-          { studentId: s.id, marks: "", error: null, isExisting: false },
-        ])
-      )
+  const filteredStudents = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return students;
+    }
+
+    const query = searchQuery.toLowerCase();
+
+    return students.filter(
+      (student) =>
+        student.name
+          .toLowerCase()
+          .includes(query) ||
+        student.rollNo
+          .toLowerCase()
+          .includes(query)
+    );
+  }, [students, searchQuery]);
+
+  const completedCount = useMemo(() => {
+    return Object.values(rows).filter(
+      (row) => row.marks.trim() !== ''
+    ).length;
+  }, [rows]);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          size="large"
+          color={COLORS.primary}
+        />
+        <Text style={styles.loadingText}>
+          Loading Students...
+        </Text>
+      </View>
     );
   }
 
-  const hasAnyExisting = useMemo(
-    () => Object.values(rows).some((r) => r.isExisting),
-    [rows]
-  );
-
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Teacher Marks Entry</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Select class, subject and exam to enter or update student marks.
-        </p>
-      </div>
-
-      {toast && (
-        <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium text-white ${
-            toast.type === "success" ? "bg-emerald-600" : "bg-rose-600"
-          }`}
-        >
-          {toast.text}
-        </div>
-      )}
-
-      <ResultFilters
-        classes={CLASS_OPTIONS}
-        subjects={SUBJECT_OPTIONS}
-        exams={EXAM_OPTIONS}
-        classId={classId}
-        subject={subject}
-        examType={examType}
-        onClassChange={setClassId}
-        onSubjectChange={setSubject}
-        onExamChange={setExamType}
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#FFFFFF"
       />
 
-      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-100">
-        {!filtersComplete ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-sm text-gray-500">
-            Select class, subject and exam to load the student list.
-          </div>
-        ) : loadingStudents ? (
-          <div className="flex justify-center py-10">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-          </div>
-        ) : students.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-12 text-center text-sm text-gray-500">
-            No students found for this class.
-            <br />
-            <span className="text-xs text-gray-400">
-              (Student list API is not wired up yet — see TODO in this file.)
-            </span>
-          </div>
-        ) : (
-          <>
-            <MarksTable
-              students={students}
-              rows={rows}
-              maxMarks={MAX_MARKS_DEFAULT}
-              passingMarks={PASSING_MARKS_DEFAULT}
-              onMarksChange={handleMarksChange}
-              onSaveRow={handleSaveRow}
-              savingStudentId={savingStudentId}
-              disabled={savingAll}
-            />
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButton}>
+            ←
+          </Text>
+        </TouchableOpacity>
 
-            <div className="mt-4 flex flex-wrap justify-end gap-3">
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={savingAll}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+        <Text style={styles.headerTitle}>
+          Teacher Marks Entry
+        </Text>
+
+        <View style={{ width: 32 }} />
+      </View>
+
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>
+          Examination Dashboard
+        </Text>
+
+        <Text style={styles.summarySubtitle}>
+          Enter marks for selected class.
+        </Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>
+              {students.length}
+            </Text>
+
+            <Text style={styles.statLabel}>
+              Students
+            </Text>
+          </View>
+
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>
+              {completedCount}
+            </Text>
+
+            <Text style={styles.statLabel}>
+              Completed
+            </Text>
+          </View>
+
+          <View style={styles.statBox}>
+            <Text style={styles.statNumber}>
+              {MAX_MARKS}
+            </Text>
+
+            <Text style={styles.statLabel}>
+              Max Marks
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* TODO:
+          Replace these temporary text inputs
+          with the project's dropdown component
+          once Class/Subject/Exam selectors exist.
+      */}
+
+      <View style={styles.filterContainer}>
+        <TextInput
+          style={styles.filterInput}
+          value={classId}
+          onChangeText={setClassId}
+          placeholder="Class"
+        />
+
+        <TextInput
+          style={styles.filterInput}
+          value={subject}
+          onChangeText={setSubject}
+          placeholder="Subject"
+        />
+
+        <TextInput
+          style={styles.filterInput}
+          value={examType}
+          onChangeText={setExamType}
+          placeholder="Exam"
+        />
+      </View>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          placeholder="Search Student..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          style={styles.searchInput}
+          placeholderTextColor={
+            COLORS.textSecondary
+          }
+        />
+      <FlatList
+        data={filteredStudents}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => {
+          const row = rows[item.id];
+
+          return (
+            <View style={styles.studentCard}>
+              <View style={styles.studentInfo}>
+                <Text style={styles.studentName}>
+                  {item.name}
+                </Text>
+
+                <Text style={styles.rollNumber}>
+                  Roll No: {item.rollNo}
+                </Text>
+              </View>
+
+              <View style={styles.marksContainer}>
+                <TextInput
+                  value={row?.marks ?? ''}
+                  keyboardType="numeric"
+                  maxLength={3}
+                  placeholder="Marks"
+                  placeholderTextColor={
+                    COLORS.textSecondary
+                  }
+                  style={[
+                    styles.marksInput,
+                    row?.error && styles.errorInput,
+                  ]}
+                  onChangeText={(text) => {
+                    let error: string | null = null;
+
+                    if (text.trim() !== '') {
+                      const value = Number(text);
+
+                      if (Number.isNaN(value)) {
+                        error = 'Invalid';
+                      } else if (value < 0) {
+                        error = 'Invalid';
+                      } else if (value > MAX_MARKS) {
+                        error = `>${MAX_MARKS}`;
+                      }
+                    }
+
+                    setRows((prev) => ({
+                      ...prev,
+                      [item.id]: {
+                        ...prev[item.id],
+                        marks: text,
+                        error,
+                      },
+                    }));
+                  }}
+                />
+
+                {row?.error ? (
+                  <Text style={styles.errorText}>
+                    {row.error}
+                  </Text>
+                ) : null}
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.saveButton,
+                  row?.marks.trim() === '' &&
+                    styles.disabledButton,
+                ]}
+                disabled={
+                  row?.marks.trim() === '' ||
+                  row?.error !== null
+                }
+                onPress={async () => {
+                  try {
+                    await ExamService.uploadMarks({
+                      studentId: item.id,
+                      classId,
+                      subject,
+                      examType,
+                      marks: Number(row.marks),
+                      maxMarks: MAX_MARKS,
+                      passingMarks: PASSING_MARKS,
+                    });
+
+                    setRows((prev) => ({
+                      ...prev,
+                      [item.id]: {
+                        ...prev[item.id],
+                        isExisting: true,
+                      },
+                    }));
+                  } catch (error) {
+                    console.log(error);
+                  }
+                }}
               >
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveAll}
-                disabled={savingAll}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                {savingAll ? "Saving..." : hasAnyExisting ? "Update Marks" : "Save Marks"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+                <Text style={styles.saveButtonText}>
+                  {row?.isExisting
+                    ? 'Update'
+                    : 'Save'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          );
+        }}
+      />
+
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            savingAll &&
+              styles.submitButtonDisabled,
+          ]}
+          disabled={savingAll}
+          onPress={async () => {
+            setSavingAll(true);
+
+            try {
+              for (const student of students) {
+                const row = rows[student.id];
+
+                if (
+                  !row ||
+                  row.error ||
+                  row.marks.trim() === ''
+                ) {
+                  continue;
+                }
+
+                await ExamService.uploadMarks({
+                  studentId: student.id,
+                  classId,
+                  subject,
+                  examType,
+                  marks: Number(row.marks),
+                  maxMarks: MAX_MARKS,
+                  passingMarks: PASSING_MARKS,
+                });
+              }
+            } catch (error) {
+              console.log(error);
+            } finally {
+              setSavingAll(false);
+            }
+          }}
+        >
+          {savingAll ? (
+            <ActivityIndicator
+              color="#FFFFFF"
+            />
+          ) : (
+            <Text style={styles.submitButtonText}>
+              Save All Marks
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+          </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    paddingTop:
+      Platform.OS === 'android'
+        ? StatusBar.currentHeight
+        : 0,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+
+  loadingText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSecondary,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+
+  header: {
+    height: 56,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+
+  backButton: {
+    fontSize: 22,
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+
+  headerTitle: {
+    fontSize: FONT_SIZE.md,
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+
+  summaryCard: {
+    margin: SPACING.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: SPACING.lg,
+    ...SHADOWS.sm,
+  },
+
+  summaryTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textPrimary,
+  },
+
+  summarySubtitle: {
+    marginTop: 4,
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZE.sm,
+  },
+
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: SPACING.md,
+  },
+
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  statNumber: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary,
+  },
+
+  statLabel: {
+    marginTop: 4,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+  },
+
+  filterContainer: {
+    paddingHorizontal: SPACING.lg,
+    gap: SPACING.sm,
+  },
+
+  filterInput: {
+    height: 46,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md,
+    color: COLORS.textPrimary,
+  },
+
+  searchContainer: {
+    paddingHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+
+  searchInput: {
+    height: 46,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: SPACING.md,
+    color: COLORS.textPrimary,
+  },
+
+  listContent: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: 120,
+  },
+
+  studentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    ...SHADOWS.sm,
+  },
+
+  studentInfo: {
+    flex: 1,
+  },
+
+  studentName: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textPrimary,
+  },
+
+  rollNumber: {
+    marginTop: 2,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+  },
+
+  marksContainer: {
+    width: 90,
+    marginHorizontal: SPACING.sm,
+  },
+
+  marksInput: {
+    height: 42,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    textAlign: 'center',
+    backgroundColor: '#FFFFFF',
+    color: COLORS.textPrimary,
+  },
+
+  errorInput: {
+    borderColor: COLORS.absent,
+  },
+
+  errorText: {
+    marginTop: 2,
+    fontSize: 10,
+    color: COLORS.absent,
+    textAlign: 'center',
+  },
+
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 10,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 72,
+  },
+
+  disabledButton: {
+    opacity: 0.5,
+  },
+
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontWeight: FONT_WEIGHT.semibold,
+    fontSize: FONT_SIZE.xs,
+  },
+
+  bottomBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    padding: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+
+  submitButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+});
