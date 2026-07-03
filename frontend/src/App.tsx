@@ -10,10 +10,10 @@ import StudentSidebar from "./students/components/StudentSidebar";
 
 import ResultsPage from "./exams/ResultsPage"; 
 
-
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 import TeacherLayout from "./teachers/components/TeacherLayout";
 import Login from "./auth/Login";
+import ForgotPassword from "./auth/ForgotPassword";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommonNavbar from "./components/layout/CommonNavbar";
 import Footer from "./components/layout/Footer";
@@ -56,7 +56,7 @@ function App() {
 
         {/* Login */}
         <Route path="/" element={<Login />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         {/* Protected Student Routes */}
         <Route
           element={
