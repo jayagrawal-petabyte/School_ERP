@@ -456,3 +456,57 @@ export const AssignmentService = {
   },
 };
 
+export interface LeaveRequest {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedAt: string;
+}
+
+const LEAVE_REQUESTS_DB: LeaveRequest[] = [
+  {
+    id: 'l1',
+    leaveType: 'Sick Leave',
+    startDate: '2026-06-10',
+    endDate: '2026-06-11',
+    reason: 'Suffering from viral fever and advised absolute bed rest by the doctor.',
+    status: 'approved',
+    requestedAt: '2026-06-09 09:15 AM'
+  }
+];
+
+export const LeaveRequestService = {
+  getLeaveRequests: async (): Promise<LeaveRequest[]> => {
+    await delay(300);
+    return [...LEAVE_REQUESTS_DB].sort(
+      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
+    );
+  },
+
+  submitLeaveRequest: async (
+    leaveType: string,
+    startDate: string,
+    endDate: string,
+    reason: string
+  ): Promise<{ success: boolean; message: string }> => {
+    await delay(500);
+
+    const newRequest: LeaveRequest = {
+      id: `l${Date.now()}`,
+      leaveType,
+      startDate,
+      endDate,
+      reason,
+      status: 'pending',
+      requestedAt: new Date().toLocaleString(),
+    };
+
+    LEAVE_REQUESTS_DB.push(newRequest);
+    return { success: true, message: 'Leave request submitted successfully.' };
+  },
+};
+
+
