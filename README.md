@@ -30,6 +30,24 @@ The Attendance Module provides features for teachers to manage student daily att
    - **Critical Attendance Warnings** flagging students whose attendance rate drops below 75%.
    - Student leaderboard sorted by attendance percentage.
 
+
+
+Provides authorization roles division (Teacher vs Student) and a student leave application workflow.
+
+#### Features Implemented:
+1. **Interactive Role Switcher (`HomeScreen.tsx`)**:
+   - Added a segment tab switcher at the top of the Home Dashboard to toggle between **Teacher Panel** and **Student Panel**.
+   - Greeting text and name dynamically adjusts (e.g. Mrs. Shradha Sen for Teacher, Sofia Morales for Student).
+2. **Role-Based Navigation Routing**:
+   - **Teacher Panel**: Tapping "Attendance" navigates to the class listing dashboard to manage or mark logs.
+   - **Student Panel**: Tapping "Attendance" navigates directly to a locked monthly calendar view of that student's own attendance, preventing search modifications.
+   - **Academics Grid**: Grid items render dynamically based on role (showing "Apply Leave" for students, and hiding it for teachers).
+3. **Leave Requests Screen (`LeaveRequestScreen.tsx`)**:
+   - Form to select Leave Type (Sick, Casual, Family Event, Other), fill date ranges, and input explanation reason.
+   - History logs tab displaying previous requests, dates, and color-coded status badges (Approved in Green, Pending in Amber, Rejected in Red).
+4. **Mock API Integration (`api.ts`)**:
+   - Exposed `submitLeaveRequest` and `getLeaveRequests` client actions to manipulate the mock database locally.
+
 ---
 
 ### Completed Module: Assignments Module (Assigned to: Stuti)
