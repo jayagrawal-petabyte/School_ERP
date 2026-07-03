@@ -47,7 +47,11 @@ function validateSubmission(payload, file) {
     return assignmentId;
 }
 
-function calculateSubmissionStatus(dueDate) {
+function calculateSubmissionStatus(dueDate, isSubmitted = true) {
+
+    if (!isSubmitted) {
+        return "pending";
+    }
 
     if (!dueDate) {
         return "submitted";
@@ -91,27 +95,42 @@ function submitAssignment(payload, file, user) {
         calculateSubmissionStatus(dueDate);
 
     return submissionStore.addSubmission({
-        assignmentId,
-        studentId: user.id,
-        fileName: file.originalname,
-        fileType: file.mimetype,
-        fileSize: file.size,
-        status: submissionStatus,
-        submittedAt: data.submittedAt || now()
-    });
+    assignment_id: assignmentId,
+    student_id: user.id,
+    file_url: null, // TODO: Replace with Supabase Storage URL
+    file_name: file.originalname,
+    file_type: file.mimetype,
+    file_size: file.size,
+    status: submissionStatus,
+    submitted_at: new Date().toISOString()
+});
 }
 
-function getSubmissionStatus(id) {
-    const submission =
-        submissionStore.findSubmission(id);
+function getSubmissionStatus(assignmentId, user) {
 
+    requireStudent(user);
+
+    const submission =
+        submissionStore.findSubmissionStatus(
+            assignmentId,
+            user.id
+        );
+
+    // Student has not submitted yet
     if (!submission) {
-        const error = new Error("Submission not found.");
-        error.statusCode = 404;
-        throw error;
+        return {
+            assignmentId,
+            studentId: user.id,
+            status: "pending"
+        };
     }
 
-    return submission;
+    return {
+        assignmentId,
+        studentId: user.id,
+        status: submission.status,
+        submittedAt: submission.submitted_at
+    };
 }
 
 function getStudentSubmissions(user) {
@@ -155,8 +174,6 @@ function downloadSubmission(id) {
         throw error;
     }
 
-    // TODO: Generate a signed download URL from Supabase Storage
-    // once the shared Supabase client is integrated.
 
     return submission;
 }

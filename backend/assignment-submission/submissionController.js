@@ -31,17 +31,25 @@ function submitAssignment(req, res) {
 }
 
 function getSubmissionStatus(req, res) {
-    try {
-        const submission = submissionService.getSubmissionStatus(
-            req.params.submissionId
-        );
 
-        return sendResponse(res, 200, submission);
+    try {
+
+        const user = submissionService.readUser(req);
+
+        const status =
+            submissionService.getSubmissionStatus(
+                req.params.assignmentId,
+                user
+            );
+
+        return sendResponse(res, 200, status);
+
     } catch (error) {
+
         return handleError(res, error);
+
     }
 }
-
 function getStudentSubmissions(req, res) {
     try {
         const user = submissionService.readUser(req);

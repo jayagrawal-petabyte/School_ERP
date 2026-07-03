@@ -9,18 +9,18 @@ function now() {
 function addSubmission(data) {
 
     const submission = {
-        id: String(nextId++),
-        assignmentId: String(data.assignmentId),
-        studentId: String(data.studentId),
-        fileName: data.fileName,
-        fileType: data.fileType,
-        fileSize: data.fileSize,
-        fileUrl: data.fileUrl || null,
-        status: data.status || "submitted",
-        submittedAt: now(),
-        createdAt: now(),
-        updatedAt: now()
-    };
+    id: String(nextId++),
+    assignment_id: data.assignment_id,
+    student_id: data.student_id,
+    file_url: data.file_url,
+    file_name: data.file_name,
+    file_type: data.file_type,
+    file_size: data.file_size,
+    status: data.status,
+    submitted_at: data.submitted_at,
+    created_at: now(),
+    updated_at: now()
+};
 
     submissions.push(submission);
 
@@ -39,22 +39,22 @@ function findSubmissionByAssignmentAndStudent(
 ) {
     return submissions.find(
         (submission) =>
-            submission.assignmentId === String(assignmentId) &&
-            submission.studentId === String(studentId)
+            submission.assignment_id === String(assignmentId) &&
+            submission.student_id === String(studentId)
     );
 }
 
 function findStudentSubmissions(studentId) {
     return submissions.filter(
         (submission) =>
-            submission.studentId === String(studentId)
+            submission.student_id === String(studentId)
     );
 }
 
 function findAssignmentSubmissions(assignmentId) {
     return submissions.filter(
         (submission) =>
-            submission.assignmentId === String(assignmentId)
+            submission.assignment_id === String(assignmentId)
     );
 }
 
@@ -67,7 +67,7 @@ function updateSubmission(id, changes) {
     }
 
     Object.assign(submission, changes, {
-        updatedAt: now()
+        updated_at: now()
     });
 
     return submission;
@@ -90,6 +90,14 @@ function removeSubmission(id) {
 
 function listSubmissions() {
     return submissions;
+}
+function findSubmissionStatus(assignmentId, studentId) {
+
+    return submissions.find(
+        (submission) =>
+            submission.assignment_id === String(assignmentId) &&
+            submission.student_id === String(studentId)
+    );
 }
 
 module.exports = {

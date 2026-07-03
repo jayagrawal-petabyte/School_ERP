@@ -18,7 +18,7 @@ router.post(
     submitAssignment
 );
 
-router.get("/status/:submissionId", getSubmissionStatus);
+router.get("/status/:assignmentId",getSubmissionStatus);
 
 router.get("/student", getStudentSubmissions);
 
