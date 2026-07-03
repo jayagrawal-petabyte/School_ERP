@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { SECURITY } from '../constants';
+import { SECURITY } from '../constants/auth';
 import { clearAllTokens } from '../utils/security';
 
 export const useSession = (onSessionExpired?: () => void) => {
