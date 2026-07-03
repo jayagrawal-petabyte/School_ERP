@@ -11,7 +11,13 @@ const TeacherSidebar = () => {
       icon: "📝",
       path: "/teacher/assignments",
     },
+    {
+      label: "Examination & Results",
+      icon: "🎓",
+      path: "/teacher/results",
+    },
   ];
+  
 
   const handleLogout = () => {
     logout();

@@ -7,7 +7,7 @@ import StudentSidebar from "./students/components/StudentSidebar";
 
 import ResultsPage from "./exams/ResultsPage"; 
 
-
+import ClassResultsPage from "./teachers/ClassResultsPage"; // Add this line
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 import TeacherLayout from "./teachers/components/TeacherLayout";
 import Login from "./auth/Login";
@@ -36,14 +36,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-<<<<<<< HEAD
-        <Route path="/" element={<StudentLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
+        {/* <Route path="/" element={<StudentLayout />}> */}
+          {/* <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="profile" element={<Profile />} />
-          <Route path="results" element={<ResultsPage />} /> {/* Add this line */}
-=======
+          <Route path="results" element={<ResultsPage />} /> Add this line */}
 
         {/* Login */}
         <Route path="/" element={<Login />} />
@@ -60,7 +58,7 @@ function App() {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/assignments" element={<StudentDashboard />} />
->>>>>>> 77287d2842c307ff7ae9f565ee6cb0127c3a561b
+          <Route path="/results" element={<ResultsPage />} />
         </Route>
 
         {/* Teacher */}
@@ -81,8 +79,10 @@ function App() {
             path="/teacher/assignments/create"
             element={<CreateAssignment />}
           />
-        </Route>
 
+          {/* <Route path="/teacher/results" element={<ResultsPage />} /> */}
+          <Route path="/teacher/results" element={<ClassResultsPage />} />
+        </Route>
         {/* Unknown route */}
         <Route path="*" element={<Navigate to="/" replace />} />
 
@@ -90,5 +90,6 @@ function App() {
     </BrowserRouter>
   );
 }
+
 
 export default App;
