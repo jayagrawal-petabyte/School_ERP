@@ -8,7 +8,7 @@ const AUTH_MESSAGES = Object.freeze({
 
     /* Authentication */
     LOGIN_REQUIRED: "Please log in to continue.",
-    INVALID_CREDENTIALS: "Invalid credentials.",
+    INVALID_CREDENTIALS: "Invalid email or password.",
     UNAUTHORIZED: "Unauthorized access.",
     FORBIDDEN: "You do not have permission to access this resource.",
 
@@ -19,7 +19,8 @@ const AUTH_MESSAGES = Object.freeze({
     /* JWT */
     TOKEN_REQUIRED: "Authentication token is required.",
     INVALID_TOKEN: "Invalid authentication token.",
-    TOKEN_EXPIRED: "Authentication token has expired. Please log in again.",
+    TOKEN_EXPIRED:
+        "Authentication token has expired. Please log in again.",
 
     /* Account Security */
     ACCOUNT_LOCKED:
@@ -30,10 +31,14 @@ const AUTH_MESSAGES = Object.freeze({
 
     /* Validation */
     INVALID_REQUEST: "Invalid request data.",
+    EMAIL_REQUIRED: "Email is required.",
+    INVALID_EMAIL: "Please provide a valid email address.",
+    PASSWORD_REQUIRED: "Password is required.",
+    INVALID_PASSWORD: "Password must be a valid string.",
 
     /* Server */
     INTERNAL_SERVER_ERROR:
-        "An unexpected server error occurred. Please try again later."
+        "An unexpected server error occurred. Please try again later.",
 });
 
 module.exports = AUTH_MESSAGES;

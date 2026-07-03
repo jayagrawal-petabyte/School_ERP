@@ -9,26 +9,29 @@ const {
 const AUTH_MESSAGES = require("../constants/authMessages");
 
 
+  //Login validation rules.
+ 
 const loginValidationRules = [
     body("email")
         .trim()
         .notEmpty()
-        .withMessage("Email is required.")
+        .withMessage(AUTH_MESSAGES.EMAIL_REQUIRED)
         .bail()
         .isEmail()
-        .withMessage("Please provide a valid email address.")
+        .withMessage(AUTH_MESSAGES.INVALID_EMAIL)
         .normalizeEmail(),
 
     body("password")
-        .trim()
         .notEmpty()
-        .withMessage("Password is required.")
+        .withMessage(AUTH_MESSAGES.PASSWORD_REQUIRED)
         .bail()
         .isString()
-        .withMessage("Password must be a valid string."),
+        .withMessage(AUTH_MESSAGES.INVALID_PASSWORD),
 ];
 
 
+ //Authorization header validation rules.
+ 
 const authorizationValidationRules = [
     header("authorization")
         .notEmpty()
@@ -39,6 +42,8 @@ const authorizationValidationRules = [
 ];
 
 
+  //Validates incoming request.
+ 
 function validateRequest(req, res, next) {
     const errors = validationResult(req);
 
