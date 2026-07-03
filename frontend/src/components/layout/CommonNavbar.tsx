@@ -14,7 +14,7 @@ const CommonNavbar = ({ title, role }: CommonNavbarProps) => {
   });
 
   return (
-    <header className="flex items-center justify-between bg-white shadow-sm rounded-xl px-6 py-4 mb-6">
+    <header className="flex items-center justify-between bg-white shadow-sm rounded-xl px-6 py-4 mb-6 pl-16 md:pl-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-800">{title}</h1>
         <p className="text-gray-500 text-sm">

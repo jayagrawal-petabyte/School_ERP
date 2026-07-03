@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { AssignmentCard } from '../components/AssignmentCard';
+import StudentSubmitAssignment from './StudentSubmitAssignment';
 
-interface Assignment {
+type Assignment = {
   id: string;
   title: string;
   description: string;
   dueDate: string;
   maxMarks: number;
   status: 'pending' | 'submitted';
-}
+};
+
 
 export const StudentDashboard: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'submitted'>('all');
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
 
   const mockAssignments: Assignment[] = [
     {
@@ -96,10 +100,26 @@ export const StudentDashboard: React.FC = () => {
               maxMarks={assignment.maxMarks}
               role="student"
               status={assignment.status}
+              onSubmit={() => {
+                setActiveAssignment(assignment);
+                setSubmitOpen(true);
+              }}
             />
           ))}
         </div>
       )}
+        {submitOpen && activeAssignment && (
+          <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-3xl">
+              <StudentSubmitAssignment
+                assignmentId={activeAssignment.id}
+                assignmentTitle={activeAssignment.title}
+                onClose={() => setSubmitOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+
     </div>
   );
 };

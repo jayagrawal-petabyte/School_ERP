@@ -2,17 +2,17 @@ import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 
-import TeacherSidebar from "./TeacherSidebar";
+import AdminSidebar from "./AdminSidebar";
 import CommonNavbar from "../../components/layout/CommonNavbar";
 import Footer from "../../components/layout/Footer";
 
-const TeacherLayout: React.FC = () => {
+const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFF]">
+    <div className="flex bg-[#F8FAFF] min-h-screen">
       {/* Sidebar */}
-      <TeacherSidebar
+      <AdminSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -20,17 +20,16 @@ const TeacherLayout: React.FC = () => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="fixed top-5 left-4 z-50 p-2 rounded-lg bg-[#2f3273] text-white shadow-lg md:hidden hover:bg-[#24265a] transition-colors"
-        aria-label="Open sidebar"
+        className="md:hidden fixed top-4 left-4 z-50 bg-[#2f3273] text-white p-2 rounded-lg shadow-lg"
       >
         <Menu size={22} />
       </button>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 pt-16 md:pt-6">
+      <main className="flex-1 p-6 overflow-y-auto">
         <CommonNavbar
-          title="Teacher Dashboard"
-          role="Teacher"
+          title="Admin Dashboard"
+          role="Admin"
         />
 
         <Outlet />
@@ -41,4 +40,4 @@ const TeacherLayout: React.FC = () => {
   );
 };
 
-export default TeacherLayout;
+export default AdminLayout;

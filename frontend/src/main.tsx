@@ -4,11 +4,14 @@ import "./index.css";
 import App from "./App";
 
 import { AuthProvider } from "./context/AuthContext";
+import { ERPProvider } from "./context/ERPContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <ERPProvider>
+        <App />
+      </ERPProvider>
     </AuthProvider>
   </StrictMode>
 );

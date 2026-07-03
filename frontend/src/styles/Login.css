@@ -47,9 +47,10 @@ body{
 }
 
 .role.active{
-    border-color:#5b4cf0;
-    color:#5b4cf0;
+    border-color:#6C63FF;
+    color:#6C63FF;
     font-weight:bold;
+    box-shadow: 0 10px 30px rgba(108, 99, 255, 0.45);
 }
 
 .input-group{
@@ -77,15 +78,31 @@ body{
     font-size:14px;
 }
 
-.login-btn{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:8px;
-    background:#5b4cf0;
-    color:white;
-    font-size:17px;
-    cursor:pointer;
+.login-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6C63FF, #5A4CF0);
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(108, 99, 255, 0.35);
+}
+
+.login-btn:active {
+  transform: scale(0.98);
+}
+
+.login-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .role{
@@ -102,12 +119,13 @@ body{
 
     cursor:pointer;
 
-    transition:.3s;
+    transition: all 0.25s ease;
 }
 
-.role:hover{
-    border-color:#5b4cf0;
-    transform:translateY(-2px);
+.role:hover {
+  border-color: #6C63FF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 99, 255, 0.15);
 }
 .password-container {
   position: relative;
@@ -129,4 +147,67 @@ body{
 
 .password-toggle:hover {
   color: #5b4df0;
+}
+
+.login-header{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.login-logo{
+    width:70px;
+    height:70px;
+    margin:0 auto 15px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:34px;
+
+    background:#6C63FF;
+    color:white;
+
+    border-radius:50%;
+
+    box-shadow:0 8px 20px rgba(108,99,255,.25);
+}
+
+input {
+  transition: all 0.25s ease;
+}
+
+input:focus {
+  border-color: #6C63FF;
+  box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.15);
+   outline: none;  
+}
+
+.error-text {
+  color: #e53935;
+  font-size: 13px;
+  margin-top: 6px;
+  margin-left: 2px;
+  font-weight: 500;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: fadeUp 0.5s ease;
+}
+
+.login-error {
+  text-align: center;
+  margin: 12px 0;
 }
