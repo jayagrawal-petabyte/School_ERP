@@ -14,7 +14,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import RoleTabs from '../components/RoleTabs';
 import SecureInput from '../components/SecureInput';
 import PrimaryButton from '../components/PrimaryButton';
-import { ROLES, COLORS, SECURITY } from '../constants';
+import { COLORS } from "../constants";
+import { ROLES, SECURITY } from "../constants/auth";
 import {
   isValidIdentifier,
   isAccountLocked,

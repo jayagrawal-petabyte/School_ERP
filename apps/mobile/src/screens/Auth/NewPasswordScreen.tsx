@@ -13,7 +13,8 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import SecureInput from '../components/SecureInput';
 import PrimaryButton from '../components/PrimaryButton';
-import { COLORS, SECURITY } from '../constants';
+import { COLORS } from '../constants';
+import { SECURITY } from '../constants/auth';
 import { getPasswordStrength, validatePassword } from '../utils/security';
 import { RootStackParamList } from '../navigation/types';
 

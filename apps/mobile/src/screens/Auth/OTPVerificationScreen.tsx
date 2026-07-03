@@ -13,7 +13,8 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import OTPInput from '../components/OTPInput';
 import PrimaryButton from '../components/PrimaryButton';
-import { COLORS, SECURITY } from '../constants';
+import { COLORS } from '../constants';
+import { SECURITY } from '../constants/auth';
 import { RootStackParamList } from '../navigation/types';
 
 const ACCENT = '#4F46E5';
