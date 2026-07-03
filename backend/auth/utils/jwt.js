@@ -12,20 +12,20 @@ const {
 
 function generateToken(payload) {
     if (
-    !payload ||
-    typeof payload !== "object" ||
-    !String(payload.id).trim() ||
-    !String(payload.email).trim() ||
-    !String(payload.role).trim()
-)   {
+        !payload ||
+        typeof payload !== "object" ||
+        !payload.id ||
+        !String(payload.email).trim() ||
+        !String(payload.role).trim()
+    ) {
         throw new Error(AUTH_MESSAGES.INVALID_REQUEST);
     }
 
     return jwt.sign(
         {
             id: payload.id,
-            email: payload.email,
-            role: payload.role,
+            email: payload.email.trim(),
+            role: payload.role.trim().toLowerCase(),
         },
         SECRET,
         {

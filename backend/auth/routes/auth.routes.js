@@ -1,4 +1,3 @@
-
 "use strict";
 
 const express = require("express");
@@ -17,7 +16,7 @@ const {
 
 const router = express.Router();
 
-
+//user login
 router.post(
     "/login",
     loginValidationRules,
@@ -25,6 +24,7 @@ router.post(
     authController.login
 );
 
+//user logout
 router.post(
     "/logout",
     authorizationValidationRules,
@@ -42,4 +42,4 @@ router.get(
     authController.getCurrentUser
 );
 
-module.exports = router;
+module.exports = Object.freeze(router);

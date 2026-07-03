@@ -3,7 +3,9 @@
 const { verifyToken } = require("../utils/jwt");
 const AUTH_MESSAGES = require("../constants/authMessages");
 
-
+/**
+ * Authenticate JWT token.
+ */
 function authenticateToken(req, res, next) {
     const authorizationHeader = req.get("Authorization");
 
@@ -31,11 +33,11 @@ function authenticateToken(req, res, next) {
 
         req.user = decodedToken;
 
-        next();
+        return next();
     } catch (error) {
         return res.status(401).json({
             success: false,
-            message: error.message,
+            message: error.message || AUTH_MESSAGES.INVALID_TOKEN,
         });
     }
 }

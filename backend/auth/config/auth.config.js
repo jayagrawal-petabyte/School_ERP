@@ -1,7 +1,5 @@
 "use strict";
 
-
-
 const AUTH_CONFIG = Object.freeze({
 
     /* JWT Configuration */
@@ -22,5 +20,9 @@ const AUTH_CONFIG = Object.freeze({
     },
 
 });
+
+if (!AUTH_CONFIG.JWT.SECRET) {
+    throw new Error("JWT_SECRET environment variable is not configured.");
+}
 
 module.exports = AUTH_CONFIG;

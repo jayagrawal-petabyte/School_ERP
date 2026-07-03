@@ -20,18 +20,14 @@ function authorizeRoles(...allowedRoles) {
             });
         }
 
-        if (
-            !allowedRoles.includes(
-                String(user.role)
-            )
-        ) {
+        if (!allowedRoles.includes(String(user.role))) {
             return res.status(403).json({
                 success: false,
                 message: AUTH_MESSAGES.FORBIDDEN,
             });
         }
 
-        next();
+        return next();
     };
 }
 

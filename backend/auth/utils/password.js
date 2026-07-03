@@ -32,7 +32,8 @@ async function comparePassword(
     if (
         typeof plainPassword !== "string" ||
         !plainPassword.trim() ||
-        typeof hashedPassword !== "string"
+        typeof hashedPassword !== "string" ||
+        !hashedPassword.trim()
     ) {
         throw new Error(AUTH_MESSAGES.INVALID_REQUEST);
     }
