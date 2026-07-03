@@ -94,14 +94,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
 
         if (selectedRole.requiresMFA) {
-  navigation.navigate('MFA', {
-    role: selectedRole,
-  });
-} else {
-  navigation.replace('Dashboard', {
-    role: selectedRole,
-  });
-}
+          navigation.navigate('MFA', {
+            role: selectedRole,
+          });
+        } else if (selectedRole.key === 'student' || selectedRole.key === 'teacher') {
+          navigation.replace('Home', {
+            initialRole: selectedRole.key,
+          });
+        } else {
+          navigation.replace('Dashboard', {
+            role: selectedRole,
+          });
+        }
       } else {
         recordFailedAttempt(identifier);
         const remaining = getRemainingAttempts(identifier);

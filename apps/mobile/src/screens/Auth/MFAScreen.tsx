@@ -37,9 +37,15 @@ const MFAScreen: React.FC<Props> = ({ navigation, route }) => {
   try {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    navigation.replace('Dashboard', {
-      role,
-    });
+    if (role && (role.key === 'student' || role.key === 'teacher')) {
+      navigation.replace('Home', {
+        initialRole: role.key as 'student' | 'teacher',
+      });
+    } else {
+      navigation.replace('Dashboard', {
+        role,
+      });
+    }
   } catch (error) {
     Alert.alert('Error', 'OTP verification failed.');
   } finally {

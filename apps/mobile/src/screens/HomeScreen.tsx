@@ -10,13 +10,16 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
+type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 interface Props {
+  route: HomeScreenRouteProp;
   navigation: HomeScreenNavigationProp;
 }
 
@@ -29,8 +32,15 @@ interface AcademicItem {
   params?: any;
 }
 
-export default function HomeScreen({ navigation }: Props) {
-  const [role, setRole] = useState<'teacher' | 'student'>('teacher');
+export default function HomeScreen({ route, navigation }: Props) {
+  const { initialRole } = route.params || {};
+  const [role, setRole] = useState<'teacher' | 'student'>(initialRole || 'teacher');
+
+  React.useEffect(() => {
+    if (initialRole) {
+      setRole(initialRole);
+    }
+  }, [initialRole]);
 
   const getAcademicItems = (): AcademicItem[] => {
     const baseItems: AcademicItem[] = [
