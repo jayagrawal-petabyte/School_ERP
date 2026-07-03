@@ -28,6 +28,10 @@ const toResultResponse = (result, role) => {
     response.teacher_id = result.teacher_id ?? result.teacherId;
   }
 
+  // optional metadata added when repository/service provides joined records
+  if (result.exam_meta) response.exam_meta = result.exam_meta;
+  if (result.subject_meta) response.subject_meta = result.subject_meta;
+
   return response;
 };
 

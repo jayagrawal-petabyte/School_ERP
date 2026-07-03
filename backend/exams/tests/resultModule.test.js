@@ -2,6 +2,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const resultService = require('../service/resultService');
+const relationshipService = require('../service/relationshipService');
+const resultRepository = require('../repository/resultRepository');
+
+// stub DB-dependent methods for tests to avoid real Supabase calls
+relationshipService.examExists = async () => true;
+relationshipService.subjectExists = async () => true;
+resultRepository.create = async (payload) => ({ id: 'stub-1', ...payload });
+resultRepository.findById = async (id) => ({ id: id || 'stub-1', student_id: 'student-1', teacher_id: 'teacher-1', subject_id: 'math', exam_id: 'midterm', marks_obtained: 82, class_id: 'class-7', max_marks: 100, passing_marks: 33, status: 'pass', created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
 
 const makeUser = (overrides = {}) => ({
   id: 'teacher-1',

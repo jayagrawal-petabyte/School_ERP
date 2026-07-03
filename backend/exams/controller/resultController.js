@@ -10,7 +10,7 @@ const createResult = async (req, res) => {
 };
 
 const updateResult = async (req, res) => {
-  const result = await resultService.updateResult(req.params.id, req.body);
+  const result = await resultService.updateResult(req.params.id, req.body, req.user);
   res.status(200).json({
     success: true,
     data: resultDto.toResultResponse(result, req.user.role),
@@ -26,7 +26,17 @@ const getResultById = async (req, res) => {
 };
 
 const getAllResults = async (req, res) => {
-  const results = await resultService.getAllResults(req.user);
+  const results = await resultService.getAllResults(req.user, req.query);
+  // results may contain pagination
+  if (results && results.pagination) {
+    res.status(200).json({
+      success: true,
+      data: resultDto.toResultsResponse(results.data, req.user.role),
+      pagination: results.pagination,
+    });
+    return;
+  }
+
   res.status(200).json({
     success: true,
     data: resultDto.toResultsResponse(results, req.user.role),
@@ -34,7 +44,16 @@ const getAllResults = async (req, res) => {
 };
 
 const getMyResults = async (req, res) => {
-  const results = await resultService.getMyResults(req.user);
+  const results = await resultService.getMyResults(req.user, req.query);
+  if (results && results.pagination) {
+    res.status(200).json({
+      success: true,
+      data: resultDto.toResultsResponse(results.data, req.user.role),
+      pagination: results.pagination,
+    });
+    return;
+  }
+
   res.status(200).json({
     success: true,
     data: resultDto.toResultsResponse(results, req.user.role),

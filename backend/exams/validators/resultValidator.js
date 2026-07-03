@@ -20,10 +20,6 @@ const validateMarks = (req, res, next) => {
   const maxMarks = req.body.max_marks ?? req.body.maxMarks ?? 100;
   const passingMarks = req.body.passing_marks ?? req.body.passingMarks ?? Math.min(33, Number(maxMarks) || 100);
 
-  if (req.method === 'POST' && (marks === undefined || marks === null || marks === '')) {
-    return next(new AppError('Marks are required', 400));
-  }
-
   if (marks !== undefined && marks !== null && marks !== '') {
     const marksNum = Number(marks);
 
@@ -37,6 +33,9 @@ const validateMarks = (req, res, next) => {
 
     req.body.marks_obtained = marksNum;
     delete req.body.marks;
+  } else {
+    delete req.body.marks;
+    delete req.body.marks_obtained;
   }
 
   if (maxMarks !== undefined && maxMarks !== null && maxMarks !== '') {
