@@ -9,6 +9,7 @@ import AssignmentListScreen from '../screens/AssignmentListScreen';
 import AssignmentDetailsScreen from '../screens/AssignmentDetailsScreen';
 import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
 import { theme } from '../theme';
+import LeaveRequestScreen from '../screens/LeaveRequestScreen';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   AssignmentList: { classId: string; className: string };
   AssignmentDetails: { assignmentId: string };
   SubmitAssignment: { assignmentId: string; title: string; subject: string };
+  LeaveRequest: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -94,6 +96,11 @@ export default function AppNavigator() {
         name="SubmitAssignment"
         component={SubmitAssignmentScreen}
         options={{ title: 'Submit Assignment' }}
+      />
+      <Stack.Screen
+        name="LeaveRequest"
+        component={LeaveRequestScreen}
+        options={{ title: 'Apply Leave' }}
       />
     </Stack.Navigator>
   );
