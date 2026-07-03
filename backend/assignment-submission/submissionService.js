@@ -16,8 +16,20 @@ function requireStudent(user) {
     }
 }
 
-function validateSubmission(payload, file) {
+function validateStudentOwnership(payload, user) {
+    if (
+        payload.studentId &&
+        String(payload.studentId) !== String(user.id)
+    ) {
+        const error = new Error(
+            "You can only submit your own assignment."
+        );
+        error.statusCode = 403;
+        throw error;
+    }
+}
 
+function validateSubmission(payload, file) {
     const assignmentId = String(payload.assignmentId || "").trim();
 
     if (!assignmentId) {
@@ -35,9 +47,27 @@ function validateSubmission(payload, file) {
     return assignmentId;
 }
 
-function submitAssignment(payload, file, user) {
+function calculateSubmissionStatus(dueDate) {
 
+    if (!dueDate) {
+        return "submitted";
+    }
+
+    const today = new Date();
+    const assignmentDueDate = new Date(dueDate);
+
+    today.setHours(0, 0, 0, 0);
+    assignmentDueDate.setHours(0, 0, 0, 0);
+
+    return today > assignmentDueDate
+        ? "late"
+        : "submitted";
+}
+
+function submitAssignment(payload, file, user) {
     requireStudent(user);
+
+    validateStudentOwnership(payload, user);
 
     const assignmentId = validateSubmission(payload, file);
 
@@ -55,18 +85,23 @@ function submitAssignment(payload, file, user) {
         throw error;
     }
 
+    const dueDate = null;
+
+    const submissionStatus =
+        calculateSubmissionStatus(dueDate);
+
     return submissionStore.addSubmission({
         assignmentId,
         studentId: user.id,
         fileName: file.originalname,
         fileType: file.mimetype,
         fileSize: file.size,
-        status: "submitted"
+        status: submissionStatus,
+        submittedAt: data.submittedAt || now()
     });
 }
 
 function getSubmissionStatus(id) {
-
     const submission =
         submissionStore.findSubmission(id);
 
@@ -80,7 +115,6 @@ function getSubmissionStatus(id) {
 }
 
 function getStudentSubmissions(user) {
-
     requireStudent(user);
 
     return submissionStore.findStudentSubmissions(
@@ -92,15 +126,15 @@ function getAssignmentSubmissions(
     assignmentId,
     user
 ) {
-
     const role = String(user.role || "").toLowerCase();
 
     if (
         role !== "teacher" &&
-        role !== "admin"
+        role !== "admin" &&
+        role !== "principal"
     ) {
         const error = new Error(
-            "Only teachers and admins can view assignment submissions."
+            "Only teachers, principals, and admins can view assignment submissions."
         );
         error.statusCode = 403;
         throw error;
@@ -112,7 +146,6 @@ function getAssignmentSubmissions(
 }
 
 function downloadSubmission(id) {
-
     const submission =
         submissionStore.findSubmission(id);
 
@@ -121,6 +154,9 @@ function downloadSubmission(id) {
         error.statusCode = 404;
         throw error;
     }
+
+    // TODO: Generate a signed download URL from Supabase Storage
+    // once the shared Supabase client is integrated.
 
     return submission;
 }

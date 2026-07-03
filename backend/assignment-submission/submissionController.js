@@ -25,7 +25,6 @@ function submitAssignment(req, res) {
         );
 
         return sendResponse(res, 201, submission);
-
     } catch (error) {
         return handleError(res, error);
     }
@@ -38,7 +37,6 @@ function getSubmissionStatus(req, res) {
         );
 
         return sendResponse(res, 200, submission);
-
     } catch (error) {
         return handleError(res, error);
     }
@@ -51,7 +49,6 @@ function getStudentSubmissions(req, res) {
         const submissions = submissionService.getStudentSubmissions(user);
 
         return sendResponse(res, 200, submissions);
-
     } catch (error) {
         return handleError(res, error);
     }
@@ -67,7 +64,6 @@ function getAssignmentSubmissions(req, res) {
         );
 
         return sendResponse(res, 200, submissions);
-
     } catch (error) {
         return handleError(res, error);
     }
@@ -83,7 +79,6 @@ function downloadSubmission(req, res) {
         );
 
         return sendResponse(res, 200, submission);
-
     } catch (error) {
         return handleError(res, error);
     }
