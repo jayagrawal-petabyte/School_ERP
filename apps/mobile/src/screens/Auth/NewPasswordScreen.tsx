@@ -11,12 +11,12 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import SecureInput from '../components/SecureInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
-import { SECURITY } from '../constants/auth';
-import { getPasswordStrength, validatePassword } from '../utils/security';
-import { RootStackParamList } from '../navigation/types';
+import SecureInput from '../../components/Auth/SecureInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { SECURITY } from '../../constants/auth';
+import { getPasswordStrength, validatePassword } from '../../utils/security';
+import { RootStackParamList } from '../../navigation/types';
 
 const ACCENT = '#4F46E5';
 

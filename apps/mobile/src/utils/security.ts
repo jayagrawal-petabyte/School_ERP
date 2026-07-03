@@ -1,4 +1,4 @@
-import { SECURITY } from '../constants';
+import { SECURITY } from '../constants/auth';
 import type { DimensionValue } from 'react-native';
 
 export const sanitizeInput = (input: string = ''): string => {

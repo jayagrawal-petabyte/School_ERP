@@ -11,11 +11,11 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import OTPInput from '../components/OTPInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
-import { SECURITY } from '../constants/auth';
-import { RootStackParamList } from '../navigation/types';
+import OTPInput from '../../components/Auth/OTPInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { SECURITY } from '../../constants/auth';
+import { RootStackParamList } from '../../navigation/types';
 
 const ACCENT = '#4F46E5';
 
@@ -31,7 +31,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   useEffect(() => {
     if (countdown <= 0) { setCanResend(true); return; }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    const timer = setTimeout(() => setCountdown((c: number) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
 

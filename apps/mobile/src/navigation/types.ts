@@ -1,0 +1,24 @@
+import { Role } from '../constants/auth';
+
+export type RootStackParamList = {
+  // Academics Module
+  Home: undefined;
+  AttendanceList: undefined;
+  MarkAttendance: { classId: string; className: string };
+  AttendanceHistory: { classId: string; className: string; defaultStudentName?: string };
+  AttendanceReports: { classId: string; className: string };
+  AssignmentList: { classId: string; className: string };
+  AssignmentDetails: { assignmentId: string };
+  SubmitAssignment: { assignmentId: string; title: string; subject: string };
+  LeaveRequest: undefined;
+
+  // Authentication Module
+  Splash: undefined;
+  Login: undefined;
+  ForgotPassword: undefined;
+  OTPVerification: { identifier?: string; type: 'email' | 'phone' };
+  NewPassword: { identifier?: string };
+  PasswordSuccess: undefined;
+  MFA: { role: Role };
+  Dashboard: { role: Role };
+};

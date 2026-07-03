@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
-import { RootStackParamList } from '../navigation/types';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PasswordSuccess'>;
 

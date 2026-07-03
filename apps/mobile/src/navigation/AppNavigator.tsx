@@ -8,37 +8,32 @@ import AttendanceReportsScreen from '../screens/AttendanceReportsScreen';
 import AssignmentListScreen from '../screens/AssignmentListScreen';
 import AssignmentDetailsScreen from '../screens/AssignmentDetailsScreen';
 import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
-import { theme } from '../theme';
 import LeaveRequestScreen from '../screens/LeaveRequestScreen';
-
-export type RootStackParamList = {
-  Home: undefined;
-  AttendanceList: undefined;
-  MarkAttendance: { classId: string; className: string };
-  AttendanceHistory: { classId: string; className: string; defaultStudentName?: string };
-  AttendanceReports: { classId: string; className: string };
-  AssignmentList: { classId: string; className: string };
-  AssignmentDetails: { assignmentId: string };
-  SubmitAssignment: { assignmentId: string; title: string; subject: string };
-  LeaveRequest: undefined;
-};
+import SplashScreen from '../screens/Auth/SplashScreen';
+import LoginScreen from '../screens/Auth/LoginScreen';
+import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
+import OTPVerificationScreen from '../screens/Auth/OTPVerificationScreen';
+import NewPasswordScreen from '../screens/Auth/NewPasswordScreen';
+import PasswordSuccessScreen from '../screens/Auth/PasswordSuccessScreen';
+import MFAScreen from '../screens/Auth/MFAScreen';
+import DashboardScreen from '../screens/Auth/DashboardScreen';
+import { RootStackParamList } from './types';
+export { RootStackParamList };
+import { theme } from '../theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="Splash"
       screenOptions={{
         headerShown: false,
         contentStyle: {
           backgroundColor: theme.colors.background,
         },
-        // Enable smooth slide transitions across both Android and iOS
         animation: 'slide_from_right',
-        // Restrict orientation to portrait to maintain layout structure
         orientation: 'portrait',
-        // Fallback styling configurations for sub-stacks or header activations
         headerStyle: {
           backgroundColor: theme.colors.surface,
         },
@@ -50,6 +45,17 @@ export default function AppNavigator() {
         headerShadowVisible: false,
       }}
     >
+      {/* Authentication screens */}
+      <Stack.Screen name="Splash" component={SplashScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+      <Stack.Screen name="NewPassword" component={NewPasswordScreen} />
+      <Stack.Screen name="PasswordSuccess" component={PasswordSuccessScreen} />
+      <Stack.Screen name="MFA" component={MFAScreen} />
+      <Stack.Screen name="Dashboard" component={DashboardScreen} />
+
+      {/* Main app screens */}
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -65,7 +71,7 @@ export default function AppNavigator() {
         component={MarkAttendanceScreen}
         options={({ route }) => ({ 
           title: `Mark - ${route.params.className}`,
-          animation: 'slide_from_bottom', // Custom smooth entry for marking sheet
+          animation: 'slide_from_bottom',
         })}
       />
       <Stack.Screen

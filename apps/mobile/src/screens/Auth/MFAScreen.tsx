@@ -8,11 +8,10 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-import OTPInput from '../components/OTPInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
-import { RootStackParamList } from '../navigation/types';
+import OTPInput from '../../components/Auth/OTPInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'MFA'>;
 

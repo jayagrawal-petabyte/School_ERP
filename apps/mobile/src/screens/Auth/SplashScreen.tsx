@@ -7,8 +7,8 @@ import {
 } from "react-native";
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { getToken } from "../utils/security";
-import { RootStackParamList } from '../navigation/types';
+import { getToken } from "../../utils/security";
+import { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
 

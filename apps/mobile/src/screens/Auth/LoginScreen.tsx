@@ -11,11 +11,11 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import RoleTabs from '../components/RoleTabs';
-import SecureInput from '../components/SecureInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from "../constants";
-import { ROLES, SECURITY } from "../constants/auth";
+import RoleTabs from '../../components/Auth/RoleTabs';
+import SecureInput from '../../components/Auth/SecureInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { ROLES, SECURITY } from '../../constants/auth';
 import {
   isValidIdentifier,
   isAccountLocked,
@@ -24,8 +24,8 @@ import {
   getRemainingAttempts,
   getRemainingLockoutTime,
   storeToken,
-} from '../utils/security';
-import { RootStackParamList } from '../navigation/types';
+} from '../../utils/security';
+import { RootStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 

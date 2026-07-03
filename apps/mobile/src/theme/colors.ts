@@ -39,6 +39,7 @@ export const colors = {
   // Borders
   border: '#E4E7EC',
   borderLight: '#F2F4F7',
+  tabBg: '#F2F4F7',
 };
 
 export type ColorsType = typeof colors;

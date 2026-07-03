@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   View,
   Text,
@@ -10,8 +9,8 @@ import {
   StyleProp,
   ViewStyle,
 } from 'react-native';
-import { sanitizeInput } from '../utils/security';
-import { COLORS } from '../constants';
+import { sanitizeInput } from '../../utils/security';
+import { COLORS } from '../../constants/theme';
 
 interface SecureInputProps {
   label?: string;
@@ -78,16 +77,12 @@ const SecureInput: React.FC<SecureInputProps> = ({
         />
         {showToggle && (
           <TouchableOpacity
-  style={styles.toggleBtn}
-  onPress={() => setIsPasswordVisible((v) => !v)}
-  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
->
-  <Ionicons
-    name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-    size={22}
-    color={COLORS.textMuted}
-  />
-</TouchableOpacity>
+            style={styles.toggleBtn}
+            onPress={() => setIsPasswordVisible((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={{ fontSize: 16 }}>{isPasswordVisible ? "👁️" : "🙈"}</Text>
+          </TouchableOpacity>
         )}
       </View>
 

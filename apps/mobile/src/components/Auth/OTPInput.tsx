@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { View, TextInput, StyleSheet, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
-import { COLORS } from '../constants';
+import { COLORS } from '../../constants/theme';
 
 interface OTPInputProps {
   otp: string[];
@@ -33,7 +33,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ otp, setOtp, accentColor = '#4F46E5
       {Array.from({ length }).map((_, i) => (
         <TextInput
           key={i}
-          ref={(r) => (refs.current[i] = r)}
+          ref={(r) => { refs.current[i] = r; }}
           style={[
             styles.box,
             otp[i] ? { borderColor: accentColor } : { borderColor: COLORS.border },
