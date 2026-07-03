@@ -15,7 +15,7 @@ export type RootStackParamList = {
   Home: undefined;
   AttendanceList: undefined;
   MarkAttendance: { classId: string; className: string };
-  AttendanceHistory: { classId: string; className: string };
+  AttendanceHistory: { classId: string; className: string; defaultStudentName?: string };
   AttendanceReports: { classId: string; className: string };
   AssignmentList: { classId: string; className: string };
   AssignmentDetails: { assignmentId: string };

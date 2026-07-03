@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AttendanceList'>;
+type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 interface Props {
   navigation: HomeScreenNavigationProp;
@@ -30,37 +30,67 @@ interface AcademicItem {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const academicItems: AcademicItem[] = [
-    { id: '1', title: 'Students', emoji: '🧑‍🎓', color: '#E0F2FE' },
-    { id: '2', title: 'Teachers', emoji: '👩‍🏫', color: '#FCE7F3' },
-    { 
-      id: '3', 
-      title: 'Attendance', 
-      emoji: '📋', 
-      color: '#ECFDF5',
-      route: 'AttendanceList'
-    },
-    { id: '4', title: 'Syllabus', emoji: '📖', color: '#F3F4F6' },
-    { id: '5', title: 'Time Table', emoji: '🗓️', color: '#EFF6FF' },
-    { 
-      id: '6', 
-      title: 'Assignments', 
-      emoji: '📝', 
-      color: '#FFF9E6',
-      route: 'AssignmentList',
-      params: { classId: '1', className: 'Standard - 8 - C' }
-    },
-    { id: '7', title: 'Exams', emoji: '✍️', color: '#FEE4E2' },
-    { id: '8', title: 'Results', emoji: '📊', color: '#E0F2FE' },
-    { id: '9', title: 'Fees', emoji: '💵', color: '#ECFDF5' },
-    { id: '10', title: 'Events', emoji: '📅', color: '#FFF6ED' },
-    { id: '11', title: 'Inbox', emoji: '✉️', color: '#FFF9E6' },
-    { id: '12', title: 'Ask Doubt', emoji: '🙋', color: '#F3F4F6' },
-  ];
+  const [role, setRole] = useState<'teacher' | 'student'>('teacher');
+
+  const getAcademicItems = (): AcademicItem[] => {
+    const baseItems: AcademicItem[] = [
+      { id: '1', title: 'Teachers', emoji: '👩‍🏫', color: '#FCE7F3' },
+      { id: '2', title: 'Syllabus', emoji: '📖', color: '#F3F4F6' },
+      { id: '3', title: 'Time Table', emoji: '🗓️', color: '#EFF6FF' },
+      { 
+        id: '4', 
+        title: 'Assignments', 
+        emoji: '📝', 
+        color: '#FFF9E6',
+        route: 'AssignmentList',
+        params: { classId: '1', className: 'Standard - 8 - C' }
+      },
+      { id: '5', title: 'Exams', emoji: '✍️', color: '#FEE4E2' },
+      { id: '6', title: 'Results', emoji: '📊', color: '#E0F2FE' },
+      { id: '7', title: 'Fees', emoji: '💵', color: '#ECFDF5' },
+      { id: '8', title: 'Events', emoji: '📅', color: '#FFF6ED' },
+      { id: '9', title: 'Inbox', emoji: '✉️', color: '#FFF9E6' },
+      { id: '10', title: 'Ask Doubt', emoji: '🙋', color: '#F3F4F6' },
+    ];
+
+    if (role === 'teacher') {
+      // Teacher panel items
+      return [
+        { id: 't0', title: 'Students', emoji: '🧑‍🎓', color: '#E0F2FE' },
+        { 
+          id: 't_attendance', 
+          title: 'Attendance', 
+          emoji: '📋', 
+          color: '#ECFDF5',
+          route: 'AttendanceList'
+        },
+        ...baseItems
+      ];
+    } else {
+      // Student panel items
+      return [
+        { 
+          id: 's_leave', 
+          title: 'Apply Leave', 
+          emoji: '✉️', 
+          color: '#FFF6ED',
+          route: 'LeaveRequest'
+        },
+        { 
+          id: 's_attendance', 
+          title: 'Attendance', 
+          emoji: '📋', 
+          color: '#ECFDF5',
+          route: 'AttendanceHistory',
+          params: { classId: '1', className: 'Standard - 8 - C', defaultStudentName: 'Sofia Morales' }
+        },
+        ...baseItems
+      ];
+    }
+  };
 
   const handlePressItem = (item: AcademicItem) => {
     if (item.route) {
-      // Navigate to the module
       navigation.navigate(item.route as any, item.params);
     } else {
       Alert.alert(
@@ -75,11 +105,13 @@ export default function HomeScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header Profile Info (Michael Smith / Sofia Morales) */}
+      {/* Header Profile Info */}
       <View style={styles.header}>
         <View style={styles.profileContainer}>
           <Text style={styles.greeting}>Hello</Text>
-          <Text style={styles.userName}>Sofia Morales</Text>
+          <Text style={styles.userName}>
+            {role === 'teacher' ? 'Mrs. Shradha Sen' : 'Sofia Morales'}
+          </Text>
         </View>
         <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
           <View style={styles.bellOutline}>
@@ -90,8 +122,31 @@ export default function HomeScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* Temporary Role Switcher */}
+      <View style={styles.roleSwitcherContainer}>
+        <TouchableOpacity
+          style={[styles.roleTab, role === 'teacher' && styles.roleTabActive]}
+          onPress={() => setRole('teacher')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.roleTabText, role === 'teacher' && styles.roleTabTextActive]}>
+            Teacher Panel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.roleTab, role === 'student' && styles.roleTabActive]}
+          onPress={() => setRole('student')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.roleTabText, role === 'student' && styles.roleTabTextActive]}>
+            Student Panel
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Search Input block */}
+        {/* Search Input bar */}
         <View style={styles.searchSection}>
           <View style={styles.searchBox}>
             <Text style={styles.searchIcon}>🔍</Text>
@@ -104,7 +159,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.sectionTitle}>Academics</Text>
           
           <View style={styles.grid}>
-            {academicItems.map((item) => (
+            {getAcademicItems().map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.gridItem}
@@ -120,7 +175,7 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* E-Learning Section Header */}
+        {/* E-Learning Section */}
         <View style={styles.elearningSection}>
           <Text style={styles.sectionTitle}>E-Learning</Text>
           <View style={styles.elearningBanner}>
@@ -204,6 +259,34 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 3,
     marginTop: 1,
   },
+  roleSwitcherContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    borderRadius: 8,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  roleTab: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  roleTabActive: {
+    backgroundColor: COLORS.primary,
+  },
+  roleTabText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: FONT_WEIGHT.semibold,
+  },
+  roleTabTextActive: {
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold,
+  },
   scrollContent: {
     paddingBottom: SPACING.xl,
   },
@@ -232,7 +315,7 @@ const styles = StyleSheet.create({
   },
   academicsSection: {
     paddingHorizontal: SPACING.lg,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.xs,
   },
   sectionTitle: {
     fontSize: FONT_SIZE.md,
