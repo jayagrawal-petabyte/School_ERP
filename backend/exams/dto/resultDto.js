@@ -23,6 +23,14 @@ const toResultResponse = (result, role) => {
     updatedAt: result.updated_at ?? result.updatedAt,
   };
 
+  if (result.exam_meta !== undefined) {
+    response.exam_meta = result.exam_meta;
+  }
+
+  if (result.subject_meta !== undefined) {
+    response.subject_meta = result.subject_meta;
+  }
+
   if (safeRole !== 'student') {
     response.teacherId = result.teacher_id ?? result.teacherId;
     response.teacher_id = result.teacher_id ?? result.teacherId;

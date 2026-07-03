@@ -43,6 +43,84 @@ const runQuery = async (queryBuilder) => {
   return queryBuilder;
 };
 
+const normalizeIds = (ids = []) => [...new Set(
+  (Array.isArray(ids) ? ids : [ids])
+    .filter((value) => value !== undefined && value !== null)
+    .map((value) => String(value))
+)];
+
+const cache = {
+  exams: new Map(),
+  subjects: new Map(),
+};
+
+const fetchRowsByIds = async (table, ids, selectColumns) => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return null;
+  }
+
+  const normalizedIds = normalizeIds(ids);
+  if (normalizedIds.length === 0) {
+    return [];
+  }
+
+  const response = await runQuery(
+    client.from(table)
+      .select(selectColumns)
+      .in('id', normalizedIds)
+  );
+
+  if (response?.error) {
+    const message = String(response.error?.message || '').toLowerCase();
+    if (message.includes('does not exist') || message.includes('relation') || message.includes('not found')) {
+      return [];
+    }
+
+    throw new AppError(`Unable to fetch ${table} metadata`, 500, response.error);
+  }
+
+  return response?.data || [];
+};
+
+const fetchExamsByIds = async (ids) => {
+  const normalizedIds = normalizeIds(ids);
+  const cachedResults = normalizedIds
+    .filter((id) => cache.exams.has(id))
+    .map((id) => cache.exams.get(id));
+  const missingIds = normalizedIds.filter((id) => !cache.exams.has(id));
+
+  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id') : [];
+  if (fetchedResults === null) {
+    return null;
+  }
+
+  for (const exam of fetchedResults) {
+    cache.exams.set(String(exam.id), exam);
+  }
+
+  return [...cachedResults, ...fetchedResults];
+};
+
+const fetchSubjectsByIds = async (ids) => {
+  const normalizedIds = normalizeIds(ids);
+  const cachedResults = normalizedIds
+    .filter((id) => cache.subjects.has(id))
+    .map((id) => cache.subjects.get(id));
+  const missingIds = normalizedIds.filter((id) => !cache.subjects.has(id));
+
+  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code') : [];
+  if (fetchedResults === null) {
+    return null;
+  }
+
+  for (const subject of fetchedResults) {
+    cache.subjects.set(String(subject.id), subject);
+  }
+
+  return [...cachedResults, ...fetchedResults];
+};
+
 const isParentOfStudent = async (parentId, studentId) => {
   if (!parentId || !studentId) {
     throw new AppError('Invalid parent/student identifiers', 400);
@@ -139,4 +217,6 @@ module.exports = {
   getParentStudentIds,
   getTeacherClassIds,
   isTeacherAssignedToClass,
+  fetchExamsByIds,
+  fetchSubjectsByIds,
 };
