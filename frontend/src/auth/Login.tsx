@@ -36,27 +36,34 @@ function Login() {
   const [errors, setErrors] = useState<Errors>({});
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockTime, setLockTime] = useState(0);
-  
-    useEffect(() => {
+
+  // Clear fields whenever Login page opens
+  useEffect(() => {
+    setEmail("");
+    setPassword("");
+    setRememberMe(false);
+  }, []);
+
+  // Lock timer
+  useEffect(() => {
     if (lockTime <= 0) {
-        setErrors((prev) => ({
+      setErrors((prev) => ({
         ...prev,
         login: "",
-        }));
-        return;
+      }));
+      return;
     }
 
     const timer = setInterval(() => {
-        setLockTime((prev) => prev - 1);
+      setLockTime((prev) => prev - 1);
     }, 1000);
 
-  return () => clearInterval(timer);
-}, [lockTime]);
+    return () => clearInterval(timer);
+  }, [lockTime]);
 
   const handleLogin = () => {
-     if (lockTime > 0) {
-        return;
-    }
+    if (lockTime > 0) return;
+
     const newErrors: Errors = {};
 
     if (!email.trim()) {
@@ -85,44 +92,49 @@ function Login() {
         setFailedAttempts(attempts);
 
         if (attempts >= 3) {
-            setLockTime(30);
-            setFailedAttempts(0);
+          setLockTime(30);
+          setFailedAttempts(0);
 
-            setErrors({
+          setErrors({
             login: "Too many failed attempts. Try again in 30 seconds.",
-            });
+          });
         } else {
-            setErrors({
+          setErrors({
             login: "Invalid Credentials",
-            });
+          });
         }
 
         setLoading(false);
         return;
-    }
+      }
+
+      // Clear fields before leaving page
+      setEmail("");
+      setPassword("");
 
       login(role, rememberMe);
-        setFailedAttempts(0);
+      setFailedAttempts(0);
+
       switch (role) {
         case "student":
-            navigate("/dashboard");
-            break;
+          navigate("/dashboard");
+          break;
 
         case "teacher":
-            navigate("/teacher/assignments");
-            break;
+          navigate("/teacher/assignments");
+          break;
 
         case "admin":
-        navigate("/admin/dashboard");
-        break;
+          navigate("/admin/dashboard");
+          break;
 
         case "parent":
-            navigate("/dashboard");
-            break;
+          navigate("/dashboard");
+          break;
 
         default:
-            navigate("/");
-        }
+          navigate("/");
+      }
 
       setLoading(false);
     }, 1000);
@@ -136,15 +148,14 @@ function Login() {
 
           <h1 className="title">School ERP</h1>
 
-          <p className="subtitle">
-            Welcome Back
-          </p>
+          <p className="subtitle">Welcome Back</p>
         </div>
 
         <div className="role-container">
           <button
             className={role === "admin" ? "role active" : "role"}
             onClick={() => setRole("admin")}
+            type="button"
           >
             <FaUserShield />
             <span>Admin</span>
@@ -153,6 +164,7 @@ function Login() {
           <button
             className={role === "teacher" ? "role active" : "role"}
             onClick={() => setRole("teacher")}
+            type="button"
           >
             <FaChalkboardTeacher />
             <span>Teacher</span>
@@ -161,6 +173,7 @@ function Login() {
           <button
             className={role === "student" ? "role active" : "role"}
             onClick={() => setRole("student")}
+            type="button"
           >
             <FaUserGraduate />
             <span>Student</span>
@@ -169,114 +182,126 @@ function Login() {
           <button
             className={role === "parent" ? "role active" : "role"}
             onClick={() => setRole("parent")}
+            type="button"
           >
             <FaUsers />
             <span>Parent</span>
           </button>
         </div>
 
-        <div className="input-group">
-          <label>Email Address</label>
+        <form
+          autoComplete="off"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleLogin();
+          }}
+        >
+          <div className="input-group">
+            <label>Email Address</label>
 
-          <input
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-
-              setErrors((prev) => ({
-                ...prev,
-                email: "",
-                login: "",
-              }));
-            }}
-          />
-
-          {errors.email && (
-            <p className="error-text">
-              {errors.email}
-            </p>
-          )}
-        </div>
-
-        <div className="input-group">
-          <label>Password</label>
-
-          <div className="password-container">
             <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter password"
-              value={password}
+              type="email"
+              name="login-email"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Enter email"
+              value={email}
               onChange={(e) => {
-                setPassword(e.target.value);
+                setEmail(e.target.value);
 
                 setErrors((prev) => ({
                   ...prev,
-                  password: "",
+                  email: "",
                   login: "",
                 }));
               }}
             />
 
-            <span
-              className="password-toggle"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <FaEyeSlash /> : <FaEye />}
-            </span>
+            {errors.email && (
+              <p className="error-text">{errors.email}</p>
+            )}
           </div>
 
-          {errors.password && (
-          <p className="error-text">
-            {errors.password}
-          </p>
-        )}
-        </div>
+          <div className="input-group">
+            <label>Password</label>
 
-        <div className="login-options">
-          <label>
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            Remember me
-          </label>
+            <div className="password-container">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="login-password"
+                autoComplete="new-password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
 
-          <Link to="/forgot-password">Forgot Password?</Link>
-        </div>
+                  setErrors((prev) => ({
+                    ...prev,
+                    password: "",
+                    login: "",
+                  }));
+                }}
+              />
 
-        {lockTime > 0 ? (
-          <p
-            style={{
-              color: "#ff9800",
-              textAlign: "center",
-              marginBottom: "15px",
-              fontWeight: "bold",
-            }}
-          >
-            Too many failed attempts. Try again in {lockTime} seconds.
-          </p>
-        ) : (
-          errors.login && (
-            <p className="error-text login-error">
-              {errors.login}
+              <span
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </span>
+            </div>
+
+            {errors.password && (
+              <p className="error-text">{errors.password}</p>
+            )}
+          </div>
+
+          <div className="login-options">
+            <label>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              Remember me
+            </label>
+
+            <Link to="/forgot-password">
+              Forgot Password?
+            </Link>
+          </div>
+
+          {lockTime > 0 ? (
+            <p
+              style={{
+                color: "#ff9800",
+                textAlign: "center",
+                marginBottom: "15px",
+                fontWeight: "bold",
+              }}
+            >
+              Too many failed attempts. Try again in {lockTime} seconds.
             </p>
-          )
-        )}
-        
-        <button
-        className="login-btn"
-        onClick={handleLogin}
-        disabled={loading || lockTime > 0}
-        >
-        {loading
-            ? "Signing In..."
-            : lockTime > 0
-            ? `Try again in ${lockTime}s`
-            : "Sign In"}
-        </button>
+          ) : (
+            errors.login && (
+              <p className="error-text login-error">
+                {errors.login}
+              </p>
+            )
+          )}
+
+          <button
+            className="login-btn"
+            type="submit"
+            disabled={loading || lockTime > 0}
+          >
+            {loading
+              ? "Signing In..."
+              : lockTime > 0
+              ? `Try again in ${lockTime}s`
+              : "Sign In"}
+          </button>
+        </form>
       </div>
     </div>
   );
