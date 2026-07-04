@@ -7,7 +7,9 @@ import Attendance from "./students/pages/Attendance";
 import Profile from "./students/pages/Profile";
 import StudentSidebar from "./students/components/StudentSidebar";
 import ResultsPage from "./exams/ResultsPage"; 
+
 import ClassResultsPage from "./teachers/ClassResultsPage"; // ADDED IMPORT
+
 
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 import TeacherLayout from "./teachers/components/TeacherLayout";
@@ -39,7 +41,9 @@ const StudentLayout: React.FC = () => {
 function App() {
   return (
     <BrowserRouter>
+      
       <Routes>
+
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -47,17 +51,47 @@ function App() {
 
         {/* Protected Student Routes */}
         <Route element={<ProtectedRoute allowedRole="student"><StudentLayout /></ProtectedRoute>}>
+
+        <Route path="/" element={<Login />} />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          element={
+            <ProtectedRoute allowedRole="student">
+              <StudentLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/results" element={<ResultsPage />} />
           <Route path="/assignments" element={<StudentDashboard />} />
         </Route>
+
     
         {/* Admin Routes */}
         <Route element={<ProtectedRoute allowedRole="admin"><AdminLayout /></ProtectedRoute>}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/results" element={<AdminResultsDashboard />} />
+
+        
+      {/* Admin */}  
+        <Route
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            path="/admin/dashboard"
+            element={<AdminDashboard />}
+          />
         </Route>
 
         {/* Teacher Routes */}
