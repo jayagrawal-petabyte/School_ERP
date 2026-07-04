@@ -10,23 +10,28 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import OTPInput from '../components/OTPInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS, SECURITY } from '../constants';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import OTPInput from '../../components/Auth/OTPInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { SECURITY } from '../../constants/auth';
+import { RootStackParamList } from '../../navigation/types';
 
 const ACCENT = '#4F46E5';
 
-const OTPVerificationScreen = ({ navigation, route }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'OTPVerification'>;
+
+const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { identifier, type } = route.params || {};
-  const [otp, setOtp] = useState(Array(6).fill(''));
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(SECURITY.OTP_RESEND_COOLDOWN);
   const [canResend, setCanResend] = useState(false);
 
-  
+
   useEffect(() => {
     if (countdown <= 0) { setCanResend(true); return; }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    const timer = setTimeout(() => setCountdown((c: number) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
 
@@ -35,7 +40,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     setCountdown(SECURITY.OTP_RESEND_COOLDOWN);
     setCanResend(false);
     setOtp(Array(6).fill(''));
-   
+
     Alert.alert('Code sent', `A new code has been sent to your ${type}.`);
   };
 
@@ -47,9 +52,9 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     }
     setLoading(true);
     try {
-      
+
       await new Promise((res) => setTimeout(res, 1200));
-      
+
       navigation.navigate('NewPassword', { identifier });
     } catch {
       Alert.alert('Invalid code', 'The code you entered is incorrect. Please try again.');

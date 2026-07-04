@@ -1,14 +1,23 @@
-// ─── PrimaryButton Component ────────────────────────────────────────────────
-
 import React from 'react';
 import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
   StyleSheet,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 
-const PrimaryButton = ({
+interface PrimaryButtonProps {
+  title: string;
+  onPress: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+  backgroundColor?: string;
+  style?: StyleProp<ViewStyle>;
+}
+
+const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   title,
   onPress,
   loading = false,

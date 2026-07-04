@@ -31,9 +31,15 @@ export const colors = {
   textMuted: '#98A2B3',
   textLight: '#FFFFFF',
   
+  // Generic UI Status Colors
+  error: '#EF4444',
+  success: '#10B981',
+  warning: '#F59E0B',
+
   // Borders
   border: '#E4E7EC',
   borderLight: '#F2F4F7',
+  tabBg: '#F2F4F7',
 };
 
 export type ColorsType = typeof colors;

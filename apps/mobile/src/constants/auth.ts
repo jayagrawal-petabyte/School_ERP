@@ -1,5 +1,13 @@
+export interface Role {
+  key: string;
+  label: string;
+  icon: string;
+  accent: string;
+  sub: string;
+  requiresMFA: boolean;
+}
 
-export const ROLES = [
+export const ROLES: Role[] = [
   {
     key: 'student',
     label: 'Student',
@@ -30,7 +38,7 @@ export const ROLES = [
     icon: '🛡️',
     accent: '#EF4444',
     sub: 'Admin portal — authorised access only',
-    requiresMFA: true, 
+    requiresMFA: true,
   },
 ];
 
@@ -40,27 +48,22 @@ export const SCREEN = {
   OTP: 'OTP',
   NEW_PASSWORD: 'NEW_PASSWORD',
   SUCCESS: 'SUCCESS',
-};
+} as const;
 
-export const COLORS = {
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  border: '#CBD5E1',
-  borderLight: '#E2E8F0',
-  textPrimary: '#1A2340',
-  textSecondary: '#475569',
-  textMuted: '#94A3B8',
-  error: '#EF4444',
-  success: '#10B981',
-  warning: '#F59E0B',
-  tabBg: '#E8EDF5',
-};
+export interface SecurityConfig {
+  MAX_LOGIN_ATTEMPTS: number;
+  LOCKOUT_DURATION_MS: number;
+  SESSION_TIMEOUT_MS: number;
+  OTP_EXPIRY_SECONDS: number;
+  MIN_PASSWORD_LENGTH: number;
+  OTP_RESEND_COOLDOWN: number;
+}
 
-export const SECURITY = {
-  MAX_LOGIN_ATTEMPTS: 5,       
+export const SECURITY: SecurityConfig = {
+  MAX_LOGIN_ATTEMPTS: 5,
   LOCKOUT_DURATION_MS: 300000,
-  SESSION_TIMEOUT_MS: 1800000, 
-  OTP_EXPIRY_SECONDS: 300,     
+  SESSION_TIMEOUT_MS: 1800000,
+  OTP_EXPIRY_SECONDS: 300,
   MIN_PASSWORD_LENGTH: 8,
-  OTP_RESEND_COOLDOWN: 45,    
+  OTP_RESEND_COOLDOWN: 45,
 };

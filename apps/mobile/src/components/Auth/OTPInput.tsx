@@ -1,11 +1,18 @@
 import React, { useRef } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
-import { COLORS } from '../constants';
+import { View, TextInput, StyleSheet, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
+import { COLORS } from '../../constants/theme';
 
-const OTPInput = ({ otp, setOtp, accentColor = '#4F46E5', length = 6 }) => {
-  const refs = useRef([]);
+interface OTPInputProps {
+  otp: string[];
+  setOtp: (otp: string[]) => void;
+  accentColor?: string;
+  length?: number;
+}
 
-  const handleChange = (text, index) => {
+const OTPInput: React.FC<OTPInputProps> = ({ otp, setOtp, accentColor = '#4F46E5', length = 6 }) => {
+  const refs = useRef<(TextInput | null)[]>([]);
+
+  const handleChange = (text: string, index: number) => {
     const digit = text.replace(/[^0-9]/g, '').slice(-1);
     const newOtp = [...otp];
     newOtp[index] = digit;
@@ -15,7 +22,7 @@ const OTPInput = ({ otp, setOtp, accentColor = '#4F46E5', length = 6 }) => {
     }
   };
 
-  const handleKeyPress = (e, index) => {
+  const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       refs.current[index - 1]?.focus();
     }
@@ -26,7 +33,7 @@ const OTPInput = ({ otp, setOtp, accentColor = '#4F46E5', length = 6 }) => {
       {Array.from({ length }).map((_, i) => (
         <TextInput
           key={i}
-          ref={(r) => (refs.current[i] = r)}
+          ref={(r) => { refs.current[i] = r; }}
           style={[
             styles.box,
             otp[i] ? { borderColor: accentColor } : { borderColor: COLORS.border },

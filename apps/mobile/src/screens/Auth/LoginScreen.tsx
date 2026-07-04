@@ -10,10 +10,12 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import RoleTabs from '../components/RoleTabs';
-import SecureInput from '../components/SecureInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { ROLES, COLORS, SECURITY } from '../constants';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import RoleTabs from '../../components/Auth/RoleTabs';
+import SecureInput from '../../components/Auth/SecureInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { ROLES, SECURITY } from '../../constants/auth';
 import {
   isValidIdentifier,
   isAccountLocked,
@@ -22,9 +24,12 @@ import {
   getRemainingAttempts,
   getRemainingLockoutTime,
   storeToken,
-} from '../utils/security';
+} from '../../utils/security';
+import { RootStackParamList } from '../../navigation/types';
 
-const LoginScreen = ({ navigation }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedRole, setSelectedRole] = useState(ROLES[0]);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +37,7 @@ const LoginScreen = ({ navigation }) => {
   const [identifierError, setIdentifierError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const validate = () => {
+  const validate = (): boolean => {
     let valid = true;
     setIdentifierError('');
     setPasswordError('');
@@ -78,25 +83,29 @@ const LoginScreen = ({ navigation }) => {
       // Response: { token, refreshToken, user }
       await new Promise((res) => setTimeout(res, 1500));
 
-      
+
       const mockSuccess = password.length >= 8;
 
       if (mockSuccess) {
         resetLoginAttempts(identifier);
-        
+
         await storeToken('auth_token', 'mock_jwt_token_here');
         await storeToken('user_role', JSON.stringify(selectedRole));
 
-      
+
         if (selectedRole.requiresMFA) {
-  navigation.navigate('MFA', {
-    role: selectedRole,
-  });
-} else {
-  navigation.replace('Dashboard', {
-    role: selectedRole,
-  });
-}
+          navigation.navigate('MFA', {
+            role: selectedRole,
+          });
+        } else if (selectedRole.key === 'student' || selectedRole.key === 'teacher') {
+          navigation.replace('Home', {
+            initialRole: selectedRole.key,
+          });
+        } else {
+          navigation.replace('Dashboard', {
+            role: selectedRole,
+          });
+        }
       } else {
         recordFailedAttempt(identifier);
         const remaining = getRemainingAttempts(identifier);
@@ -138,7 +147,7 @@ const LoginScreen = ({ navigation }) => {
           <Text style={styles.heading}>Sign in</Text>
           <Text style={styles.subheading}>{selectedRole.sub}</Text>
 
-          
+
 
           {/* Email or Mobile */}
           <SecureInput

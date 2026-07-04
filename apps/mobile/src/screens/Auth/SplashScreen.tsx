@@ -5,27 +5,38 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { getToken } from "../utils/security";
+import { getToken } from "../../utils/security";
+import { RootStackParamList } from '../../navigation/types';
 
-const SplashScreen = ({ navigation }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'Splash'>;
+
+const SplashScreen: React.FC<Props> = ({ navigation }) => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-    
+
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-     
+
        const token = await getToken("auth_token");
 const storedRole = await getToken("user_role");
 
-if (token) {
-  navigation.replace("Dashboard", {
-    role: storedRole ? JSON.parse(storedRole) : null,
-  });
-} else {
-  navigation.replace("Login");
-}
+        if (token) {
+          const parsedRole = storedRole ? JSON.parse(storedRole) : null;
+          if (parsedRole && (parsedRole.key === 'student' || parsedRole.key === 'teacher')) {
+            navigation.replace('Home', {
+              initialRole: parsedRole.key,
+            });
+          } else {
+            navigation.replace('Dashboard', {
+              role: parsedRole,
+            });
+          }
+        } else {
+          navigation.replace('Login');
+        }
       } catch (error) {
         navigation.replace("Login");
       }

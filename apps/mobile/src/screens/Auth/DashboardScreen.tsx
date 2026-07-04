@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { useSession } from '../hooks/useSession';
-import { clearAllTokens } from '../utils/security';
-import { COLORS } from '../constants';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSession } from '../../hooks/useSession';
+import { clearAllTokens } from '../../utils/security';
+import { COLORS } from '../../constants/theme';
+import { RootStackParamList } from '../../navigation/types';
 
-const DashboardScreen = ({ navigation, route }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
+
+const DashboardScreen: React.FC<Props> = ({ navigation, route }) => {
   const { role } = route.params || {};
 
   const handleLogout = async () => {
@@ -19,7 +23,7 @@ const DashboardScreen = ({ navigation, route }) => {
     navigation.replace('Login');
   };
 
-  
+
   useSession(() => {
     Alert.alert(
       'Session Expired',

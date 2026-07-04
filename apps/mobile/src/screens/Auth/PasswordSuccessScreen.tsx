@@ -1,9 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { RootStackParamList } from '../../navigation/types';
 
-const PasswordSuccessScreen = ({ navigation }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'PasswordSuccess'>;
+
+const PasswordSuccessScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>

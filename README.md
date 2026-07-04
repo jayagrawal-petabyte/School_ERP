@@ -72,6 +72,24 @@ The Assignments Module provides student task-tracking and submission features.
 
 ---
 
+### In Progress: Profile & Dashboard Module (Assigned to: Krishna Karanwal)
+
+The Profile & Dashboard module will provide the data layer for Student, Teacher, and Parent profiles, along with role-based dashboard cards. Service layer and UI screens are pending.
+
+#### Implemented so far:
+1. **User & Profile Types (`types/index.ts`)**:
+   - `AppUser` type matching the `users` table schema (id, role, full_name, account_status, timestamps).
+   - `TeacherProfileView` and `ParentProfileView`, joining teacher-to-classes and parent-to-children relations.
+   - `StudentProfileView` scaffolded with a placeholder class join, pending confirmation of the student-class relation in the schema.
+   - `DashboardCard` type for role-based dashboard grid items.
+
+#### Pending:
+- Mock/real service layer for profile fetch and update operations.
+- Dashboard card service filtered by role.
+- Student, Teacher, Parent Profile screens, Settings screen, Edit Profile screen.
+
+---
+
 ### Service API Layer (`api.ts`)
 - Configured a simulated network client database with simulated delay.
 - Pre-loaded with static attendance history (including May 2023 logs) and assignment mock states (algebra, physics reports, chemistry mechanisms) for instant offline testing.

@@ -1,16 +1,34 @@
 import React, { useState } from 'react';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  KeyboardTypeOptions,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
-import { sanitizeInput } from '../utils/security';
-import { COLORS } from '../constants';
+import { sanitizeInput } from '../../utils/security';
+import { COLORS } from '../../constants/theme';
 
-const SecureInput = ({
+interface SecureInputProps {
+  label?: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  keyboardType?: KeyboardTypeOptions;
+  secureTextEntry?: boolean;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  errorText?: string;
+  successText?: string;
+  editable?: boolean;
+  accentColor?: string;
+  showToggle?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
+
+const SecureInput: React.FC<SecureInputProps> = ({
   label,
   value,
   onChangeText,
@@ -27,7 +45,7 @@ const SecureInput = ({
 }) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const handleChange = (text) => {
+  const handleChange = (text: string) => {
     const clean = sanitizeInput(text);
     onChangeText(clean);
   };
@@ -59,16 +77,12 @@ const SecureInput = ({
         />
         {showToggle && (
           <TouchableOpacity
-  style={styles.toggleBtn}
-  onPress={() => setIsPasswordVisible((v) => !v)}
-  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
->
-  <Ionicons
-    name={isPasswordVisible ? "eye-outline" : "eye-off-outline"}
-    size={22}
-    color={COLORS.textMuted}
-  />
-</TouchableOpacity>
+            style={styles.toggleBtn}
+            onPress={() => setIsPasswordVisible((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={{ fontSize: 16 }}>{isPasswordVisible ? "👁️" : "🙈"}</Text>
+          </TouchableOpacity>
         )}
       </View>
 
@@ -110,7 +124,7 @@ const styles = StyleSheet.create({
     right: 12,
     padding: 4,
   },
- 
+
   errorText: {
     fontSize: 11,
     color: COLORS.error,

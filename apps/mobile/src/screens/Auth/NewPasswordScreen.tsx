@@ -10,14 +10,19 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import SecureInput from '../components/SecureInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS, SECURITY } from '../constants';
-import { getPasswordStrength, validatePassword } from '../utils/security';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import SecureInput from '../../components/Auth/SecureInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { SECURITY } from '../../constants/auth';
+import { getPasswordStrength, validatePassword } from '../../utils/security';
+import { RootStackParamList } from '../../navigation/types';
 
 const ACCENT = '#4F46E5';
 
-const NewPasswordScreen = ({ navigation, route }) => {
+type Props = NativeStackScreenProps<RootStackParamList, 'NewPassword'>;
+
+const NewPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   const { identifier } = route.params || {};
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,13 +36,13 @@ const NewPasswordScreen = ({ navigation, route }) => {
     newPassword.length >= SECURITY.MIN_PASSWORD_LENGTH &&
     newPassword === confirmPassword;
 
-  const getConfirmStatus = () => {
+  const getConfirmStatus = (): { successText?: string; errorText?: string } => {
     if (!confirmPassword) return {};
     if (passwordsMatch) return { successText: 'Passwords match' };
     return { errorText: "Passwords don't match" };
   };
 
-  const validate = () => {
+  const validate = (): boolean => {
     setNewPwError('');
     setConfirmPwError('');
 
@@ -61,7 +66,7 @@ const NewPasswordScreen = ({ navigation, route }) => {
     if (!validate()) return;
     setLoading(true);
     try {
-      
+
       await new Promise((res) => setTimeout(res, 1500));
       navigation.navigate('PasswordSuccess');
     } catch {

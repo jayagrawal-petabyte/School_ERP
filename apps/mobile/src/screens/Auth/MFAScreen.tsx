@@ -7,15 +7,18 @@ import {
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import OTPInput from '../../components/Auth/OTPInput';
+import PrimaryButton from '../../components/Auth/PrimaryButton';
+import { COLORS } from '../../constants/theme';
+import { RootStackParamList } from '../../navigation/types';
 
-import OTPInput from '../components/OTPInput';
-import PrimaryButton from '../components/PrimaryButton';
-import { COLORS } from '../constants';
+type Props = NativeStackScreenProps<RootStackParamList, 'MFA'>;
 
-const MFAScreen = ({ navigation, route }) => {
+const MFAScreen: React.FC<Props> = ({ navigation, route }) => {
   const { role } = route.params;
 
-  const [otp, setOtp] = useState(Array(6).fill(''));
+  const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const [loading, setLoading] = useState(false);
 
   const verifyOTP = async () => {
@@ -34,9 +37,15 @@ const MFAScreen = ({ navigation, route }) => {
   try {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    navigation.replace('Dashboard', {
-      role,
-    });
+    if (role && (role.key === 'student' || role.key === 'teacher')) {
+      navigation.replace('Home', {
+        initialRole: role.key as 'student' | 'teacher',
+      });
+    } else {
+      navigation.replace('Dashboard', {
+        role,
+      });
+    }
   } catch (error) {
     Alert.alert('Error', 'OTP verification failed.');
   } finally {

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { AppState } from 'react-native';
-import { SECURITY } from '../constants';
+import { AppState, AppStateStatus } from 'react-native';
+import { SECURITY } from '../constants/auth';
 import { clearAllTokens } from '../utils/security';
 
-export const useSession = (onSessionExpired) => {
-  const timerRef = useRef(null);
-  const appStateRef = useRef(AppState.currentState);
+export const useSession = (onSessionExpired?: () => void) => {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -30,7 +30,7 @@ export const useSession = (onSessionExpired) => {
       ) {
         clearTimer();
       }
-   
+
       if (
         appStateRef.current !== 'active' &&
         nextState === 'active'

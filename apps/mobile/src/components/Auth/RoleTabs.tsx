@@ -1,13 +1,17 @@
-// ─── RoleTabs Component ─────────────────────────────────────────────────────
-
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ROLES, COLORS } from '../constants';
+import { ROLES, Role } from '../../constants/auth';
+import { COLORS } from '../../constants/theme';
 
-const RoleTabs = ({ selectedRole, onSelect }) => {
+interface RoleTabsProps {
+  selectedRole: Role;
+  onSelect: (role: Role) => void;
+}
+
+const RoleTabs: React.FC<RoleTabsProps> = ({ selectedRole, onSelect }) => {
   return (
     <View style={styles.container}>
-      {ROLES.map((role) => {
+      {ROLES.map((role: Role) => {
         const isActive = selectedRole.key === role.key;
         return (
           <TouchableOpacity
