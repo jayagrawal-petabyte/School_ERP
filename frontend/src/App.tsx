@@ -9,7 +9,7 @@ import Profile from "./students/pages/Profile";
 import StudentSidebar from "./students/components/StudentSidebar";
 
 import ResultsPage from "./exams/ResultsPage"; 
-
+import ClassResultsPage from "./teachers/ClassResultsPage";
 
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
 import TeacherLayout from "./teachers/components/TeacherLayout";
@@ -53,18 +53,16 @@ const StudentLayout: React.FC = () => {
 function App() {
   return (
     <BrowserRouter>
+      
       <Routes>
-        <Route path="/" element={<StudentLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="attendance" element={<Attendance />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="results" element={<ResultsPage />} /> {/* Add this line */}
 
-        {/* Login */}
         <Route path="/" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        {/* Protected Student Routes */}
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
         <Route
           element={
             <ProtectedRoute allowedRole="student">
@@ -78,8 +76,8 @@ function App() {
           <Route path="/results" element={<ResultsPage />} />
           <Route path="/assignments" element={<StudentDashboard />} />
         </Route>
-    
-    
+        
+      {/* Admin */}  
         <Route
           element={
             <ProtectedRoute allowedRole="admin">
