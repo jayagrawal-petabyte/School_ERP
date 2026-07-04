@@ -44,13 +44,13 @@ const StudentSidebar = ({ open, onClose }: StudentSidebarProps) => {
     navigate("/", { replace: true });
     onClose();
   };
-  const navItems = [
-    { label: "Dashboard", icon: "📊", active: true },
-    { label: "Profile", icon: "👤", active: false },
-    { label: "Attendance", icon: "📋", active: false },
-    { label: "Results", icon: "📝", active: false},
-    { label: "Assignments", icon: "📝", active: false }
-  ];
+  // const navItems = [
+  //   { label: "Dashboard", icon: "📊", active: true },
+  //   { label: "Profile", icon: "👤", active: false },
+  //   { label: "Attendance", icon: "📋", active: false },
+  //   { label: "Results", icon: "📝", active: false},
+  //   { label: "Assignments", icon: "📝", active: false }
+  // ];
 
   return (
     <>

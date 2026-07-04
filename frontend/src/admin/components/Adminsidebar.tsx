@@ -17,6 +17,7 @@ const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
       icon: "📊",
       path: "/admin/dashboard",
     },
+    { label: "Exam Results", icon: "📑", path: "/admin/results" },
   ];
 
   const handleLogout = () => {

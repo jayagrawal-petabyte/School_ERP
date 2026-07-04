@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import { Menu } from "lucide-react";
 
-import AdminSidebar from "./AdminSidebar";
+import AdminSidebar from "./Adminsidebar";
 import CommonNavbar from "../../components/layout/CommonNavbar";
 import Footer from "../../components/layout/Footer";
 
