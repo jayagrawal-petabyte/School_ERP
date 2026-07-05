@@ -6,7 +6,6 @@ const {
 
 const AUTH_MESSAGES = require("../constants/authMessages");
 
-
 async function authenticateToken(req, res, next) {
     const authorizationHeader = req.get("Authorization");
 

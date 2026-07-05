@@ -41,6 +41,7 @@ function authorizeRoles(...allowedRoles) {
                 .select("role")
                 .eq("id", user.id)
                 .single();
+       
 
             if (error || !data) {
                 return res.status(403).json({
