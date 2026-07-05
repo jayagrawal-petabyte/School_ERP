@@ -1,40 +1,42 @@
 const express = require('express');
 const resultController = require('../controller/resultController');
-const authenticateUser = require('../middleware/authenticateUser');
+const { authenticateToken } = require('../../auth/middleware/auth.middleware');
+const { authorizeRoles } = require('../../auth/middleware/role.middleware');
 const authorize = require('../middleware/authorize');
 const asyncHandler = require('../middleware/asyncHandler');
 const { validateMarks } = require('../validators/resultValidator');
 const resultService = require('../service/resultService');
+const ROLES = require('../constants/roles');
 
 const router = express.Router();
 
-router.use(authenticateUser);
+router.use(authenticateToken);
 
 const resultOwnershipContext = async (req) => resultService.getOwnershipContext(req.params.id);
 
 router.post(
   '/',
-  authorize({ roles: ['admin', 'principal', 'teacher'] }),
+  authorizeRoles(ROLES.ADMIN, ROLES.TEACHER, ROLES.PRINCIPAL),
   validateMarks,
   asyncHandler(resultController.createResult)
 );
 
 router.get(
   '/me',
-  authorize({ roles: ['student'] }),
+  authorizeRoles(ROLES.STUDENT),
   asyncHandler(resultController.getMyResults)
 );
 
 router.get(
   '/',
-  authorize({ roles: ['admin', 'principal', 'teacher', 'parent'] }),
+  authorizeRoles(ROLES.ADMIN, ROLES.TEACHER, ROLES.PRINCIPAL, ROLES.PARENT),
   asyncHandler(resultController.getAllResults)
 );
 
 router.get(
   '/:id',
+  authorizeRoles(ROLES.ADMIN, ROLES.TEACHER, ROLES.PRINCIPAL, ROLES.PARENT, ROLES.STUDENT),
   authorize({
-    roles: ['admin', 'principal', 'teacher', 'parent', 'student'],
     ownership: {
       enabled: true,
       resource: 'result',
@@ -47,8 +49,8 @@ router.get(
 
 router.put(
   '/:id',
+  authorizeRoles(ROLES.ADMIN, ROLES.TEACHER, ROLES.PRINCIPAL),
   authorize({
-    roles: ['admin', 'principal', 'teacher'],
     ownership: {
       enabled: true,
       resource: 'result',

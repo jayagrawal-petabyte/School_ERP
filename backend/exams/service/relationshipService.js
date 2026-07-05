@@ -49,9 +49,32 @@ const normalizeIds = (ids = []) => [...new Set(
     .map((value) => String(value))
 )];
 
+const getCacheTtlMs = () => Number(process.env.EXAMS_METADATA_CACHE_TTL_MS || 300000);
+
 const cache = {
   exams: new Map(),
   subjects: new Map(),
+};
+
+const getCachedValue = (cacheStore, id) => {
+  const entry = cacheStore.get(id);
+  if (!entry) {
+    return null;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    cacheStore.delete(id);
+    return null;
+  }
+
+  return entry.value;
+};
+
+const setCachedValue = (cacheStore, id, value) => {
+  cacheStore.set(id, {
+    value,
+    expiresAt: Date.now() + getCacheTtlMs(),
+  });
 };
 
 const fetchRowsByIds = async (table, ids, selectColumns) => {
@@ -86,9 +109,9 @@ const fetchRowsByIds = async (table, ids, selectColumns) => {
 const fetchExamsByIds = async (ids) => {
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
-    .filter((id) => cache.exams.has(id))
-    .map((id) => cache.exams.get(id));
-  const missingIds = normalizedIds.filter((id) => !cache.exams.has(id));
+    .map((id) => getCachedValue(cache.exams, id))
+    .filter((value) => value !== null);
+  const missingIds = normalizedIds.filter((id) => getCachedValue(cache.exams, id) === null);
 
   const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id') : [];
   if (fetchedResults === null) {
@@ -96,7 +119,7 @@ const fetchExamsByIds = async (ids) => {
   }
 
   for (const exam of fetchedResults) {
-    cache.exams.set(String(exam.id), exam);
+    setCachedValue(cache.exams, String(exam.id), exam);
   }
 
   return [...cachedResults, ...fetchedResults];
@@ -105,9 +128,9 @@ const fetchExamsByIds = async (ids) => {
 const fetchSubjectsByIds = async (ids) => {
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
-    .filter((id) => cache.subjects.has(id))
-    .map((id) => cache.subjects.get(id));
-  const missingIds = normalizedIds.filter((id) => !cache.subjects.has(id));
+    .map((id) => getCachedValue(cache.subjects, id))
+    .filter((value) => value !== null);
+  const missingIds = normalizedIds.filter((id) => getCachedValue(cache.subjects, id) === null);
 
   const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code') : [];
   if (fetchedResults === null) {
@@ -115,7 +138,7 @@ const fetchSubjectsByIds = async (ids) => {
   }
 
   for (const subject of fetchedResults) {
-    cache.subjects.set(String(subject.id), subject);
+    setCachedValue(cache.subjects, String(subject.id), subject);
   }
 
   return [...cachedResults, ...fetchedResults];
