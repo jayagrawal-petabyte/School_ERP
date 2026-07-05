@@ -12,12 +12,17 @@ const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
   const { logout } = useAuth();
 
   const navItems = [
-    {
-      label: "Dashboard",
-      icon: "📊",
-      path: "/admin/dashboard",
-    },
+    { label: "Dashboard", icon: "📊", path: "/admin/dashboard" },
+    { label: "Students", icon: "🎓", path: "/admin/students" },
+    { label: "Teachers", icon: "👨‍🏫", path: "/admin/teachers" },
+    { label: "Parents", icon: "👨‍👩‍👧", path: "/admin/parents" },
+    { label: "Attendance", icon: "📅", path: "/admin/attendance" },
+    { label: "Fees", icon: "💳", path: "/admin/fees" },
+    { label: "Timetable", icon: "⏰", path: "/admin/timetable" },
     { label: "Exam Results", icon: "📑", path: "/admin/results" },
+    { label: "Library", icon: "📚", path: "/admin/library" },
+    { label: "Reports", icon: "📈", path: "/admin/reports" },
+    { label: "Settings", icon: "⚙️", path: "/admin/settings" },
   ];
 
   const handleLogout = () => {
