@@ -1,4 +1,4 @@
-const supabase = require('../database/supabaseClient'); // Adjust path if their client file has a different name
+const supabase = require('../database/supabaseClient'); 
 const { validateAttendanceDate, validateAttendanceStatus } = require('./validation');
 
 const markAttendance = async (req, res) => {
@@ -6,9 +6,11 @@ const markAttendance = async (req, res) => {
         const { role, user_id } = req.user; 
         const { date, studentId, status, classId } = req.body;
 
-        if (role !== 'admin' && role !== 'teacher') {
+        const normalizedRole = role ? role.toLowerCase() : '';
+
+        if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
-                error: "Access denied. Only Teachers and Admins can mark attendance." 
+                error: "Access denied. Only authorized staff can mark attendance." 
             });
         }
 
@@ -35,7 +37,6 @@ const markAttendance = async (req, res) => {
             .select();
 
         if (error) {
-    
             if (error.code === '23505') {
                 return res.status(409).json({ error: "Attendance already marked for this student on this date." });
             }
@@ -55,12 +56,14 @@ const markAttendance = async (req, res) => {
 const updateAttendance = async (req, res) => {
     try {
         const { role } = req.user;
-        const { id } = req.params; // Expecting the attendance record ID in the URL params
+        const { id } = req.params; 
         const { date, status } = req.body;
 
-        if (role !== 'admin' && role !== 'teacher') {
+        const normalizedRole = role ? role.toLowerCase() : '';
+
+        if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
-                error: "Access denied. Only Teachers and Admins can update attendance records." 
+                error: "Access denied. Only authorized staff can update attendance records." 
             });
         }
 
@@ -99,11 +102,12 @@ const updateAttendance = async (req, res) => {
 const viewAttendance = async (req, res) => {
     try {
         const { role, user_id } = req.user;
-        const { classId, date } = req.query; // Query filters
+        const { classId, date } = req.query; 
         
+        const normalizedRole = role ? role.toLowerCase() : '';
         let query = supabase.from('attendance_records').select('*');
 
-        if (role === 'student') {
+        if (normalizedRole === 'student') {
             console.log(`Enforcing structural query isolation. Filtering target student_id: ${user_id}`);
             query = query.eq('student_id', user_id);
         } else {
@@ -117,8 +121,8 @@ const viewAttendance = async (req, res) => {
         if (error) throw error;
 
         return res.status(200).json({ 
-            message: role === 'student' ? "Displaying your personal attendance records securely." : "Displaying requested multi-user attendance records.",
-            scope: role === 'student' ? "Individual" : "Administrative",
+            message: normalizedRole === 'student' ? "Displaying your personal attendance records securely." : "Displaying requested multi-user attendance records.",
+            scope: normalizedRole === 'student' ? "Individual" : "Administrative",
             data: data
         });
     } catch (error) {

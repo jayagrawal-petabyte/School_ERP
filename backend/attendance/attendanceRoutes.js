@@ -2,10 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { markAttendance, updateAttendance, viewAttendance } = require('./attendanceController');
 
-const verifyJWT = (req, res, next) => next(); 
-
-router.post('/mark', verifyJWT, markAttendance);
-router.put('/update', verifyJWT, updateAttendance);
-router.get('/view', verifyJWT, viewAttendance);
+router.post('/mark', markAttendance);
+router.put('/update/:id', updateAttendance);
+router.get('/view', viewAttendance);
 
 module.exports = router;
