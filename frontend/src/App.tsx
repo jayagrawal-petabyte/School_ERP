@@ -22,11 +22,11 @@ import AdminDashboard from "./admin/pages/AdminDashboard";
 import AdminLayout from "./admin/components/AdminLayout";
 import AdminStudents from "./students/pages/Students";
 import AdminTeachers from "./teachers/Teachers";
-import AdminParents from "./parents/Parents";
+import AdminParents from "./parent/Parents";
 import AdminAttendance from "./attendance/pages/AdminAttendance";
 import Fees from "./fees/Fees";
 import Timetable from "./timetable/Timetable";
-import Library from "./library/Library";
+import Library from "./Library/Library";
 import Reports from "./reports/Reports";
 import Settings from "./settings/Settings";
 
