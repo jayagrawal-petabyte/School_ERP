@@ -9,8 +9,6 @@ const {
 const AUTH_MESSAGES = require("../constants/authMessages");
 
 
-  //Login validation rules.
- 
 const loginValidationRules = [
     body("email")
         .trim()
@@ -22,6 +20,7 @@ const loginValidationRules = [
         .normalizeEmail(),
 
     body("password")
+        .trim()
         .notEmpty()
         .withMessage(AUTH_MESSAGES.PASSWORD_REQUIRED)
         .bail()
@@ -30,8 +29,6 @@ const loginValidationRules = [
 ];
 
 
- //Authorization header validation rules.
- 
 const authorizationValidationRules = [
     header("authorization")
         .notEmpty()
@@ -42,8 +39,6 @@ const authorizationValidationRules = [
 ];
 
 
-  //Validates incoming request.
- 
 function validateRequest(req, res, next) {
     const errors = validationResult(req);
 
@@ -58,7 +53,7 @@ function validateRequest(req, res, next) {
         });
     }
 
-    next();
+    return next();
 }
 
 module.exports = Object.freeze({
