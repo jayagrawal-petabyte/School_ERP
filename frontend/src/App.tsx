@@ -12,6 +12,8 @@ import ClassResultsPage from "./teachers/ClassResultsPage"; // ADDED IMPORT
 
 
 import { CreateAssignment, StudentDashboard, TeacherDashboard } from './assignments';
+import { NotificationsPage } from "./notifications/pages/Notifications";
+import { AttendanceReports } from "./reports/pages/AttendanceReports";
 import TeacherLayout from "./teachers/components/TeacherLayout";
 import Login from "./auth/Login";
 import ForgotPassword from "./auth/ForgotPassword";
@@ -71,6 +73,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/results" element={<ResultsPage />} />
           <Route path="/assignments" element={<StudentDashboard />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/attendance-reports" element={<AttendanceReports />} />
         </Route>
 
         {/* Admin Routes */}
