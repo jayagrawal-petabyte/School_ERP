@@ -50,15 +50,6 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* Protected Student Routes */}
-        <Route element={<ProtectedRoute allowedRole="student"><StudentLayout /></ProtectedRoute>}>
-
-        <Route path="/" element={<Login />} />
-
-        <Route
-          path="/forgot-password"
-          element={<ForgotPassword />}
-        />
-
         <Route
           element={
             <ProtectedRoute allowedRole="student">
@@ -73,14 +64,7 @@ function App() {
           <Route path="/assignments" element={<StudentDashboard />} />
         </Route>
 
-    
         {/* Admin Routes */}
-        <Route element={<ProtectedRoute allowedRole="admin"><AdminLayout /></ProtectedRoute>}>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/results" element={<AdminResultsDashboard />} />
-
-        
-      {/* Admin */}  
         <Route
           element={
             <ProtectedRoute allowedRole="admin">
@@ -88,10 +72,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route
-            path="/admin/dashboard"
-            element={<AdminDashboard />}
-          />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/results" element={<AdminResultsDashboard />} />
         </Route>
 
         {/* Teacher Routes */}
