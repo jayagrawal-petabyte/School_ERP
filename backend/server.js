@@ -21,6 +21,7 @@ const authRouter = require('./auth').authRouter;
 const { assignmentRoutes } = require('./assignments');
 const attendanceRoutes = require('./attendance/attendanceRoutes');
 const { resultRoutes } = require('./exams');
+const errorHandler = require('./exams/middleware/errorHandler');
 const { notificationRoutes } = require('./notifications');
 const { reportRoutes } = require('./reports');
 const { submissionRoutes } = require('./assignment-submission');
@@ -76,13 +77,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || 'Internal Server Error';
-
-  res.status(statusCode).json({ error: message });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 

@@ -1,3 +1,3 @@
-const authMiddleware = require('../../user-management/authMiddleware');
+const { authenticateToken } = require('../../auth/middleware/auth.middleware');
 
-module.exports = authMiddleware;
+module.exports = authenticateToken;

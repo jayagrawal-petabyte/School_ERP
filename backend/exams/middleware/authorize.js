@@ -1,11 +1,7 @@
 const AppError = require('../errors/AppError');
 const relationshipService = require('../service/relationshipService');
-
-const normalizeStringArray = (value) => {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.map((item) => String(item).trim().toLowerCase());
-  return [String(value).trim().toLowerCase()];
-};
+const AUTH_MESSAGES = require('../../auth/constants/authMessages');
+const ROLES = require('../constants/roles');
 
 const normalizeRole = (role) => (role == null ? '' : String(role).trim().toLowerCase());
 
@@ -19,11 +15,16 @@ const checkOwnership = async (user, resourceContext) => {
   const teacherId = resourceContext.teacher_id || resourceContext.teacherId;
   const classId = resourceContext.class_id || resourceContext.classId;
 
-  if (role === 'student') {
+  // Admin and principal bypass ownership checks entirely and retain full access.
+  if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
+    return true;
+  }
+
+  if (role === ROLES.STUDENT) {
     return String(studentId) === String(user.id);
   }
 
-  if (role === 'teacher') {
+  if (role === ROLES.TEACHER) {
     if (String(teacherId) === String(user.id)) {
       return true;
     }
@@ -39,7 +40,7 @@ const checkOwnership = async (user, resourceContext) => {
     return false;
   }
 
-  if (role === 'parent') {
+  if (role === ROLES.PARENT) {
     if (!studentId) {
       return false;
     }
@@ -50,8 +51,7 @@ const checkOwnership = async (user, resourceContext) => {
   return false;
 };
 
-const authorize = ({ roles = [], ownership, requireOwnership = false } = {}) => {
-  const allowedRoles = normalizeStringArray(roles);
+const authorize = ({ ownership, requireOwnership = false } = {}) => {
   const ownershipConfig = ownership === true
     ? { enabled: true }
     : (ownership || (requireOwnership ? { enabled: true } : {}));
@@ -60,17 +60,7 @@ const authorize = ({ roles = [], ownership, requireOwnership = false } = {}) => 
     if (!req.user || !req.user.role) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: Authentication required.',
-        details: {},
-      });
-    }
-
-    const userRole = normalizeRole(req.user.role);
-    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-      return res.status(403).json({
-        success: false,
-        message: 'Forbidden: Insufficient role privileges.',
-        details: {},
+        message: AUTH_MESSAGES.UNAUTHORIZED,
       });
     }
 
@@ -84,12 +74,13 @@ const authorize = ({ roles = [], ownership, requireOwnership = false } = {}) => 
           return next(new AppError('Resource not found.', 404));
         }
 
+        // Reuse the fetched result context in the service layer to avoid duplicate lookups.
+        req.resourceOwner = resourceContext;
+
         const isOwner = await checkOwnership(req.user, resourceContext);
         if (!isOwner) {
-          return next(new AppError('Forbidden: You do not have ownership of this resource.', 403));
+          return next(new AppError(AUTH_MESSAGES.FORBIDDEN, 403));
         }
-
-        req.resourceOwner = resourceContext;
       } catch (error) {
         return next(error);
       }
