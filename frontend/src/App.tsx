@@ -20,6 +20,15 @@ import CommonNavbar from "./components/layout/CommonNavbar";
 import Footer from "./components/layout/Footer";
 import AdminDashboard from "./admin/pages/AdminDashboard";
 import AdminLayout from "./admin/components/AdminLayout";
+import AdminStudents from "./students/pages/Students";
+import AdminTeachers from "./teachers/Teachers";
+import AdminParents from "./parents/Parents";
+import AdminAttendance from "./attendance/pages/AdminAttendance";
+import Fees from "./fees/Fees";
+import Timetable from "./timetable/Timetable";
+import Library from "./library/Library";
+import Reports from "./reports/Reports";
+import Settings from "./settings/Settings";
 
 const StudentLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,6 +83,15 @@ function App() {
         >
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/results" element={<AdminResultsDashboard />} />
+          <Route path="/admin/students" element={<AdminStudents />} />
+          <Route path="/admin/teachers" element={<AdminTeachers />} />
+          <Route path="/admin/parents" element={<AdminParents />} />
+          <Route path="/admin/attendance" element={<AdminAttendance />} />
+          <Route path="/admin/fees" element={<Fees />} />
+          <Route path="/admin/timetable" element={<Timetable />} />
+          <Route path="/admin/library" element={<Library />} />
+          <Route path="/admin/reports" element={<Reports />} />
+          <Route path="/admin/settings" element={<Settings />} />
         </Route>
 
         {/* Teacher Routes */}
