@@ -164,9 +164,9 @@ function getAssignmentSubmissions(
     );
 }
 
-function downloadSubmission(id) {
-    const submission =
-        submissionStore.findSubmission(id);
+function downloadSubmission(id, user) {
+
+    const submission = submissionStore.findSubmission(id);
 
     if (!submission) {
         const error = new Error("Submission not found.");
@@ -174,7 +174,29 @@ function downloadSubmission(id) {
         throw error;
     }
 
+    const role = String(user.role || "").toLowerCase();
 
+    // Student: can download only their own submission
+    if (role === "student") {
+        if (String(submission.student_id) !== String(user.id)) {
+            const error = new Error(
+                "You are not authorized to access this submission."
+            );
+            error.statusCode = 403;
+            throw error;
+        }
+    }
+
+    // Parent: no access
+    if (role === "parent") {
+        const error = new Error(
+            "You are not authorized to access this submission."
+        );
+        error.statusCode = 403;
+        throw error;
+    }
+
+    // Teachers, admins and principals are allowed
     return submission;
 }
 

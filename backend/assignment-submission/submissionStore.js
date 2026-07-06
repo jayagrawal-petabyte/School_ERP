@@ -1,3 +1,4 @@
+const { getClientForUser } = require("../services/database.service");
 const submissions = [];
 
 let nextId = 1;
@@ -6,7 +7,7 @@ function now() {
     return new Date().toISOString();
 }
 
-function addSubmission(data) {
+function addSubmission(data, token) {
 
     const submission = {
     id: String(nextId++),
