@@ -16,7 +16,9 @@ const {
 
 const router = express.Router();
 
-//user login
+/**
+ * User login.
+ */
 router.post(
     "/login",
     loginValidationRules,
@@ -24,7 +26,9 @@ router.post(
     authController.login
 );
 
-//user logout
+/**
+ * User logout.
+ */
 router.post(
     "/logout",
     authorizationValidationRules,
@@ -33,7 +37,9 @@ router.post(
     authController.logout
 );
 
-
+/**
+ * Get current authenticated user.
+ */
 router.get(
     "/me",
     authorizationValidationRules,

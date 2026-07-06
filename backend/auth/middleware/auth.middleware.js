@@ -1,12 +1,12 @@
 "use strict";
 
-const { verifyToken } = require("../utils/jwt");
+const {
+    getClientForUser,
+} = require("../../services/database.service");
+
 const AUTH_MESSAGES = require("../constants/authMessages");
 
-/**
- * Authenticate JWT token.
- */
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res, next) {
     const authorizationHeader = req.get("Authorization");
 
     if (!authorizationHeader) {
@@ -29,15 +29,29 @@ function authenticateToken(req, res, next) {
     }
 
     try {
-        const decodedToken = verifyToken(token);
+        const supabase = getClientForUser(token);
 
-        req.user = decodedToken;
+        const {
+            data,
+            error,
+        } = await supabase.auth.getUser(token);
+
+        if (error || !data?.user) {
+            return res.status(401).json({
+                success: false,
+                message: AUTH_MESSAGES.INVALID_TOKEN,
+            });
+        }
+
+        req.user = data.user;
 
         return next();
     } catch (error) {
         return res.status(401).json({
             success: false,
-            message: error.message || AUTH_MESSAGES.INVALID_TOKEN,
+            message:
+                error.message ||
+                AUTH_MESSAGES.INVALID_TOKEN,
         });
     }
 }
