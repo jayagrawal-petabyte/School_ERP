@@ -1,6 +1,6 @@
 const { authenticateToken } = require('../../auth/middleware/auth.middleware');
 const { authorizeRoles } = require('../../auth/middleware/role.middleware');
-const supabase = require('../supabaseClient');
+const { getClientForUser } = require('../../services/database.service');
 
 const injectScopedClasses = async (req, res, next) => {
     // Requires authenticateToken and authorizeRoles to run first
@@ -15,6 +15,13 @@ const injectScopedClasses = async (req, res, next) => {
     
     if (req.user.role === 'teacher') {
         try {
+            const authHeader = req.get('Authorization');
+            if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+                return res.status(401).json({ success: false, message: 'Invalid or missing token' });
+            }
+            const token = authHeader.split(' ')[1];
+            const supabase = getClientForUser(token);
+            
             const { data, error } = await supabase
                 .from('class_teachers')
                 .select('class_id')

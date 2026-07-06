@@ -1,7 +1,13 @@
-const supabase = require('../supabaseClient');
+const { getClientForUser } = require('../../services/database.service');
 
 const getDashboardReport = async (req, res) => {
     try {
+        const authHeader = req.get('Authorization');
+        if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+            return res.status(401).json({ success: false, message: 'Invalid or missing token' });
+        }
+        const token = authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
         // Admin/Principal only, so no scoped constraints
         
         // Real metric: Recent Pass Rate based on exam_marks
