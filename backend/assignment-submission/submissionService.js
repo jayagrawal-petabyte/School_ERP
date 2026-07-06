@@ -68,7 +68,8 @@ function calculateSubmissionStatus(dueDate, isSubmitted = true) {
         : "submitted";
 }
 
-function submitAssignment(payload, file, user) {
+function submitAssignment(payload, file, user, authHeader) {
+
     requireStudent(user);
 
     validateStudentOwnership(payload, user);
@@ -78,7 +79,8 @@ function submitAssignment(payload, file, user) {
     const existingSubmission =
         submissionStore.findSubmissionByAssignmentAndStudent(
             assignmentId,
-            user.id
+            user.id,
+            authHeader
         );
 
     if (existingSubmission) {
@@ -94,29 +96,32 @@ function submitAssignment(payload, file, user) {
     const submissionStatus =
         calculateSubmissionStatus(dueDate);
 
-    return submissionStore.addSubmission({
-    assignment_id: assignmentId,
-    student_id: user.id,
-    file_url: null, // TODO: Replace with Supabase Storage URL
-    file_name: file.originalname,
-    file_type: file.mimetype,
-    file_size: file.size,
-    status: submissionStatus,
-    submitted_at: new Date().toISOString()
-});
+    return submissionStore.addSubmission(
+        {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            file_url: null, // TODO: Replace with Supabase Storage URL
+            file_name: file.originalname,
+            file_type: file.mimetype,
+            file_size: file.size,
+            status: submissionStatus,
+            submitted_at: new Date().toISOString()
+        },
+        authHeader
+    );
 }
 
-function getSubmissionStatus(assignmentId, user) {
+function getSubmissionStatus(assignmentId, user, authHeader) {
 
     requireStudent(user);
 
     const submission =
         submissionStore.findSubmissionStatus(
             assignmentId,
-            user.id
+            user.id,
+            authHeader
         );
 
-    // Student has not submitted yet
     if (!submission) {
         return {
             assignmentId,
@@ -133,18 +138,22 @@ function getSubmissionStatus(assignmentId, user) {
     };
 }
 
-function getStudentSubmissions(user) {
+function getStudentSubmissions(user, authHeader) {
+
     requireStudent(user);
 
     return submissionStore.findStudentSubmissions(
-        user.id
+        user.id,
+        authHeader
     );
 }
 
 function getAssignmentSubmissions(
     assignmentId,
-    user
+    user,
+    authHeader
 ) {
+
     const role = String(user.role || "").toLowerCase();
 
     if (
@@ -160,13 +169,18 @@ function getAssignmentSubmissions(
     }
 
     return submissionStore.findAssignmentSubmissions(
-        assignmentId
+        assignmentId,
+        authHeader
     );
 }
 
-function downloadSubmission(id, user) {
+function downloadSubmission(id, user, authHeader) {
 
-    const submission = submissionStore.findSubmission(id);
+    const submission =
+        submissionStore.findSubmission(
+            id,
+            authHeader
+        );
 
     if (!submission) {
         const error = new Error("Submission not found.");
@@ -176,7 +190,6 @@ function downloadSubmission(id, user) {
 
     const role = String(user.role || "").toLowerCase();
 
-    // Student: can download only their own submission
     if (role === "student") {
         if (String(submission.student_id) !== String(user.id)) {
             const error = new Error(
@@ -187,7 +200,6 @@ function downloadSubmission(id, user) {
         }
     }
 
-    // Parent: no access
     if (role === "parent") {
         const error = new Error(
             "You are not authorized to access this submission."
@@ -196,7 +208,6 @@ function downloadSubmission(id, user) {
         throw error;
     }
 
-    // Teachers, admins and principals are allowed
     return submission;
 }
 
