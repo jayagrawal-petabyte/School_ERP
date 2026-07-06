@@ -108,5 +108,6 @@ module.exports = {
     findAssignmentSubmissions,
     updateSubmission,
     removeSubmission,
-    listSubmissions
+    listSubmissions,
+    findSubmissionStatus
 };

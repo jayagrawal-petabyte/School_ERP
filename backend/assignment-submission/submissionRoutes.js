@@ -1,8 +1,9 @@
 const express = require("express");
 
 const router = express.Router();
-
 const upload = require("./uploadMiddleware");
+const { authenticateToken } = require("../auth/middleware/auth.middleware");
+const { authorizeRoles } = require("../auth/middleware/role.middleware");
 
 const {
     submitAssignment,
@@ -14,16 +15,37 @@ const {
 
 router.post(
     "/submit",
+    authenticateToken,
+    authorizeRoles("student"),
     upload.single("file"),
     submitAssignment
 );
 
-router.get("/status/:assignmentId",getSubmissionStatus);
+router.get(
+    "/status/:submissionId",
+    authenticateToken,
+    authorizeRoles("student"),
+    getSubmissionStatus
+);
 
-router.get("/student", getStudentSubmissions);
+router.get(
+    "/student",
+    authenticateToken,
+    authorizeRoles("student"),
+    getStudentSubmissions
+);
 
-router.get("/assignment/:assignmentId", getAssignmentSubmissions);
+router.get(
+    "/assignment/:assignmentId",
+    authenticateToken,
+    authorizeRoles("teacher", "admin", "principal"),
+    getAssignmentSubmissions
+);
 
-router.get("/download/:submissionId", downloadSubmission);
+router.get(
+    "/download/:submissionId",
+    authenticateToken,
+    downloadSubmission
+);
 
 module.exports = router;
