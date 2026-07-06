@@ -88,16 +88,27 @@ function validateUser(payload) {
   validateName(fullName);
 
   if (!email) {
-    const error = new Error('Email is required.');
+    const error = new Error("Email is required.");
     error.statusCode = 400;
     throw error;
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    const error = new Error('Invalid email format.');
+  const at = email.indexOf("@");
+  const dot = email.lastIndexOf(".");
+
+  if (
+    at <= 0 ||
+    dot <= at + 1 ||
+    dot === email.length - 1 ||
+    at !== email.lastIndexOf("@") || // Prevents multiple '@' symbols
+    email.includes(" ") ||           // Prevents internal whitespace
+    email.includes("..")             // Prevents consecutive dots
+  ) {
+    const error = new Error("Invalid email format.");
     error.statusCode = 400;
     throw error;
   }
+
 
   if (!role) {
     const error = new Error('Role is required.');
