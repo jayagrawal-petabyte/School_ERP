@@ -1,22 +1,5 @@
 require("dotenv").config();
-const Module = require('module');
 const express = require('express');
-
-const originalLoad = Module._load;
-Module._load = function patchedLoad(request, parent, isMain) {
-  if (request === '../database/supabaseClient' || request === './database/supabaseClient' || request.endsWith('supabaseClient')) {
-    return {
-      from: () => ({
-        select: async () => ({ data: [], error: null }),
-        insert: () => ({ select: async () => ({ data: [], error: null }) }),
-        update: () => ({ eq: () => ({ select: async () => ({ data: [], error: null }) }) }),
-        eq: () => ({ select: async () => ({ data: [], error: null }) }),
-      }),
-    };
-  }
-
-  return originalLoad.apply(this, arguments);
-};
 
 const authRouter = require('./auth').authRouter;
 const { assignmentRoutes } = require('./assignments');
