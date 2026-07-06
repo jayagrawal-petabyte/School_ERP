@@ -26,7 +26,7 @@ const getResultStudentId = (result = {}) => result.student_id || result.studentI
 const getResultTeacherId = (result = {}) => result.teacher_id || result.teacherId;
 const getResultClassId = (result = {}) => result.class_id || result.classId;
 
-const assertResultAccess = async (user, result) => {
+const assertResultAccess = async (user, result, { requireOwnership = false } = {}) => {
   if (!result) {
     throw new AppError('Result not found', 404);
   }
@@ -55,9 +55,18 @@ const assertResultAccess = async (user, result) => {
     const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
     const teacherOwnsResult = String(getResultTeacherId(result)) === String(user.id);
     const classAssigned = teacherClassIds.includes(String(getResultClassId(result)));
+
+    if (requireOwnership) {
+      if (!teacherOwnsResult) {
+        throw new AppError('Forbidden', 403);
+      }
+      return result;
+    }
+
     if (!teacherOwnsResult && !classAssigned) {
       throw new AppError('Forbidden', 403);
     }
+
     return result;
   }
 
@@ -159,6 +168,10 @@ const normalizeResultPayload = (data, user, { isUpdate = false, existingResult =
     throw new AppError('Exam type is required', 400);
   }
 
+  if (!isUpdate && !classId) {
+    throw new AppError('Class ID is required', 400);
+  }
+
   const resolvedMaxMarks = validateNumber(maxMarks ?? 100, 'max_marks', { min: 1, required: false }) ?? (maxMarks ?? 100);
   const resolvedPassingMarks = validateNumber(passingMarks ?? Math.min(33, resolvedMaxMarks), 'passing_marks', { min: 0, max: resolvedMaxMarks, required: false }) ?? (passingMarks ?? Math.min(33, resolvedMaxMarks));
   const resolvedMarksObtained = validateNumber(marksObtained, 'marks_obtained', { min: 0, required: !isUpdate }) ?? (isUpdate ? marksObtained : 0);
@@ -240,7 +253,7 @@ const updateResult = async (id, data, options = {}) => {
     throw new AppError('Result not found', 404);
   }
 
-  await assertResultAccess(options.user || {}, existingResult);
+  await assertResultAccess(options.user || {}, existingResult, { requireOwnership: true });
 
   const normalizedPayload = normalizeResultPayload(data, {}, { isUpdate: true, existingResult });
   const updates = {};
@@ -296,6 +309,64 @@ const getResultById = async (id, options = {}) => {
   return enriched;
 };
 
+const createEmptyResponse = (options = {}) => {
+  const page = Math.max(1, Number(options.page || 1));
+  const limit = Math.max(1, Number(options.limit || 10));
+
+  return {
+    success: true,
+    page,
+    limit,
+    total: 0,
+    totalPages: 0,
+    data: [],
+  };
+};
+
+const fetchRoleScopedResults = async (user, filters = {}, options = {}) => {
+  const role = String(user.role).toLowerCase();
+
+  if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
+    return resultRepository.findAll(filters, options);
+  }
+
+  if (role === ROLES.STUDENT) {
+    return resultRepository.findAll({ ...filters, student_id: user.id }, options);
+  }
+
+  if (role === ROLES.PARENT) {
+    const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
+    if (!Array.isArray(parentStudentIds) || parentStudentIds.length === 0) {
+      return createEmptyResponse(options);
+    }
+
+    return resultRepository.findAll({ ...filters, student_id: parentStudentIds }, options);
+  }
+
+  if (role === ROLES.TEACHER) {
+    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
+    const teacherQuery = resultRepository.findAll({ ...filters, teacher_id: user.id }, { ...options, page: 1, limit: 1000 });
+    const classQuery = teacherClassIds.length > 0
+      ? resultRepository.findAll({ ...filters, class_id: teacherClassIds }, { ...options, page: 1, limit: 1000 })
+      : Promise.resolve(createEmptyResponse({ ...options, page: 1, limit: 1000 }));
+
+    const [teacherResponse, classResponse] = await Promise.all([teacherQuery, classQuery]);
+    const mergedResults = [...(teacherResponse?.data || []), ...(classResponse?.data || [])];
+    const uniqueResults = mergedResults.filter((result, index, rows) => rows.findIndex((entry) => String(entry.id) === String(result.id)) === index);
+
+    return {
+      success: true,
+      page: Math.max(1, Number(options.page || 1)),
+      limit: Math.max(1, Number(options.limit || 10)),
+      total: uniqueResults.length,
+      totalPages: uniqueResults.length === 0 ? 0 : Math.ceil(uniqueResults.length / Math.max(1, Number(options.limit || 10))),
+      data: uniqueResults,
+    };
+  }
+
+  return createEmptyResponse(options);
+};
+
 const getAllResults = async (user, options = {}) => {
   const role = String(user.role).toLowerCase();
   const normalizedOptions = {
@@ -306,50 +377,12 @@ const getAllResults = async (user, options = {}) => {
     filters: options.filters || {},
   };
 
-  if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
-    const response = await resultRepository.findAll(normalizedOptions.filters, normalizedOptions);
-    const enriched = await enrichResultsWithMetadata(response.data);
-    return { ...response, data: enriched };
-  }
-
-  if (role === ROLES.TEACHER) {
-    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
-    const results = await resultRepository.findAll({}, { page: 1, limit: 1000 });
-    const filteredResults = results.data.filter((result) => {
-      const teacherIdMatches = String(result.teacher_id || result.teacherId) === String(user.id);
-      const classMatches = teacherClassIds.includes(String(result.class_id || result.classId));
-      return teacherIdMatches || classMatches;
-    });
-
-    const filteredByQuery = applyQueryFilters(filteredResults, normalizedOptions.filters);
-    const sortedResults = sortResults(filteredByQuery, normalizedOptions.sortBy, normalizedOptions.order);
-    const paginated = paginateResults(sortedResults, normalizedOptions);
-    const enriched = await enrichResultsWithMetadata(paginated.data);
-    return { ...paginated, data: enriched };
-  }
-
-  if (role === ROLES.PARENT) {
-    const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
-    const results = await resultRepository.findAll({}, { page: 1, limit: 1000 });
-    const filteredResults = results.data.filter((result) => parentStudentIds.includes(String(result.student_id || result.studentId)));
-    const filteredByQuery = applyQueryFilters(filteredResults, normalizedOptions.filters);
-    const sortedResults = sortResults(filteredByQuery, normalizedOptions.sortBy, normalizedOptions.order);
-    const paginated = paginateResults(sortedResults, normalizedOptions);
-    const enriched = await enrichResultsWithMetadata(paginated.data);
-    return { ...paginated, data: enriched };
-  }
-
-  if (role === ROLES.STUDENT) {
-    const results = await resultRepository.findAll({}, { page: 1, limit: 1000 });
-    const filteredResults = results.data.filter((result) => String(result.student_id || result.studentId) === String(user.id));
-    const filteredByQuery = applyQueryFilters(filteredResults, normalizedOptions.filters);
-    const sortedResults = sortResults(filteredByQuery, normalizedOptions.sortBy, normalizedOptions.order);
-    const paginated = paginateResults(sortedResults, normalizedOptions);
-    const enriched = await enrichResultsWithMetadata(paginated.data);
-    return { ...paginated, data: enriched };
-  }
-
-  return { success: true, page: 1, limit: 10, total: 0, totalPages: 0, data: [] };
+  const response = await fetchRoleScopedResults(user, normalizedOptions.filters, normalizedOptions);
+  const results = Array.isArray(response?.data) ? response.data : [];
+  const sortedResults = sortResults(results, normalizedOptions.sortBy, normalizedOptions.order);
+  const paginated = paginateResults(sortedResults, normalizedOptions);
+  const enriched = await enrichResultsWithMetadata(paginated.data);
+  return { ...paginated, data: enriched };
 };
 
 const applyQueryFilters = (results, filters = {}) => results.filter((result) => Object.entries(filters).every(([key, value]) => {
@@ -425,9 +458,8 @@ const paginateResults = (results, options = {}) => {
 };
 
 const getMyResults = async (user) => {
-  const allResults = (await resultRepository.findAll()).data || [];
-  const filteredResults = allResults.filter((result) => String(result.student_id || result.studentId) === String(user.id));
-  return enrichResultsWithMetadata(filteredResults);
+  const response = await resultRepository.findAll({ student_id: user.id }, { page: 1, limit: 1000 });
+  return enrichResultsWithMetadata(response?.data || []);
 };
 
 const getOwnershipContext = async (id) => {
