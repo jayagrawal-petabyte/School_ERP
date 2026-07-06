@@ -1,21 +1,3 @@
-/**
- * ParentReport.jsx — School ERP | Reports Module
- *
- * An Enterprise Parent Analytics Report — NOT another Parent Management
- * page, NOT another dashboard. It answers: how healthy is the parent
- * ecosystem, how well is it linked to students, and how reachable is it?
- *
- * Data model note: ERPContext links a parent to a student by PHONE NUMBER
- * (see addStudent/updateStudent/deleteStudent in ERPContext.jsx) — there is
- * no parentId/studentIds foreign key. This report re-derives that same join
- * itself (memoized) so every KPI, analytic, and table row here always
- * matches the real Student ↔ Parent link, and stays in sync automatically
- * whenever Student CRUD, Parent CRUD, or the sync logic changes anything.
- *
- * Everything is computed with useMemo directly from useERP() — no duplicate
- * state, no hardcoded values, no sample data.
- */
-
 import { useState, useMemo } from "react";
 import { useERP } from "../ERPContext.jsx";
 import {
@@ -25,11 +7,8 @@ import {
 } from "./reportShared.jsx";
 
 const RECORDS_PER_PAGE = 8;
-const PARENT_ACCENT = "#ad1457"; // this report's own signature accent — visually distinct from Student (blue) / Teacher (purple)
+const PARENT_ACCENT = "#ad1457"; 
 
-// ─── Local, Parent-Report-only visual primitives (kept out of reportShared.jsx
-//     so Student Report / Teacher Report are never affected) — these are what
-//     give this report its own identity per the design requirement. ──────────
 
 function StatRing({ pct, label, sub, color = PARENT_ACCENT, size = 96 }) {
   const clamped = Math.max(0, Math.min(100, pct));
@@ -104,10 +83,7 @@ export default function ParentReport() {
   const [sortDir, setSortDir]           = useState("desc");
   const [page, setPage]                 = useState(1);
 
-  // ── The real Student ↔ Parent join, re-derived from ERPContext ───────────
-  // One row per (parent, child) pair. A parent with zero children still
-  // produces one "unlinked parent" row; a student with no matching parent
-  // is tracked separately as a data-quality issue below.
+ 
   const links = useMemo(() => {
     const rows = [];
     parents.forEach((p) => {
@@ -161,12 +137,7 @@ export default function ParentReport() {
     return { one, two, multiple };
   }, [parents]);
 
-  // ── Analytics 2: Parent Status ──
-  // Note: the ERP's data model only tracks Active/Inactive for parents —
-  // there is no "Pending" state in ERPContext, so it is intentionally not
-  // fabricated here.
 
-  // ── Analytics 3: Communication Health ──
   const commHealth = useMemo(() => ({
     emailOnFile:   parents.filter((p) => !!p.email).length,
     phoneOnFile:   parents.filter((p) => !!p.phone).length,
@@ -174,9 +145,7 @@ export default function ParentReport() {
     missingPhone:  parents.filter((p) => !p.phone).length,
   }), [parents]);
 
-  // ── Analytics 4 & 5: Class-wise / Section-wise Parent Distribution ──
-  // Counts DISTINCT parents represented in each class/section (a parent with
-  // two children in the same class still counts once for that class).
+
   const classDistribution = useMemo(() => {
     const map = {};
     links.filter((l) => l.student).forEach((l) => {
