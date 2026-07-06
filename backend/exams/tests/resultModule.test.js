@@ -93,16 +93,51 @@ test('getAllResults supports pagination, filtering and sorting', async () => {
   assert.equal(response.totalPages >= 0, true);
 });
 
+test('getAllResults uses repository filters for student-scoped results', async () => {
+  const originalFindAll = resultRepository.findAll;
+  const originalFetchExamsByIds = relationshipService.fetchExamsByIds;
+  const originalFetchSubjectsByIds = relationshipService.fetchSubjectsByIds;
+
+  resultRepository.findAll = async (filters = {}) => {
+    assert.deepEqual(filters, { student_id: 'student-1' });
+    return {
+      success: true,
+      page: 1,
+      limit: 10,
+      total: 1,
+      totalPages: 1,
+      data: [{ id: 'result-1', student_id: 'student-1', teacher_id: 'teacher-1', class_id: 'class-7', status: 'pass' }],
+    };
+  };
+  relationshipService.fetchExamsByIds = async () => [];
+  relationshipService.fetchSubjectsByIds = async () => [];
+
+  try {
+    const response = await resultService.getAllResults({ id: 'student-1', role: ROLES.STUDENT }, { page: 1, limit: 10 });
+    assert.equal(response.data.length, 1);
+    assert.equal(response.data[0].id, 'result-1');
+  } finally {
+    resultRepository.findAll = originalFindAll;
+    relationshipService.fetchExamsByIds = originalFetchExamsByIds;
+    relationshipService.fetchSubjectsByIds = originalFetchSubjectsByIds;
+  }
+});
+
 test('parent can view only their own children\'s results', async () => {
   const originalFindAll = resultRepository.findAll;
   const originalGetParentStudentIds = relationshipService.getParentStudentIds;
 
-  resultRepository.findAll = async () => ({
-    data: [
+  resultRepository.findAll = async (filters = {}) => {
+    const studentIds = Array.isArray(filters.student_id) ? filters.student_id : [filters.student_id];
+    const rows = [
       { id: 'result-1', student_id: 'student-1', class_id: 'class-7', teacher_id: 'teacher-1', status: 'pass' },
       { id: 'result-2', student_id: 'student-2', class_id: 'class-8', teacher_id: 'teacher-2', status: 'fail' },
-    ],
-  });
+    ];
+
+    return {
+      data: rows.filter((row) => studentIds.includes(String(row.student_id))),
+    };
+  };
   relationshipService.getParentStudentIds = async () => ['student-1'];
 
   try {
@@ -185,98 +220,4 @@ test('principal can access any result', async () => {
     resultRepository.findById = originalFindById;
   }
 });
-
-// exams/middleware/authorize.js
-const AppError = require('../errors/AppError');
-const relationshipService = require('../service/relationshipService');
-const AUTH_MESSAGES = require('../../auth/constants/authMessages');
-const ROLES = require('../constants/roles');
-
-const normalizeRole = (role) => (role == null ? '' : String(role).trim().toLowerCase());
-
-const checkOwnership = async (user, resourceContext) => {
-  if (!resourceContext) {
-    return false;
-  }
-
-  const role = normalizeRole(user.role);
-  const studentId = resourceContext.student_id || resourceContext.studentId;
-  const teacherId = resourceContext.teacher_id || resourceContext.teacherId;
-  const classId = resourceContext.class_id || resourceContext.classId;
-
-  // Admin and principal bypass ownership checks entirely and retain full access.
-  if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
-    return true;
-  }
-
-  if (role === ROLES.STUDENT) {
-    return String(studentId) === String(user.id);
-  }
-
-  if (role === ROLES.TEACHER) {
-    if (String(teacherId) === String(user.id)) {
-      return true;
-    }
-
-    if (Array.isArray(resourceContext.assignedTeacherIds)) {
-      return resourceContext.assignedTeacherIds.map((id) => String(id)).includes(String(user.id));
-    }
-
-    if (classId) {
-      return relationshipService.isTeacherAssignedToClass(user.id, classId);
-    }
-
-    return false;
-  }
-
-  if (role === ROLES.PARENT) {
-    if (!studentId) {
-      return false;
-    }
-
-    return relationshipService.isParentOfStudent(user.id, studentId);
-  }
-
-  return false;
-};
-
-const authorize = ({ ownership, requireOwnership = false } = {}) => {
-  const ownershipConfig = ownership === true
-    ? { enabled: true }
-    : (ownership || (requireOwnership ? { enabled: true } : {}));
-
-  return async (req, res, next) => {
-    if (!req.user || !req.user.role) {
-      return res.status(401).json({
-        success: false,
-        message: AUTH_MESSAGES.UNAUTHORIZED,
-      });
-    }
-
-    if (ownershipConfig.enabled) {
-      try {
-        const resourceContext = ownershipConfig.resolver
-          ? await ownershipConfig.resolver(req)
-          : (ownershipConfig.param ? req.params?.[ownershipConfig.param] : null);
-
-        if (!resourceContext) {
-          return next(new AppError('Resource not found.', 404));
-        }
-
-        // Reuse the fetched result context in the service layer to avoid duplicate lookups.
-        req.resourceOwner = resourceContext;
-
-        const isOwner = await checkOwnership(req.user, resourceContext);
-        if (!isOwner) {
-          return next(new AppError(AUTH_MESSAGES.FORBIDDEN, 403));
-        }
-      } catch (error) {
-        return next(error);
-      }
-    }
-
-    return next();
-  };
-};
-
-module.exports = authorize;
+ 
