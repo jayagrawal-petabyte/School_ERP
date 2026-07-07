@@ -37,12 +37,12 @@ const MONTH_NAMES = [
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 export default function AttendanceHistoryScreen({ route, navigation }: Props) {
-  const { classId } = route.params;
+  const { classId, defaultStudentName } = route.params;
 
   // Search Filter States
   const [role, setRole] = useState<'student' | 'teacher'>('student');
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Default empty for class mode
-  const [activeSearch, setActiveSearch] = useState<string>(''); // Confirmed search query
+  const [searchQuery, setSearchQuery] = useState<string>(defaultStudentName || ''); // Default empty or student name
+  const [activeSearch, setActiveSearch] = useState<string>(defaultStudentName || ''); // Confirmed search query
   const [standard] = useState<string>('Standard - 8');
   const [division] = useState<string>('Division - C');
 
@@ -321,58 +321,60 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Top Search Controls */}
-      <View style={styles.filterSection}>
-        <View style={styles.radioContainer}>
-          <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('student')}>
-            <View style={[styles.radioCircle, role === 'student' && styles.radioCircleChecked]}>
-              {role === 'student' && <View style={styles.radioDot} />}
-            </View>
-            <Text style={[styles.radioLabel, role === 'student' && styles.radioLabelActive]}>Student</Text>
-          </TouchableOpacity>
+      {/* Top Search Controls (Visible only for Teachers/Admin) */}
+      {!defaultStudentName && (
+        <View style={styles.filterSection}>
+          <View style={styles.radioContainer}>
+            <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('student')}>
+              <View style={[styles.radioCircle, role === 'student' && styles.radioCircleChecked]}>
+                {role === 'student' && <View style={styles.radioDot} />}
+              </View>
+              <Text style={[styles.radioLabel, role === 'student' && styles.radioLabelActive]}>Student</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('teacher')}>
-            <View style={[styles.radioCircle, role === 'teacher' && styles.radioCircleChecked]}>
-              {role === 'teacher' && <View style={styles.radioDot} />}
-            </View>
-            <Text style={[styles.radioLabel, role === 'teacher' && styles.radioLabelActive]}>Teachers</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.searchBox}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search student name (e.g. Lucas Henry)..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor={COLORS.textMuted}
-            />
-            {activeSearch.length > 0 && (
-              <TouchableOpacity onPress={handleClearSearch} style={styles.clearSearchBtn}>
-                <Text style={styles.clearSearchText}>✕</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('teacher')}>
+              <View style={[styles.radioCircle, role === 'teacher' && styles.radioCircleChecked]}>
+                {role === 'teacher' && <View style={styles.radioDot} />}
+              </View>
+              <Text style={[styles.radioLabel, role === 'teacher' && styles.radioLabelActive]}>Teachers</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.dropdownsRow}>
-            <View style={styles.dropdownField}>
-              <Text style={styles.dropdownText}>{standard}</Text>
-              <Text style={styles.chevronIcon}>▼</Text>
+          <View style={styles.formContainer}>
+            <View style={styles.searchBox}>
+              <Text style={styles.searchIcon}>🔍</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search student name (e.g. Lucas Henry)..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={COLORS.textMuted}
+              />
+              {activeSearch.length > 0 && (
+                <TouchableOpacity onPress={handleClearSearch} style={styles.clearSearchBtn}>
+                  <Text style={styles.clearSearchText}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
-            <View style={styles.dropdownField}>
-              <Text style={styles.dropdownText}>{division}</Text>
-              <Text style={styles.chevronIcon}>▼</Text>
+            <View style={styles.dropdownsRow}>
+              <View style={styles.dropdownField}>
+                <Text style={styles.dropdownText}>{standard}</Text>
+                <Text style={styles.chevronIcon}>▼</Text>
+              </View>
+
+              <View style={styles.dropdownField}>
+                <Text style={styles.dropdownText}>{division}</Text>
+                <Text style={styles.chevronIcon}>▼</Text>
+              </View>
             </View>
+
+            <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
+              <Text style={styles.searchBtnText}>Search</Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-            <Text style={styles.searchBtnText}>Search</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      )}
 
       {loading ? (
         <View style={styles.loadingContainer}>

@@ -32,3 +32,46 @@ export interface StudentHistoryRecord {
 }
 
 export * from './exam';
+
+export type UserRole = 'admin' | 'teacher' | 'student' | 'parent' | 'principal';
+export type AccountStatus = 'active' | 'inactive';
+
+export interface AppUser {
+  id: string;
+  role: UserRole;
+  full_name: string;
+  account_status: AccountStatus;
+  failed_login_attempts: number;
+  account_locked_until: string | null;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClassRecord {
+  id: string;
+  class_name: string;
+  section: string | null;
+  created_at: string;
+}
+
+export interface TeacherProfileView extends AppUser {
+  classes: ClassRecord[];
+}
+
+export interface ParentProfileView extends AppUser {
+  children: AppUser[];
+}
+
+export interface StudentProfileView extends AppUser {
+  classes: ClassRecord[];
+}
+
+export interface DashboardCard {
+  id: string;
+  title: string;
+  emoji: string;
+  color: string;
+  route?: string;
+  forRole: UserRole[];
+}

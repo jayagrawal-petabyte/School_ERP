@@ -1,35 +1,20 @@
-export interface Student {
-  id: string;
-  name: string;
-  rollNumber: string;
-  gender: 'M' | 'F';
-}
+import {
+  Student,
+  ClassInfo,
+  AttendanceStatus,
+  AttendanceRecord,
+  DailyAttendance,
+  StudentHistoryRecord,
+} from '../types';
 
-export interface ClassInfo {
-  id: string;
-  name: string;
-  section: string;
-  studentCount: number;
-}
-
-export type AttendanceStatus = 'present' | 'absent' | 'late' | 'earlyOff' | 'festival';
-
-export interface AttendanceRecord {
-  studentId: string;
-  status: AttendanceStatus;
-  remarks?: string;
-}
-
-export interface DailyAttendance {
-  classId: string;
-  date: string; // YYYY-MM-DD
-  records: AttendanceRecord[];
-}
-
-export interface StudentHistoryRecord {
-  date: string; // YYYY-MM-DD
-  status: AttendanceStatus;
-}
+export {
+  Student,
+  ClassInfo,
+  AttendanceStatus,
+  AttendanceRecord,
+  DailyAttendance,
+  StudentHistoryRecord,
+};
 
 // In-Memory Database of Students (matching screenshots names)
 const STUDENTS: Record<string, Student[]> = {
@@ -470,4 +455,58 @@ export const AssignmentService = {
     return { success: true, message: 'Assignment submitted successfully!' };
   },
 };
+
+export interface LeaveRequest {
+  id: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  requestedAt: string;
+}
+
+const LEAVE_REQUESTS_DB: LeaveRequest[] = [
+  {
+    id: 'l1',
+    leaveType: 'Sick Leave',
+    startDate: '2026-06-10',
+    endDate: '2026-06-11',
+    reason: 'Suffering from viral fever and advised absolute bed rest by the doctor.',
+    status: 'approved',
+    requestedAt: '2026-06-09 09:15 AM'
+  }
+];
+
+export const LeaveRequestService = {
+  getLeaveRequests: async (): Promise<LeaveRequest[]> => {
+    await delay(300);
+    return [...LEAVE_REQUESTS_DB].sort(
+      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
+    );
+  },
+
+  submitLeaveRequest: async (
+    leaveType: string,
+    startDate: string,
+    endDate: string,
+    reason: string
+  ): Promise<{ success: boolean; message: string }> => {
+    await delay(500);
+
+    const newRequest: LeaveRequest = {
+      id: `l${Date.now()}`,
+      leaveType,
+      startDate,
+      endDate,
+      reason,
+      status: 'pending',
+      requestedAt: new Date().toLocaleString(),
+    };
+
+    LEAVE_REQUESTS_DB.push(newRequest);
+    return { success: true, message: 'Leave request submitted successfully.' };
+  },
+};
+
 
