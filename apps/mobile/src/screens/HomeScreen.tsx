@@ -55,8 +55,20 @@ export default function HomeScreen({ route, navigation }: Props) {
         route: 'AssignmentList',
         params: { classId: '1', className: 'Standard - 8 - C' }
       },
-      { id: '5', title: 'Exams', emoji: '✍️', color: '#FEE4E2' },
-      { id: '6', title: 'Results', emoji: '📊', color: '#E0F2FE' },
+      { 
+        id: '5', 
+        title: 'Exams', 
+        emoji: '✍️', 
+        color: '#FEE4E2',
+        route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
+      },
+      { 
+        id: '6', 
+        title: 'Results', 
+        emoji: '📊', 
+        color: '#E0F2FE',
+        route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
+      },
       { id: '7', title: 'Fees', emoji: '💵', color: '#ECFDF5' },
       { id: '8', title: 'Events', emoji: '📅', color: '#FFF6ED' },
       { id: '9', title: 'Inbox', emoji: '✉️', color: '#FFF9E6' },

@@ -251,6 +251,8 @@ export default function TeacherMarksEntry({
             COLORS.textSecondary
           }
         />
+      </View>
+
       <FlatList
         data={filteredStudents}
         keyExtractor={(item) => item.id}

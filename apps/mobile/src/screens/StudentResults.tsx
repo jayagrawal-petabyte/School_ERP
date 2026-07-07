@@ -74,7 +74,7 @@ export default function StudentResults({
 
       setResults(response);
 
-      if (response.student) {
+      if (response && response.student) {
         setStudent(response.student);
       }
     } catch (error) {
