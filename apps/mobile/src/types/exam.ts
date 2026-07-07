@@ -7,11 +7,14 @@ export interface Student {
 
 export interface SubjectResult {
   id: string;
+  subjectId: string;
   subject: string;
+  subjectName: string;
   marks: number;
+  marksObtained: number;
   maxMarks: number;
   passingMarks: number;
-  grade?: string;
+  grade: string;
   status: "pass" | "fail";
 }
 
@@ -28,6 +31,7 @@ export interface ResultSummary {
   percentage: number;
   passedSubjects: number;
   failedSubjects: number;
+  marksObtained?: number;
 }
 
 export interface StudentResult {
@@ -35,6 +39,8 @@ export interface StudentResult {
   exam: ExamInfo;
   subjects: SubjectResult[];
   summary: ResultSummary;
+  remarks: string;
+  grade: string;
 }
 
 export interface MarksRowState {

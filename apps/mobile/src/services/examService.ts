@@ -1,7 +1,8 @@
-// TODO: Change the import path if exam.ts is moved.
 import {
   Student,
   MarksPayload,
+  StudentResult,
+  SubjectResult,
 } from '../types/exam';
 
 export interface ExamResult {
@@ -134,12 +135,97 @@ export const ExamService = {
 
   async getStudentResults(
     studentId: string
-  ): Promise<ExamResult[]> {
+  ): Promise<StudentResult | null> {
     await delay(250);
 
-    return RESULTS_DB.filter(
-      (result) => result.studentId === studentId
-    );
+    let foundStudent: Student | null = null;
+    for (const classId of Object.keys(STUDENTS_DB)) {
+      const match = STUDENTS_DB[classId].find((s) => s.id === studentId);
+      if (match) {
+        foundStudent = match;
+        break;
+      }
+    }
+
+    if (!foundStudent) return null;
+
+    const subjectsList: SubjectResult[] = [
+      {
+        id: 's1',
+        subjectId: 's1',
+        subject: 'Mathematics',
+        subjectName: 'Mathematics',
+        marks: 88,
+        marksObtained: 88,
+        maxMarks: 100,
+        passingMarks: 50,
+        grade: 'A',
+        status: 'pass'
+      },
+      {
+        id: 's2',
+        subjectId: 's2',
+        subject: 'Physics',
+        subjectName: 'Physics',
+        marks: 74,
+        marksObtained: 74,
+        maxMarks: 100,
+        passingMarks: 50,
+        grade: 'B',
+        status: 'pass'
+      },
+      {
+        id: 's3',
+        subjectId: 's3',
+        subject: 'Chemistry',
+        subjectName: 'Chemistry',
+        marks: 45,
+        marksObtained: 45,
+        maxMarks: 100,
+        passingMarks: 50,
+        grade: 'F',
+        status: 'fail'
+      },
+      {
+        id: 's4',
+        subjectId: 's4',
+        subject: 'English Literature',
+        subjectName: 'English Literature',
+        marks: 92,
+        marksObtained: 92,
+        maxMarks: 100,
+        passingMarks: 50,
+        grade: 'A+',
+        status: 'pass'
+      }
+    ];
+
+    const totalMarks = subjectsList.reduce((sum, item) => sum + item.maxMarks, 0);
+    const obtainedMarks = subjectsList.reduce((sum, item) => sum + item.marks, 0);
+    const percentage = Number(((obtainedMarks / totalMarks) * 100).toFixed(2));
+    const passedSubjects = subjectsList.filter((item) => item.status === 'pass').length;
+    const failedSubjects = subjectsList.filter((item) => item.status === 'fail').length;
+
+    return {
+      student: foundStudent,
+      exam: {
+        id: 'e1',
+        name: 'Final Term Examination',
+        academicYear: '2025-2026'
+      },
+      subjects: subjectsList,
+      summary: {
+        totalSubjects: subjectsList.length,
+        obtainedMarks,
+        totalMarks,
+        percentage,
+        passedSubjects,
+        failedSubjects,
+        marksObtained: obtainedMarks
+      },
+      remarks: 'Good progress overall. Needs improvement in Chemistry.',
+      grade: 'B'
+    };
   },
 
   async getResultsByClass(

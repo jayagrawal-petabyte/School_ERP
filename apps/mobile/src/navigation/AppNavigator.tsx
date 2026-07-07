@@ -17,6 +17,9 @@ import NewPasswordScreen from '../screens/Auth/NewPasswordScreen';
 import PasswordSuccessScreen from '../screens/Auth/PasswordSuccessScreen';
 import MFAScreen from '../screens/Auth/MFAScreen';
 import DashboardScreen from '../screens/Auth/DashboardScreen';
+import ReportCardScreen from '../screens/ReportCard';
+import StudentResultsScreen from '../screens/StudentResults';
+import TeacherMarksEntryScreen from '../screens/TeacherMarksEntry';
 import { RootStackParamList } from './types';
 export { RootStackParamList };
 import { theme } from '../theme';
@@ -107,6 +110,21 @@ export default function AppNavigator() {
         name="LeaveRequest"
         component={LeaveRequestScreen}
         options={{ title: 'Apply Leave' }}
+      />
+      <Stack.Screen
+        name="ReportCard"
+        component={ReportCardScreen}
+        options={{ title: 'Report Card' }}
+      />
+      <Stack.Screen
+        name="StudentResults"
+        component={StudentResultsScreen}
+        options={{ title: 'Results' }}
+      />
+      <Stack.Screen
+        name="TeacherMarksEntry"
+        component={TeacherMarksEntryScreen}
+        options={{ title: 'Marks Entry' }}
       />
     </Stack.Navigator>
   );

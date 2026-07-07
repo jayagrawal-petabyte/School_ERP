@@ -70,7 +70,7 @@ export default function ReportCard({
 
       setResult(response);
 
-      if (response.student) {
+      if (response && response.student) {
         setStudent(response.student);
       }
     } finally {

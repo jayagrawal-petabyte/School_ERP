@@ -12,6 +12,11 @@ export type RootStackParamList = {
   SubmitAssignment: { assignmentId: string; title: string; subject: string };
   LeaveRequest: undefined;
 
+  // Exams & Results Module
+  ReportCard: undefined;
+  StudentResults: undefined;
+  TeacherMarksEntry: undefined;
+
   // Authentication Module
   Splash: undefined;
   Login: undefined;
