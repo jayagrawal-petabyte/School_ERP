@@ -31,6 +31,8 @@ export interface StudentHistoryRecord {
   status: AttendanceStatus;
 }
 
+export * from './exam';
+
 export type UserRole = 'admin' | 'teacher' | 'student' | 'parent' | 'principal';
 export type AccountStatus = 'active' | 'inactive';
 
@@ -62,7 +64,7 @@ export interface ParentProfileView extends AppUser {
 }
 
 export interface StudentProfileView extends AppUser {
-  classes: ClassRecord[]; 
+  classes: ClassRecord[];
 }
 
 export interface DashboardCard {
