@@ -63,10 +63,10 @@ app.get('/', (_req, res) => {
 });
 
 app.use('/api/auth', authRouter);
-app.use('/api/users', userRoutes);
 app.use('/api/users/students', studentRoutes);
 app.use('/api/users/teachers', teacherRoutes);
 app.use('/api/users/parents', parentRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/exams', resultRoutes);
 app.use('/api/assignments', assignmentRoutes);

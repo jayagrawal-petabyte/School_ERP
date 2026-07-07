@@ -1,6 +1,7 @@
 const store = require('./userStore');
 const ROLES = require('../auth/constants/roles');
 const AUTH_MESSAGES = require('../auth/constants/authMessages');
+const { createClient } = require('@supabase/supabase-js');
 
 const adminRoles = [ROLES.ADMIN];
 const validRoles = Object.values(ROLES);
@@ -100,9 +101,9 @@ function validateUser(payload) {
     at <= 0 ||
     dot <= at + 1 ||
     dot === email.length - 1 ||
-    at !== email.lastIndexOf("@") || // Prevents multiple '@' symbols
-    email.includes(" ") ||           // Prevents internal whitespace
-    email.includes("..")             // Prevents consecutive dots
+    at !== email.lastIndexOf("@") ||
+    email.includes(" ") ||
+    email.includes("..")
   ) {
     const error = new Error("Invalid email format.");
     error.statusCode = 400;
@@ -132,9 +133,42 @@ async function createUser(payload, currentUser, supabase) {
 
   const validated = validateUser(payload);
 
+  // Step 1: Create the auth user via the Supabase Admin API.
+  // This requires the service role key; the anon key does not have admin rights.
+  const DATABASE_CONFIG = require('../config/database.config');
+  const { URL, SERVICE_ROLE_KEY } = DATABASE_CONFIG.SUPABASE;
+
+  if (!SERVICE_ROLE_KEY) {
+    const error = new Error(
+      'SUPABASE_SERVICE_ROLE_KEY is not configured. Cannot create auth users without it.'
+    );
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const adminClient = createClient(URL, SERVICE_ROLE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+    email: validated.email,
+    password: Math.random().toString(36).slice(-12) + 'A1!', // temporary password
+    email_confirm: true,
+  });
+
+  if (authError) {
+    const err = new Error(authError.message || 'Failed to create auth user.');
+    err.statusCode = authError.status === 422 ? 409 : 500;
+    throw err;
+  }
+
+  // Step 2: Insert the profile row in public.users using the auth user's ID.
   const user = await store.addUser(
     {
-      ...validated,
+      id: authData.user.id,
+      fullName: validated.fullName,
+      email: validated.email,
+      role: validated.role,
       createdBy: String(
         currentUser.id || currentUser._id || currentUser.email || 'unknown'
       ),
