@@ -34,7 +34,13 @@ function get(key) {
     }
 
     // Deep-clone to prevent callers from mutating cached data (cache poisoning)
-    return JSON.parse(JSON.stringify(entry.value));
+    try {
+        return JSON.parse(JSON.stringify(entry.value));
+    } catch (err) {
+        // If it can't be cloned (e.g. BigInt or circular ref), treat as cache miss
+        store.delete(key);
+        return undefined;
+    }
 }
 
 /**
@@ -46,6 +52,14 @@ function get(key) {
 function set(key, value, ttlMs = DEFAULT_TTL_MS) {
     if (typeof key !== 'string' || !key) return;
 
+    let clonedValue;
+    try {
+        clonedValue = JSON.parse(JSON.stringify(value));
+    } catch (err) {
+        // Skip caching if value is not serializable
+        return;
+    }
+
     // Evict oldest entry if we hit the size cap
     if (store.size >= MAX_ENTRIES && !store.has(key)) {
         const oldestKey = store.keys().next().value;
@@ -54,7 +68,7 @@ function set(key, value, ttlMs = DEFAULT_TTL_MS) {
 
     // Deep-clone to isolate cached data from the original object reference
     store.set(key, {
-        value: JSON.parse(JSON.stringify(value)),
+        value: clonedValue,
         expiresAt: Date.now() + ttlMs,
     });
 }

@@ -13,10 +13,10 @@ const getAttendanceReport = async (req, res) => {
         }
         const token = authHeader.split(' ')[1];
 
-        // Cache key is scoped to the exact set of classes this user can see.
-        // Different teachers will always get a different cache key — no data leakage.
-        const scopeKey = req.scopedClasses ? req.scopedClasses.slice().sort().join(',') : 'ALL';
-        const cacheKey = `attendance_report:${scopeKey}`;
+        // Cache key must be strictly scoped to the exact user to prevent data leakage.
+        // req.scopedClasses === null means admin/principal (ALL).
+        const scopeKey = req.scopedClasses === null ? 'ALL' : req.scopedClasses.slice().sort().join(',');
+        const cacheKey = `attendance_report:${req.user.id}:${scopeKey}`;
 
         const cached = cache.get(cacheKey);
         if (cached) {
@@ -47,7 +47,7 @@ const getAttendanceReport = async (req, res) => {
 
         const payload = {
             success: true,
-            scopedClasses: req.scopedClasses || 'ALL',
+            scopedClasses: req.scopedClasses === null ? 'ALL' : req.scopedClasses,
             data: {
                 overallPercentage: `${overallPercentage}%`,
                 totalRecords: totalDays
