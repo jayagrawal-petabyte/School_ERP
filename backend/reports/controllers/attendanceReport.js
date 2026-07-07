@@ -13,10 +13,13 @@ const getAttendanceReport = async (req, res) => {
         }
         const token = authHeader.split(' ')[1];
 
-        // Cache key must be strictly scoped to the exact user to prevent data leakage.
-        // req.scopedClasses === null means admin/principal (ALL).
+        // Cache key is scoped to the exact set of classes visible to this user.
+        // req.scopedClasses === null means admin/principal (full access → 'ALL').
+        // Two teachers with identical class sets produce identical data, so sharing
+        // a cache entry between them is safe — there is no per-user RLS divergence
+        // for the same class scope in our single-tenant setup.
         const scopeKey = req.scopedClasses === null ? 'ALL' : req.scopedClasses.slice().sort().join(',');
-        const cacheKey = `attendance_report:${req.user.id}:${scopeKey}`;
+        const cacheKey = `attendance_report:${scopeKey}`;
 
         const cached = cache.get(cacheKey);
         if (cached) {

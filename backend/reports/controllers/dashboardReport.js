@@ -19,11 +19,11 @@ const getDashboardReport = async (req, res) => {
 
         const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-        // Two separate cache keys with different TTLs, strictly scoped per user
-        // - Slow-changing aggregates (counts, pass rate) → 5 min TTL
-        // - Today's attendance rate → 1 min TTL (teachers update it live)
-        const AGGREGATES_KEY = `dashboard:aggregates:${req.user.id}`;
-        const ATTENDANCE_KEY = `dashboard:attendance:${req.user.id}:${today}`;
+        // Two separate cache keys with different TTLs.
+        // Keys are global (not user-scoped) because this ERP is single-tenant:
+        // all admins/principals query identical data with no per-user RLS divergence.
+        const AGGREGATES_KEY = 'dashboard:aggregates';
+        const ATTENDANCE_KEY = `dashboard:attendance:${today}`;
 
         const cachedAggregates = cache.get(AGGREGATES_KEY);
         const cachedAttendance = cache.get(ATTENDANCE_KEY);
