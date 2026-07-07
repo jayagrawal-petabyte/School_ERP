@@ -1,7 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+const DATABASE_CONFIG = require('../config/database.config');
+
+const supabaseUrl = DATABASE_CONFIG.SUPABASE.URL;
+const supabaseKey = DATABASE_CONFIG.SUPABASE.ANON_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

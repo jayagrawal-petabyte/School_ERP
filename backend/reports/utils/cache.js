@@ -3,9 +3,9 @@
 /**
  * Lightweight in-memory TTL cache for the reports module.
  * Zero external dependencies — uses a plain Map with timestamps.
- *
- * Security note: cache keys that include a user or class scope are
- * intentionally namespaced so different users never share cached data.
+ * Security note: cache keys must be strictly namespaced by their effective
+ * authorization scope (e.g., specific class set, or global) so users only
+ * access data they are permitted to view.
  */
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -60,10 +60,21 @@ function set(key, value, ttlMs = DEFAULT_TTL_MS) {
         return;
     }
 
-    // Evict oldest entry if we hit the size cap
+    // Evict entries if we hit the size cap
     if (store.size >= MAX_ENTRIES && !store.has(key)) {
-        const oldestKey = store.keys().next().value;
-        store.delete(oldestKey);
+        // Opportunistic cleanup: remove expired entries first
+        const now = Date.now();
+        for (const [k, v] of store.entries()) {
+            if (now > v.expiresAt) {
+                store.delete(k);
+            }
+        }
+        
+        // If still at cap after cleanup, evict the oldest key
+        if (store.size >= MAX_ENTRIES) {
+            const oldestKey = store.keys().next().value;
+            store.delete(oldestKey);
+        }
     }
 
     // Deep-clone to isolate cached data from the original object reference
