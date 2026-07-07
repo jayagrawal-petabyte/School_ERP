@@ -2,6 +2,7 @@ const store = require('./userStore');
 const ROLES = require('../auth/constants/roles');
 const AUTH_MESSAGES = require('../auth/constants/authMessages');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const adminRoles = [ROLES.ADMIN];
 const validRoles = Object.values(ROLES);
@@ -152,7 +153,7 @@ async function createUser(payload, currentUser, supabase) {
 
   const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
     email: validated.email,
-    password: Math.random().toString(36).slice(-12) + 'A1!', // temporary password
+    password: crypto.randomBytes(12).toString('base64url') + 'A1!', // temporary password
     email_confirm: true,
   });
 
