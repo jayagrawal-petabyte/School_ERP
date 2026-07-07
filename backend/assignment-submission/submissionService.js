@@ -1,5 +1,5 @@
 const submissionStore = require("./submissionStore");
-
+const { getClientForUser } = require("../services/database.service");
 function readUser(req) {
     return req.user || req.currentUser || {};
 }
@@ -75,6 +75,8 @@ async function submitAssignment(payload, file, user, authHeader) {
     validateStudentOwnership(payload, user);
 
     const assignmentId = validateSubmission(payload, file);
+    const token = authHeader.split(" ")[1];
+    const supabase = getClientForUser(token);
 
     const existingSubmission =
     await submissionStore.findSubmissionByAssignmentAndStudent(
@@ -91,7 +93,21 @@ async function submitAssignment(payload, file, user, authHeader) {
         throw error;
     }
 
-    const dueDate = null;
+    const { data: assignment, error } = await supabase
+    .from("assignments")
+    .select("due_date")
+    .eq("id", assignmentId)
+    .single();
+
+if (error || !assignment) {
+    const err = new Error(
+        "Assignment not found."
+    );
+    err.statusCode = 404;
+    throw err;
+}
+
+const dueDate = assignment.due_date;
 
     const submissionStatus =
         calculateSubmissionStatus(dueDate);
