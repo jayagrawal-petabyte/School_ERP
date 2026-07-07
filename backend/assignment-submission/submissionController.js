@@ -14,12 +14,12 @@ function handleError(res, error) {
     });
 }
 
-function submitAssignment(req, res) {
+async function submitAssignment(req, res) {
     try {
         const user = submissionService.readUser(req);
         const authHeader = req.get("Authorization");
 
-        const submission = submissionService.submitAssignment(
+        const submission = await submissionService.submitAssignment(
             req.body,
             req.file,
             user,

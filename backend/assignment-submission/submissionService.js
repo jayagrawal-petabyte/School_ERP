@@ -68,7 +68,7 @@ function calculateSubmissionStatus(dueDate, isSubmitted = true) {
         : "submitted";
 }
 
-function submitAssignment(payload, file, user, authHeader) {
+async function submitAssignment(payload, file, user, authHeader) {
 
     requireStudent(user);
 
@@ -77,11 +77,11 @@ function submitAssignment(payload, file, user, authHeader) {
     const assignmentId = validateSubmission(payload, file);
 
     const existingSubmission =
-        submissionStore.findSubmissionByAssignmentAndStudent(
-            assignmentId,
-            user.id,
-            authHeader
-        );
+    await submissionStore.findSubmissionByAssignmentAndStudent(
+        assignmentId,
+        user.id,
+        authHeader
+    );
 
     if (existingSubmission) {
         const error = new Error(
@@ -96,27 +96,27 @@ function submitAssignment(payload, file, user, authHeader) {
     const submissionStatus =
         calculateSubmissionStatus(dueDate);
 
-    return submissionStore.addSubmission(
-        {
-            assignment_id: assignmentId,
-            student_id: user.id,
-            file_url: null, // TODO: Replace with Supabase Storage URL
-            file_name: file.originalname,
-            file_type: file.mimetype,
-            file_size: file.size,
-            status: submissionStatus,
-            submitted_at: new Date().toISOString()
-        },
-        authHeader
-    );
+    return await submissionStore.addSubmission(
+    {
+        assignment_id: assignmentId,
+        student_id: user.id,
+        file_name: file.originalname,
+        file_type: file.mimetype,
+        file_size: file.size,
+        status: submissionStatus,
+        submitted_at: new Date().toISOString()
+    },
+    file,
+    authHeader
+);
 }
 
-function getSubmissionStatus(assignmentId, user, authHeader) {
+async function getSubmissionStatus(assignmentId, user, authHeader) {
 
     requireStudent(user);
 
     const submission =
-        submissionStore.findSubmissionStatus(
+        await submissionStore.findSubmissionStatus(
             assignmentId,
             user.id,
             authHeader
@@ -138,17 +138,17 @@ function getSubmissionStatus(assignmentId, user, authHeader) {
     };
 }
 
-function getStudentSubmissions(user, authHeader) {
+async function getStudentSubmissions(user, authHeader) {
 
     requireStudent(user);
 
-    return submissionStore.findStudentSubmissions(
+    return await submissionStore.findStudentSubmissions(
         user.id,
         authHeader
     );
 }
 
-function getAssignmentSubmissions(
+async function getAssignmentSubmissions(
     assignmentId,
     user,
     authHeader
@@ -168,16 +168,16 @@ function getAssignmentSubmissions(
         throw error;
     }
 
-    return submissionStore.findAssignmentSubmissions(
+    return await submissionStore.findAssignmentSubmissions(
         assignmentId,
         authHeader
     );
 }
 
-function downloadSubmission(id, user, authHeader) {
+async function downloadSubmission(id, user, authHeader) {
 
     const submission =
-        submissionStore.findSubmission(
+        await submissionStore.findSubmission(
             id,
             authHeader
         );
@@ -208,7 +208,16 @@ function downloadSubmission(id, user, authHeader) {
         throw error;
     }
 
-    return submission;
+    const downloadUrl =
+    await submissionStore.createDownloadUrl(
+        submission.file_url,
+        authHeader
+    );
+
+return {
+    ...submission,
+    downloadUrl
+};
 }
 
 module.exports = {
