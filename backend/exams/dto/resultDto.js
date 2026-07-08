@@ -1,11 +1,10 @@
 const toResultResponse = (result, role) => {
-  console.log('[DTO] toResultResponse - Input result:', result, 'Role:', role);
   const response = {
     id: result.id,
     studentId: result.student_id ?? result.studentId,
     teacherId: result.teacher_id ?? result.teacherId,
     classId: result.class_id ?? result.classId,
-    examId: result.exam_id,
+    examId: result.exam_id, 
     subjectId: result.subject_id ?? result.subject,
     marksObtained: result.marks_obtained ?? result.marks,
     maxMarks: result.max_marks ?? 100,
@@ -23,23 +22,19 @@ const toResultResponse = (result, role) => {
     response.subjectMeta = result.subject_meta;
   }
 
-  console.log('[DTO] toResultResponse - Output:', response);
   return response;
 };
 
 const toResultsResponse = (results, role) => (results || []).map((result) => toResultResponse(result, role));
 
-const toPaginatedResultsResponse = (payload, role) => {
-  console.log('[DTO] toPaginatedResultsResponse - Payload:', { page: payload.page, limit: payload.limit, total: payload.total, dataCount: payload.data?.length });
-  return ({
-    success: true,
-    page: payload.page,
-    limit: payload.limit,
-    total: payload.total,
-    totalPages: payload.totalPages,
-    data: toResultsResponse(payload.data, role),
-  });
-};
+const toPaginatedResultsResponse = (payload, role) => ({
+  success: true,
+  page: payload.page,
+  limit: payload.limit,
+  total: payload.total,
+  totalPages: payload.totalPages,
+  data: toResultsResponse(payload.data, role),
+});
 
 module.exports = {
   toResultResponse,

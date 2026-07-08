@@ -102,7 +102,7 @@ const attachMetadata = (results, exams = [], subjects = []) => {
   const subjectMap = new Map((subjects || []).map((subject) => [String(subject.id), subject]));
 
   return results.map((result) => {
-  const examId = String(result.exam_id ?? '');
+    const examId = String(result.exam_id ?? '');
     const subjectId = String(result.subject_id ?? result.subject ?? '');
     const exam = examMap.get(examId) || null;
     const subject = subjectMap.get(subjectId) || null;
@@ -131,26 +131,19 @@ const attachMetadata = (results, exams = [], subjects = []) => {
 };
 
 const enrichResultsWithMetadata = async (results) => {
-  console.log('[Service] enrichResultsWithMetadata - Input results count:', results?.length || 0);
   if (!Array.isArray(results) || results.length === 0) {
-    console.log('[Service] enrichResultsWithMetadata - No results to enrich');
     return results;
   }
 
   const examIds = normalizeIds(results.map((result) => result.exam_id));
   const subjectIds = normalizeIds(results.map((result) => result.subject_id ?? result.subject));
-  console.log('[Service] enrichResultsWithMetadata - Exam IDs to fetch:', examIds);
-  console.log('[Service] enrichResultsWithMetadata - Subject IDs to fetch:', subjectIds);
 
   const [exams, subjects] = await Promise.all([
     examIds.length > 0 ? relationshipService.fetchExamsByIds(examIds) : [],
     subjectIds.length > 0 ? relationshipService.fetchSubjectsByIds(subjectIds) : [],
   ]);
 
-  console.log('[Service] enrichResultsWithMetadata - Fetched exams:', exams?.length || 0, 'Fetched subjects:', subjects?.length || 0);
-  const enriched = attachMetadata(results, exams || [], subjects || []);
-  console.log('[Service] enrichResultsWithMetadata - Metadata attached to', enriched.length, 'results');
-  return enriched;
+  return attachMetadata(results, exams || [], subjects || []);
 };
 
 const normalizeResultPayload = (data, user, { isUpdate = false, existingResult = {} } = {}) => {
@@ -230,18 +223,13 @@ const ensureSubjectExists = async (subjectId) => {
 };
 
 const createResult = async (data, user) => {
-  console.log('[Service] createResult - Input data:', data);
-  console.log('[Service] createResult - User:', user);
   const resultPayload = normalizeResultPayload(data, user, { isUpdate: false });
-  console.log('[Service] createResult - Normalized payload:', resultPayload);
 
   if (!(await ensureExamExists(resultPayload.exam_id))) {
-    console.error('[Service] createResult - Exam does not exist:', resultPayload.exam_id);
     throw new AppError('exam_id does not reference an existing exam', 400);
   }
 
   if (!(await ensureSubjectExists(resultPayload.subject_id))) {
-    console.error('[Service] createResult - Subject does not exist:', resultPayload.subject_id);
     throw new AppError('subject_id does not reference an existing subject', 400);
   }
 
@@ -251,29 +239,23 @@ const createResult = async (data, user) => {
     const classAllowed = teacherClassIds.includes(String(resultPayload.class_id));
     const teacherOwnsResult = String(resultPayload.teacher_id) === String(user.id);
     if (!classAllowed && !teacherOwnsResult) {
-      console.error('[Service] createResult - Teacher not authorized for class:', resultPayload.class_id);
       throw new AppError('Forbidden', 403);
     }
   }
 
   const result = await resultRepository.create(resultPayload);
-  console.log('[Service] createResult - Result created with ID:', result.id);
   return enrichResultsWithMetadata([result]).then((items) => items[0]);
 };
 
 const updateResult = async (id, data, options = {}) => {
-  console.log('[Service] updateResult - ID:', id);
-  console.log('[Service] updateResult - Data:', data);
   const existingResult = options.resourceOwner || await resultRepository.findById(id);
   if (!existingResult) {
-    console.error('[Service] updateResult - Result not found:', id);
     throw new AppError('Result not found', 404);
   }
 
   await assertResultAccess(options.user || {}, existingResult, { requireOwnership: true });
 
   const normalizedPayload = normalizeResultPayload(data, {}, { isUpdate: true, existingResult });
-  console.log('[Service] updateResult - Normalized payload:', normalizedPayload);
   const updates = {};
   const marksChanged = data?.marks_obtained !== undefined || data?.marks !== undefined;
   const passingChanged = data?.passing_marks !== undefined || data?.passingMarks !== undefined;
@@ -285,7 +267,7 @@ const updateResult = async (id, data, options = {}) => {
   if (data?.subject_id !== undefined || data?.subject !== undefined) {
     updates.subject_id = normalizedPayload.subject_id;
   }
-  if (data?.exam_id !== undefined) {
+  if (data?.exam_id !== undefined || data?.examId !== undefined) {
     updates.exam_id = normalizedPayload.exam_id;
   }
   if (data?.class_id !== undefined || data?.classId !== undefined) {
@@ -303,33 +285,27 @@ const updateResult = async (id, data, options = {}) => {
   }
 
   if (updates.exam_id && !(await ensureExamExists(updates.exam_id))) {
-    console.error('[Service] updateResult - Exam does not exist:', updates.exam_id);
     throw new AppError('exam_id does not reference an existing exam', 400);
   }
 
   if (updates.subject_id && !(await ensureSubjectExists(updates.subject_id))) {
-    console.error('[Service] updateResult - Subject does not exist:', updates.subject_id);
     throw new AppError('subject_id does not reference an existing subject', 400);
   }
 
   if (Object.keys(updates).length === 0) {
-    console.log('[Service] updateResult - No updates needed');
     const [enriched] = await enrichResultsWithMetadata([existingResult]);
     return enriched;
   }
 
   const updatedResult = await resultRepository.update(id, updates);
-  console.log('[Service] updateResult - Result updated, applying metadata');
   return enrichResultsWithMetadata([updatedResult]).then((items) => items[0]);
 };
 
 const getResultById = async (id, options = {}) => {
-  console.log('[Service] getResultById - ID:', id);
   const result = options.resourceOwner || await resultRepository.findById(id);
   await assertResultAccess(options.user || {}, result);
 
   const [enriched] = await enrichResultsWithMetadata([result]);
-  console.log('[Service] getResultById - Result enriched:', enriched);
   return enriched;
 };
 
@@ -348,25 +324,19 @@ const createEmptyResponse = (options = {}) => {
 };
 
 const fetchRoleScopedResults = async (user, filters = {}, options = {}) => {
-  console.log('[Service] fetchRoleScopedResults - User role:', user.role, 'Filters:', filters);
   const role = String(user.role).toLowerCase();
 
   if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
-    console.log('[Service] fetchRoleScopedResults - Admin/Principal role: returning all results');
     return resultRepository.findAll(filters, options);
   }
 
   if (role === ROLES.STUDENT) {
-    console.log('[Service] fetchRoleScopedResults - Student role: filtering by student ID');
     return resultRepository.findAll({ ...filters, student_id: user.id }, options);
   }
 
   if (role === ROLES.PARENT) {
-    console.log('[Service] fetchRoleScopedResults - Parent role: fetching parent-student relationships');
     const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
-    console.log('[Service] fetchRoleScopedResults - Parent student IDs:', parentStudentIds);
     if (!Array.isArray(parentStudentIds) || parentStudentIds.length === 0) {
-      console.log('[Service] fetchRoleScopedResults - No students found for parent');
       return createEmptyResponse(options);
     }
 
@@ -374,19 +344,15 @@ const fetchRoleScopedResults = async (user, filters = {}, options = {}) => {
   }
 
   if (role === ROLES.TEACHER) {
-    console.log('[Service] fetchRoleScopedResults - Teacher role: fetching teacher-class relationships');
     const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
-    console.log('[Service] fetchRoleScopedResults - Teacher class IDs:', teacherClassIds);
     const teacherQuery = resultRepository.findAll({ ...filters, teacher_id: user.id }, { ...options, page: 1, limit: 1000 });
     const classQuery = teacherClassIds.length > 0
       ? resultRepository.findAll({ ...filters, class_id: teacherClassIds }, { ...options, page: 1, limit: 1000 })
       : Promise.resolve(createEmptyResponse({ ...options, page: 1, limit: 1000 }));
 
     const [teacherResponse, classResponse] = await Promise.all([teacherQuery, classQuery]);
-    console.log('[Service] fetchRoleScopedResults - Teacher results:', teacherResponse?.data?.length || 0, 'Class results:', classResponse?.data?.length || 0);
     const mergedResults = [...(teacherResponse?.data || []), ...(classResponse?.data || [])];
     const uniqueResults = mergedResults.filter((result, index, rows) => rows.findIndex((entry) => String(entry.id) === String(result.id)) === index);
-    console.log('[Service] fetchRoleScopedResults - Merged and deduplicated results count:', uniqueResults.length);
 
     return {
       success: true,
@@ -398,12 +364,10 @@ const fetchRoleScopedResults = async (user, filters = {}, options = {}) => {
     };
   }
 
-  console.log('[Service] fetchRoleScopedResults - Unknown role');
   return createEmptyResponse(options);
 };
 
 const getAllResults = async (user, options = {}) => {
-  console.log('[Service] getAllResults - User role:', user.role, 'Options:', options);
   const role = String(user.role).toLowerCase();
   const normalizedOptions = {
     page: Number(options.page || 1),
@@ -415,14 +379,9 @@ const getAllResults = async (user, options = {}) => {
 
   const response = await fetchRoleScopedResults(user, normalizedOptions.filters, normalizedOptions);
   const results = Array.isArray(response?.data) ? response.data : [];
-  console.log('[Service] getAllResults - Fetched', results.length, 'results before sorting');
-  
   const sortedResults = sortResults(results, normalizedOptions.sortBy, normalizedOptions.order);
   const paginated = paginateResults(sortedResults, normalizedOptions);
-  console.log('[Service] getAllResults - Paginated:', { page: paginated.page, limit: paginated.limit, total: paginated.total });
-  
   const enriched = await enrichResultsWithMetadata(paginated.data);
-  console.log('[Service] getAllResults - Enriched', enriched.length, 'results');
   return { ...paginated, data: enriched };
 };
 
@@ -499,12 +458,8 @@ const paginateResults = (results, options = {}) => {
 };
 
 const getMyResults = async (user) => {
-  console.log('[Service] getMyResults - User ID:', user.id, 'Role:', user.role);
   const response = await resultRepository.findAll({ student_id: user.id }, { page: 1, limit: 1000 });
-  console.log('[Service] getMyResults - Found', response?.data?.length || 0, 'results');
-  const enriched = await enrichResultsWithMetadata(response?.data || []);
-  console.log('[Service] getMyResults - Enriched', enriched.length, 'results');
-  return enriched;
+  return enrichResultsWithMetadata(response?.data || []);
 };
 
 const getOwnershipContext = async (id) => {

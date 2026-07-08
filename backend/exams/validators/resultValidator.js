@@ -36,11 +36,9 @@ const normalizeResultPayload = (payload) => {
 };
 
 const validateMarks = (req, res, next) => {
-  console.log('[Validator] validateMarks - Original body:', req.body);
   if (req.body && typeof req.body === "object") {
     req.body = normalizeResultPayload(req.body);
   }
-  console.log('[Validator] validateMarks - Normalized body:', req.body);
 
   next();
 };
