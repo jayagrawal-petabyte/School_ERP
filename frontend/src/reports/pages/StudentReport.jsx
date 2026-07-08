@@ -1,20 +1,21 @@
-/**
- * StudentReport.jsx — School ERP | Reports Module
- *
- * Reads exclusively from ERPContext (students). No duplicate state, no
- * hardcoded/sample data. Visually matches the existing Admin Dashboard /
- * Analytics Dashboard via reportShared.jsx.
- */
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useERP } from "../ERPContext.jsx";
 import {
   ReportShell, SummaryCard, ProgressBar, DistributionBar, AnalyticsPanel,
   StatusBadge, SearchBox, FilterSelect, SortableTh, PaginationBar, EmptyState,
-  IdChip, thStyle, tdStyle,
+  IdChip, ExportButtons, thStyle, tdStyle,
 } from "./reportShared.jsx";
+import { exportReportToPDF } from "../../utils/exportPDF.js";
+import { exportReportToExcel } from "../../utils/exportExcel.js";
 
 const RECORDS_PER_PAGE = 8;
+
+// Columns for the Student Report table — shared verbatim between the on-screen
+// table, the PDF export, and the Excel export so all three always match.
+const EXPORT_COLUMNS = [
+  "Student ID", "Student Name", "Parent Name", "Class", "Section",
+  "Phone", "Email", "Admission Date", "Status",
+];
 
 export default function StudentReport() {
   const { students } = useERP();
@@ -135,6 +136,44 @@ export default function StudentReport() {
   const handleFilterSection = (v) => { setFilterSection(v); setPage(1); };
   const handleFilterStatus = (v) => { setFilterStatus(v); setPage(1); };
 
+  // ── Export — always the full filtered + sorted dataset (`sorted`), never
+  //     just the current page and never the raw unfiltered ERPContext data ──
+  const buildExportRows = useCallback(() => sorted.map((s) => [
+    s.studentId ?? "",
+    s.name ?? "",
+    s.parentName ?? "",
+    s.studentClass ?? "",
+    s.section ?? "",
+    s.phone ?? "",
+    s.email ?? "",
+    s.admissionDate ? new Date(s.admissionDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—",
+    s.status ?? "",
+  ]), [sorted]);
+
+  const handleExportPDF = useCallback(() => {
+    exportReportToPDF({
+      title: "Student Report",
+      summary: [
+        { label: "Total Students", value: totalStudents },
+        { label: "Active", value: activeStudents },
+        { label: "Inactive", value: inactiveStudents },
+        { label: "New Admissions (30d)", value: newAdmissions },
+      ],
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Student_Report",
+    });
+  }, [buildExportRows, totalStudents, activeStudents, inactiveStudents, newAdmissions]);
+
+  const handleExportExcel = useCallback(() => {
+    exportReportToExcel({
+      sheetName: "Student Report",
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Student_Report",
+    });
+  }, [buildExportRows]);
+
   return (
     <ReportShell
       eyebrow="Reports"
@@ -214,6 +253,7 @@ export default function StudentReport() {
               <FilterSelect label="Section" value={filterSection} onChange={handleFilterSection} options={[["all", "All Sections"], ...sectionOptions.map((s) => [s, `Section ${s}`])]} />
               <FilterSelect label="Status" value={filterStatus} onChange={handleFilterStatus} options={[["all", "All Status"], ["Active", "Active"], ["Inactive", "Inactive"]]} />
               <SearchBox value={search} onChange={handleSearch} placeholder="Search by ID, name, parent, phone, email…" />
+              <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={sorted.length === 0} />
             </div>
 
             {/* Table */}
