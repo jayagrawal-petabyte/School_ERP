@@ -43,6 +43,107 @@ const runQuery = async (queryBuilder) => {
   return queryBuilder;
 };
 
+const normalizeIds = (ids = []) => [...new Set(
+  (Array.isArray(ids) ? ids : [ids])
+    .filter((value) => value !== undefined && value !== null)
+    .map((value) => String(value))
+)];
+
+const getCacheTtlMs = () => Number(process.env.EXAMS_METADATA_CACHE_TTL_MS || 300000);
+
+const cache = {
+  exams: new Map(),
+  subjects: new Map(),
+};
+
+const getCachedValue = (cacheStore, id) => {
+  const entry = cacheStore.get(id);
+  if (!entry) {
+    return null;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    cacheStore.delete(id);
+    return null;
+  }
+
+  return entry.value;
+};
+
+const setCachedValue = (cacheStore, id, value) => {
+  cacheStore.set(id, {
+    value,
+    expiresAt: Date.now() + getCacheTtlMs(),
+  });
+};
+
+const fetchRowsByIds = async (table, ids, selectColumns) => {
+  const client = getSupabaseClient();
+  if (!client) {
+    return null;
+  }
+
+  const normalizedIds = normalizeIds(ids);
+  if (normalizedIds.length === 0) {
+    return [];
+  }
+
+  const response = await runQuery(
+    client.from(table)
+      .select(selectColumns)
+      .in('id', normalizedIds)
+  );
+
+  if (response?.error) {
+    const message = String(response.error?.message || '').toLowerCase();
+    if (message.includes('does not exist') || message.includes('relation') || message.includes('not found')) {
+      return [];
+    }
+
+    throw new AppError(`Unable to fetch ${table} metadata`, 500, response.error);
+  }
+
+  return response?.data || [];
+};
+
+const fetchExamsByIds = async (ids) => {
+  const normalizedIds = normalizeIds(ids);
+  const cachedResults = normalizedIds
+    .map((id) => getCachedValue(cache.exams, id))
+    .filter((value) => value !== null);
+  const missingIds = normalizedIds.filter((id) => getCachedValue(cache.exams, id) === null);
+
+  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id') : [];
+  if (fetchedResults === null) {
+    return null;
+  }
+
+  for (const exam of fetchedResults) {
+    setCachedValue(cache.exams, String(exam.id), exam);
+  }
+
+  return [...cachedResults, ...fetchedResults];
+};
+
+const fetchSubjectsByIds = async (ids) => {
+  const normalizedIds = normalizeIds(ids);
+  const cachedResults = normalizedIds
+    .map((id) => getCachedValue(cache.subjects, id))
+    .filter((value) => value !== null);
+  const missingIds = normalizedIds.filter((id) => getCachedValue(cache.subjects, id) === null);
+
+  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code') : [];
+  if (fetchedResults === null) {
+    return null;
+  }
+
+  for (const subject of fetchedResults) {
+    setCachedValue(cache.subjects, String(subject.id), subject);
+  }
+
+  return [...cachedResults, ...fetchedResults];
+};
+
 const isParentOfStudent = async (parentId, studentId) => {
   if (!parentId || !studentId) {
     throw new AppError('Invalid parent/student identifiers', 400);
@@ -139,4 +240,6 @@ module.exports = {
   getParentStudentIds,
   getTeacherClassIds,
   isTeacherAssignedToClass,
+  fetchExamsByIds,
+  fetchSubjectsByIds,
 };

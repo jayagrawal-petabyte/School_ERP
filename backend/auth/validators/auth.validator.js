@@ -13,19 +13,19 @@ const loginValidationRules = [
     body("email")
         .trim()
         .notEmpty()
-        .withMessage("Email is required.")
+        .withMessage(AUTH_MESSAGES.EMAIL_REQUIRED)
         .bail()
         .isEmail()
-        .withMessage("Please provide a valid email address.")
+        .withMessage(AUTH_MESSAGES.INVALID_EMAIL)
         .normalizeEmail(),
 
     body("password")
         .trim()
         .notEmpty()
-        .withMessage("Password is required.")
+        .withMessage(AUTH_MESSAGES.PASSWORD_REQUIRED)
         .bail()
         .isString()
-        .withMessage("Password must be a valid string."),
+        .withMessage(AUTH_MESSAGES.INVALID_PASSWORD),
 ];
 
 
@@ -53,7 +53,7 @@ function validateRequest(req, res, next) {
         });
     }
 
-    next();
+    return next();
 }
 
 module.exports = Object.freeze({

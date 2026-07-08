@@ -43,7 +43,10 @@ function updateAssignment(req, res) {
 function deleteAssignment(req, res) {
   try {
     const user = service.readUser(req);
-    const assignment = service.deleteAssignment(req.params.id, user);
+    const assignment = service.deleteAssignment(
+      req.params.id,
+      user
+    );
 
     return sendResponse(res, 200, assignment);
   } catch (error) {

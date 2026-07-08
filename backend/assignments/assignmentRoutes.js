@@ -1,15 +1,58 @@
 const express = require('express');
 const controller = require('./assignmentController');
 
+const {
+  authenticateToken,
+} = require('../auth/middleware/auth.middleware');
+
+const {
+  authorizeRoles,
+} = require('../auth/middleware/role.middleware');
+
 const router = express.Router();
 
-router.post('/', controller.createAssignment);
+/*
+Assignment Routes
+Students, Teachers, and Admins can view assignments.
+Only Teachers and Admins can create, update, or delete assignments.
+*/
 
-router.get('/', controller.listAssignments);
-router.get('/:id', controller.getAssignment);
+// Create Assignment
+router.post(
+  '/',
+  authenticateToken,
+  authorizeRoles('admin', 'teacher'),
+  controller.createAssignment
+);
 
-router.patch('/:id', controller.updateAssignment);
+// List Assignments
+router.get(
+  '/',
+  authenticateToken,
+  controller.listAssignments
+);
 
-router.delete('/:id', controller.deleteAssignment);
+// Get Single Assignment
+router.get(
+  '/:id',
+  authenticateToken,
+  controller.getAssignment
+);
+
+// Update Assignment
+router.patch(
+  '/:id',
+  authenticateToken,
+  authorizeRoles('admin', 'teacher'),
+  controller.updateAssignment
+);
+
+// Delete Assignment
+router.delete(
+  '/:id',
+  authenticateToken,
+  authorizeRoles('admin', 'teacher'),
+  controller.deleteAssignment
+);
 
 module.exports = router;

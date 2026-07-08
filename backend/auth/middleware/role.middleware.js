@@ -1,8 +1,14 @@
 "use strict";
 
+const {
+    getClientForUser,
+} = require("../../services/database.service");
+
 const AUTH_MESSAGES = require("../constants/authMessages");
 
-
+/**
+ * Authorize user roles.
+ */
 function authorizeRoles(...allowedRoles) {
     if (allowedRoles.length === 0) {
         throw new Error(
@@ -10,7 +16,7 @@ function authorizeRoles(...allowedRoles) {
         );
     }
 
-    return function (req, res, next) {
+    return async function (req, res, next) {
         const { user } = req;
 
         if (!user) {
@@ -20,18 +26,50 @@ function authorizeRoles(...allowedRoles) {
             });
         }
 
-        if (
-            !allowedRoles.includes(
-                String(user.role)
-            )
-        ) {
-            return res.status(403).json({
+        try {
+            const authorizationHeader = req.get("Authorization");
+
+            const [, token] = authorizationHeader.split(" ");
+
+            const supabase = getClientForUser(token);
+
+            const {
+                data,
+                error,
+            } = await supabase
+                .from("users")
+                .select("role")
+                .eq("id", user.id)
+                .single();
+       
+
+            if (error || !data) {
+                return res.status(403).json({
+                    success: false,
+                    message: AUTH_MESSAGES.FORBIDDEN,
+                });
+            }
+
+            if (!allowedRoles.includes(data.role)) {
+                return res.status(403).json({
+                    success: false,
+                    message: AUTH_MESSAGES.FORBIDDEN,
+                });
+            }
+
+            // Make role available to downstream middleware/controllers
+            req.user.role = data.role;
+
+            return next();
+        } catch (error) {
+            console.error(error);
+
+            return res.status(500).json({
                 success: false,
-                message: AUTH_MESSAGES.FORBIDDEN,
+                message:
+                    AUTH_MESSAGES.INTERNAL_SERVER_ERROR,
             });
         }
-
-        next();
     };
 }
 

@@ -1,9 +1,12 @@
 const store = require('./assignmentStore');
+const { validateAssignment } = require('./validation');
 
 const staffRoles = ['admin', 'teacher'];
 
-function cleanText(value) {
-  return String(value || '').trim().replace(/\s+/g, ' ');
+function createError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
 }
 
 function readUser(req) {
@@ -14,77 +17,11 @@ function requireTeacherOrAdmin(user) {
   const role = String(user.role || '').toLowerCase();
 
   if (!staffRoles.includes(role)) {
-    const error = new Error(
+    throw createError(
+      403,
       'Only admins and teachers can manage assignments.'
     );
-    error.statusCode = 403;
-    throw error;
   }
-}
-
-function validateAssignment(payload) {
-  const title = cleanText(payload.title);
-  const description = cleanText(payload.description);
-  const subject = cleanText(payload.subject);
-  const className = cleanText(payload.className);
-  const dueDate = String(payload.dueDate || '').trim();
-
-  if (!title) {
-    const error = new Error('Assignment title is required.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!description) {
-    const error = new Error('Assignment description is required.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!subject) {
-    const error = new Error('Subject is required.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!className) {
-    const error = new Error('Class name is required.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (!dueDate) {
-    const error = new Error('Due date is required.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const due = new Date(dueDate);
-
-  if (Number.isNaN(due.getTime())) {
-    const error = new Error('Invalid due date.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-  due.setHours(0, 0, 0, 0);
-
-  if (due < today) {
-    const error = new Error('Due date cannot be in the past.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return {
-    title,
-    description,
-    subject,
-    className,
-    dueDate,
-  };
 }
 
 function createAssignment(payload, user) {
@@ -104,9 +41,7 @@ function updateAssignment(id, payload, user) {
   const existing = store.findAssignment(id);
 
   if (!existing) {
-    const error = new Error('Assignment not found.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(404, 'Assignment not found.');
   }
 
   const updated = validateAssignment({
@@ -123,15 +58,14 @@ function deleteAssignment(id, user) {
   const assignment = store.findAssignment(id);
 
   if (!assignment) {
-    const error = new Error('Assignment not found.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(404, 'Assignment not found.');
   }
 
   return store.removeAssignment(id);
 }
 
 function listAssignments(user) {
+  // Reserved for future role/class-based filtering
   return store.listAssignments();
 }
 
@@ -139,9 +73,7 @@ function getAssignment(id) {
   const assignment = store.findAssignment(id);
 
   if (!assignment) {
-    const error = new Error('Assignment not found.');
-    error.statusCode = 404;
-    throw error;
+    throw createError(404, 'Assignment not found.');
   }
 
   return assignment;

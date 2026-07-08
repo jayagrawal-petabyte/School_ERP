@@ -1,7 +1,14 @@
-const supabase = require('../supabaseClient');
+const { getClientForUser } = require('../../services/database.service');
 
 const getResultsReport = async (req, res) => {
     try {
+        const authHeader = req.get('Authorization');
+        if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
+            return res.status(401).json({ success: false, message: 'Invalid or missing token' });
+        }
+        const token = authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+        
         let query = supabase.from('exam_marks').select('*');
         
         // Scope the query

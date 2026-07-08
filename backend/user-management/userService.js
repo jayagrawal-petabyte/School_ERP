@@ -1,7 +1,9 @@
 const store = require('./userStore');
+const ROLES = require('../auth/constants/roles');
+const AUTH_MESSAGES = require('../auth/constants/authMessages');
 
-const adminRoles = ['admin', 'principal'];
-const validRoles = ['admin', 'principal', 'teacher', 'student', 'parent'];
+const adminRoles = [ROLES.ADMIN];
+const validRoles = Object.values(ROLES);
 
 const sensitiveFields = [
   'password',
@@ -46,11 +48,11 @@ function sanitizeUsers(users) {
   return users.map(sanitizeUser);
 }
 
-function requireAdminOrPrincipal(user) {
+function requireAdmin(user) {
   const role = String(user.role || '').toLowerCase();
 
   if (!adminRoles.includes(role)) {
-    const error = new Error('Only admins and principals can manage users.');
+    const error = new Error(AUTH_MESSAGES.FORBIDDEN);
     error.statusCode = 403;
     throw error;
   }
@@ -86,16 +88,27 @@ function validateUser(payload) {
   validateName(fullName);
 
   if (!email) {
-    const error = new Error('Email is required.');
+    const error = new Error("Email is required.");
     error.statusCode = 400;
     throw error;
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    const error = new Error('Invalid email format.');
+  const at = email.indexOf("@");
+  const dot = email.lastIndexOf(".");
+
+  if (
+    at <= 0 ||
+    dot <= at + 1 ||
+    dot === email.length - 1 ||
+    at !== email.lastIndexOf("@") || // Prevents multiple '@' symbols
+    email.includes(" ") ||           // Prevents internal whitespace
+    email.includes("..")             // Prevents consecutive dots
+  ) {
+    const error = new Error("Invalid email format.");
     error.statusCode = 400;
     throw error;
   }
+
 
   if (!role) {
     const error = new Error('Role is required.');
@@ -105,7 +118,7 @@ function validateUser(payload) {
 
   if (!validRoles.includes(role)) {
     const error = new Error(
-      'Role must be one of: admin, principal, teacher, student, parent.'
+      'Role must be one of: ' + validRoles.join(', ') + '.'
     );
     error.statusCode = 400;
     throw error;
@@ -114,33 +127,28 @@ function validateUser(payload) {
   return { fullName, email, role };
 }
 
-function createUser(payload, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+async function createUser(payload, currentUser, supabase) {
+  requireAdmin(currentUser);
 
   const validated = validateUser(payload);
 
-  const existing = store.findUserByEmail(validated.email);
-
-  if (existing) {
-    const error = new Error('A user with this email already exists.');
-    error.statusCode = 409;
-    throw error;
-  }
-
-  const user = store.addUser({
-    ...validated,
-    createdBy: String(
-      currentUser.id || currentUser._id || currentUser.email || 'unknown'
-    ),
-  });
+  const user = await store.addUser(
+    {
+      ...validated,
+      createdBy: String(
+        currentUser.id || currentUser._id || currentUser.email || 'unknown'
+      ),
+    },
+    supabase
+  );
 
   return sanitizeUser(user);
 }
 
-function updateUser(id, payload, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+async function updateUser(id, payload, currentUser, supabase) {
+  requireAdmin(currentUser);
 
-  const existing = store.findUser(id);
+  const existing = await store.findUser(id, supabase);
 
   if (!existing) {
     const error = new Error('User not found.');
@@ -149,34 +157,17 @@ function updateUser(id, payload, currentUser) {
   }
 
   const fullName = cleanText(payload.fullName || existing.fullName);
-  const email = cleanText(payload.email || existing.email);
 
   validateName(fullName);
 
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    const error = new Error('Invalid email format.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (email && email.toLowerCase() !== existing.email.toLowerCase()) {
-    const duplicate = store.findUserByEmail(email);
-
-    if (duplicate) {
-      const error = new Error('A user with this email already exists.');
-      error.statusCode = 409;
-      throw error;
-    }
-  }
-
-  const user = store.updateUser(id, { fullName, email });
+  const user = await store.updateUser(id, { fullName }, supabase);
   return sanitizeUser(user);
 }
 
-function deleteUser(id, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+async function deleteUser(id, currentUser, supabase) {
+  requireAdmin(currentUser);
 
-  const existing = store.findUser(id);
+  const existing = await store.findUser(id, supabase);
 
   if (!existing) {
     const error = new Error('User not found.');
@@ -184,12 +175,12 @@ function deleteUser(id, currentUser) {
     throw error;
   }
 
-  const removed = store.removeUser(id);
+  const removed = await store.removeUser(id, supabase);
   return sanitizeUser(removed);
 }
 
-function getUserById(id) {
-  const user = store.findUser(id);
+async function getUserById(id, supabase) {
+  const user = await store.findUser(id, supabase);
 
   if (!user) {
     const error = new Error('User not found.');
@@ -200,15 +191,15 @@ function getUserById(id) {
   return sanitizeUser(user);
 }
 
-function listUsers(filters) {
-  const users = store.listUsers(filters);
+async function listUsers(filters, supabase) {
+  const users = await store.listUsers(filters, supabase);
   return sanitizeUsers(users);
 }
 
-function toggleStatus(id, currentUser) {
-  requireAdminOrPrincipal(currentUser);
+async function toggleStatus(id, currentUser, supabase) {
+  requireAdmin(currentUser);
 
-  const existing = store.findUser(id);
+  const existing = await store.findUser(id, supabase);
 
   if (!existing) {
     const error = new Error('User not found.');
@@ -219,7 +210,7 @@ function toggleStatus(id, currentUser) {
   const newStatus =
     existing.accountStatus === 'active' ? 'inactive' : 'active';
 
-  const user = store.updateUser(id, { accountStatus: newStatus });
+  const user = await store.updateUser(id, { accountStatus: newStatus }, supabase);
   return sanitizeUser(user);
 }
 
@@ -229,7 +220,7 @@ module.exports = {
   getUserById,
   listUsers,
   readUser,
-  requireAdminOrPrincipal,
+  requireAdmin,
   sanitizeUser,
   sanitizeUsers,
   toggleStatus,
