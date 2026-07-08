@@ -1,14 +1,26 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useERP } from "../ERPContext.jsx";
 import {
   ReportShell, SummaryCard, DistributionBar, ProgressBar, AnalyticsPanel,
   StatusBadge, SearchBox, FilterSelect, SortableTh, PaginationBar, EmptyState,
-  IdChip, thStyle, tdStyle, ACCENT,
+  IdChip, ExportButtons, thStyle, tdStyle, ACCENT,
 } from "./reportShared.jsx";
+import { exportReportToPDF } from "../../utils/exportPDF.js";
+import { exportReportToExcel } from "../../utils/exportExcel.js";
 
 const RECORDS_PER_PAGE = 8;
-const PARENT_ACCENT = "#ad1457"; 
+const PARENT_ACCENT = "#ad1457"; // this report's own signature accent — visually distinct from Student (blue) / Teacher (purple)
 
+// Columns for the Parent Report table — shared verbatim between the on-screen
+// table, the PDF export, and the Excel export so all three always match.
+const EXPORT_COLUMNS = [
+  "Parent ID", "Parent Name", "Student Name", "Student ID", "Class", "Section",
+  "Relationship", "Phone", "Email", "Linked Date", "Status",
+];
+
+// ─── Local, Parent-Report-only visual primitives (kept out of reportShared.jsx
+//     so Student Report / Teacher Report are never affected) — these are what
+//     give this report its own identity per the design requirement. ──────────
 
 function StatRing({ pct, label, sub, color = PARENT_ACCENT, size = 96 }) {
   const clamped = Math.max(0, Math.min(100, pct));
@@ -83,7 +95,10 @@ export default function ParentReport() {
   const [sortDir, setSortDir]           = useState("desc");
   const [page, setPage]                 = useState(1);
 
- 
+  // ── The real Student ↔ Parent join, re-derived from ERPContext ───────────
+  // One row per (parent, child) pair. A parent with zero children still
+  // produces one "unlinked parent" row; a student with no matching parent
+  // is tracked separately as a data-quality issue below.
   const links = useMemo(() => {
     const rows = [];
     parents.forEach((p) => {
@@ -137,7 +152,12 @@ export default function ParentReport() {
     return { one, two, multiple };
   }, [parents]);
 
+  // ── Analytics 2: Parent Status ──
+  // Note: the ERP's data model only tracks Active/Inactive for parents —
+  // there is no "Pending" state in ERPContext, so it is intentionally not
+  // fabricated here.
 
+  // ── Analytics 3: Communication Health ──
   const commHealth = useMemo(() => ({
     emailOnFile:   parents.filter((p) => !!p.email).length,
     phoneOnFile:   parents.filter((p) => !!p.phone).length,
@@ -145,7 +165,9 @@ export default function ParentReport() {
     missingPhone:  parents.filter((p) => !p.phone).length,
   }), [parents]);
 
-
+  // ── Analytics 4 & 5: Class-wise / Section-wise Parent Distribution ──
+  // Counts DISTINCT parents represented in each class/section (a parent with
+  // two children in the same class still counts once for that class).
   const classDistribution = useMemo(() => {
     const map = {};
     links.filter((l) => l.student).forEach((l) => {
@@ -337,6 +359,47 @@ export default function ParentReport() {
   const handleFilterLinked = withPageReset(setFilterLinked);
   const handleDateFrom = withPageReset(setDateFrom);
   const handleDateTo = withPageReset(setDateTo);
+
+  // ── Export — always the full filtered + sorted dataset (`sortedLinks`),
+  //     never just the current page and never the raw unfiltered ERPContext data ──
+  const buildExportRows = useCallback(() => sortedLinks.map((l) => [
+    l.parent.id ?? "",
+    l.parent.name ?? "",
+    l.childName || l.student?.name || "Unlinked",
+    l.student ? l.student.studentId : "—",
+    l.student?.studentClass ?? "—",
+    l.student?.section ?? "—",
+    l.parent.relationship ?? "—",
+    l.parent.phone || "Missing",
+    l.parent.email || "Missing",
+    fmtDate(l.student?.createdAt),
+    l.parent.active ? "Active" : "Inactive",
+  ]), [sortedLinks]);
+
+  const handleExportPDF = useCallback(() => {
+    exportReportToPDF({
+      title: "Parent Report",
+      summary: [
+        { label: "Total Parents", value: totalParents },
+        { label: "Active", value: activeParents },
+        { label: "Inactive", value: inactiveParents },
+        { label: "Linked Students", value: totalLinkedStudents },
+        { label: "Comm. Coverage", value: `${communicationCoverage}%` },
+      ],
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Parent_Report",
+    });
+  }, [buildExportRows, totalParents, activeParents, inactiveParents, totalLinkedStudents, communicationCoverage]);
+
+  const handleExportExcel = useCallback(() => {
+    exportReportToExcel({
+      sheetName: "Parent Report",
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Parent_Report",
+    });
+  }, [buildExportRows]);
 
   return (
     <ReportShell
@@ -530,6 +593,7 @@ export default function ParentReport() {
                 <input type="date" value={dateTo} onChange={(e) => handleDateTo(e.target.value)} style={{ padding: "8px 10px", fontSize: "12px", border: "1px solid #d0d4e0", borderRadius: "6px", fontFamily: "inherit" }} />
               </div>
               <SearchBox value={search} onChange={handleSearch} placeholder="Search parent, student, ID, phone, email…" />
+              <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={sortedLinks.length === 0} />
             </div>
 
             {paged.length === 0 ? (
