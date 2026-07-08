@@ -28,14 +28,24 @@ const StudentSidebar = ({ open, onClose }: StudentSidebarProps) => {
       path: "/attendance",
     },
     {
-    label: "Results",
-    icon: "📚",
-    path: "/results",
+      label: "Results",
+      icon: "📚",
+      path: "/results",
     },
     {
       label: "Assignments",
       icon: "📝",
       path: "/assignments",
+    },
+    {
+      label: "Notifications",
+      icon: "🔔",
+      path: "/notifications",
+    },
+    {
+      label: "Attendance Reports",
+      icon: "📈",
+      path: "/attendance-reports",
     },
   ];
 

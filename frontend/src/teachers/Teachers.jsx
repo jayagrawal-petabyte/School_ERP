@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useERP } from "./ERPContext.jsx";
+import { useERP } from "../context/ERPContext.jsx";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const SUBJECTS = [
