@@ -39,19 +39,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const login = (role: string, rememberMe: boolean) => {
-    const loggedInUser: User = {
-      role,
-      isAuthenticated: true,
-    };
+  
 
-    setUser(loggedInUser);
-
-    if (rememberMe) {
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-    } else {
-      localStorage.removeItem("user");
-    }
+  const loggedInUser: User = {
+    role,
+    isAuthenticated: true,
   };
+
+  setUser(loggedInUser);
+
+  if (rememberMe) {
+    localStorage.setItem("user", JSON.stringify(loggedInUser));
+  } else {
+    localStorage.removeItem("user");
+  }
+};
 
   const logout = () => {
     setUser(null);

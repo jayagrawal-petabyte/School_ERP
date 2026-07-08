@@ -1,164 +1,126 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import {
-  LayoutDashboard,
-  CalendarCheck,
-  NotebookPen,
-  ClipboardList,
-  BookOpenCheck,
-  FileClock,
-  CalendarDays,
-  Wallet,
-  Bell,
-  MessageSquareQuote,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  School,
-} from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { X, LogOut } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
-// Reuses the EXACT SAME stylesheet as the Admin Sidebar
-import "../../components/Sidebar.css";
-import { useParentPreview } from "../context/ParentPreviewContext.jsx";
+function ParentSidebar({ open = true, onClose = () => {} }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-const NAV_ITEMS = [
-  { label: "Dashboard", path: "/parent/dashboard", icon: LayoutDashboard },
-  { label: "Attendance", path: "/parent/attendance", icon: CalendarCheck },
-  { label: "Marks", path: "/parent/marks", icon: NotebookPen },
-  { label: "Assignments", path: "/parent/assignments", icon: ClipboardList },
-  { label: "Homework", path: "/parent/homework", icon: BookOpenCheck },
-  { label: "Examinations", path: "/parent/examinations", icon: FileClock },
-  { label: "Timetable", path: "/parent/timetable", icon: CalendarDays },
-  { label: "Fees", path: "/parent/fees", icon: Wallet },
-  { label: "Notifications", path: "/parent/notifications", icon: Bell },
-  { label: "Teacher Remarks", path: "/parent/remarks", icon: MessageSquareQuote },
-];
+  const navItems = [
+    { label: "Dashboard", icon: "📊", path: "/parent/dashboard" },
+    { label: "Attendance", icon: "📅", path: "/parent/attendance" },
+    { label: "Marks", icon: "📚", path: "/parent/marks" },
+    { label: "Assignments", icon: "📝", path: "/parent/assignments" },
+    { label: "Homework", icon: "📖", path: "/parent/homework" },
+    { label: "Examinations", icon: "🧾", path: "/parent/examinations" },
+    { label: "Timetable", icon: "🗓️", path: "/parent/timetable" },
+    { label: "Fees", icon: "💳", path: "/parent/fees" },
+    { label: "Notifications", icon: "🔔", path: "/parent/notifications" },
+    { label: "Teacher Remarks", icon: "💬", path: "/parent/remarks" },
+    { label: "Settings", icon: "⚙️", path: "/parent/settings" },
+  ];
 
-function ParentSidebar() {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const { parent } = useParentPreview();
-
-  const closeMobileMenu = () => setIsMobileOpen(false);
-
-  const initials = parent?.name
-    ? parent.name.trim().charAt(0).toUpperCase()
-    : "P";
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+    onClose();
+  };
 
   return (
     <>
-      <button
-        type="button"
-        className="sidebar-mobile-toggle"
-        onClick={() => setIsMobileOpen(true)}
-        aria-label="Open navigation menu"
-      >
-        <Menu size={22} />
-      </button>
-
-      {isMobileOpen && (
+      {open && (
         <div
-          className="sidebar-backdrop"
-          onClick={closeMobileMenu}
-          aria-hidden="true"
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={onClose}
         />
       )}
 
-      <aside className={`sidebar ${isMobileOpen ? "sidebar--open" : ""}`}>
-        <div className="sidebar__header">
-          <div className="sidebar__brand">
-            <span className="sidebar__brand-icon">
-              <School size={20} />
+      <aside
+        className={`
+          fixed top-0 left-0
+          h-screen
+          w-[260px]
+          bg-[#2f3273]
+          text-white
+          shadow-xl
+          z-40
+          transform
+          transition-transform
+          duration-300
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+          md:sticky
+          flex
+          flex-col
+          overflow-y-auto
+        `}
+      >
+        <div className="flex justify-end p-4 md:hidden">
+          <button onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="px-6 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl bg-white p-1 rounded text-[#2f3273]">
+              👨‍👩‍👧
             </span>
 
-            <div className="sidebar__brand-text">
-              <span className="sidebar__brand-name">Brightwood ERP</span>
-              <span className="sidebar__brand-sub">Parent Portal</span>
+            <h1 className="text-xl font-bold">
+              School ERP
+            </h1>
+          </div>
+
+          <p className="mt-2 text-blue-200 text-xs uppercase tracking-[2px]">
+            Parent Portal
+          </p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 mt-8 space-y-2">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={onClose}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  isActive
+                    ? "bg-[#5B5FEF] text-white shadow-lg font-semibold"
+                    : "text-blue-200 hover:bg-[#3b3e85] hover:text-white"
+                }`
+              }
+            >
+              <span className="text-xl">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+
+        <div className="mt-auto border-t border-[#44478d] p-4">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-[#24265a]">
+            <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center font-bold">
+              P
+            </div>
+
+            <div>
+              <p className="font-semibold text-sm">
+                Parent
+              </p>
+
+              <p className="text-xs text-blue-200">
+                Guardian
+              </p>
             </div>
           </div>
 
           <button
-            type="button"
-            className="sidebar-close-btn"
-            onClick={closeMobileMenu}
-            aria-label="Close navigation menu"
+            onClick={handleLogout}
+            className="mt-4 w-full flex items-center gap-3 px-4 py-3 rounded-lg text-blue-200 hover:bg-[#3b3e85] hover:text-white"
           >
-            <X size={20} />
+            <LogOut size={20} />
+            <span>Sign Out</span>
           </button>
-        </div>
-
-        <nav className="sidebar__nav" aria-label="Primary">
-          <span className="sidebar__nav-label">Menu</span>
-
-          <ul className="sidebar__list">
-            {NAV_ITEMS.map(({ label, path, icon: Icon }) => (
-              <li key={path}>
-                <NavLink
-                  to={path}
-                  onClick={closeMobileMenu}
-                  className={({ isActive }) =>
-                    `sidebar__link ${
-                      isActive ? "sidebar__link--active" : ""
-                    }`
-                  }
-                >
-                  <span className="sidebar__link-indicator" />
-                  <Icon size={19} className="sidebar__link-icon" />
-                  <span className="sidebar__link-text">{label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-
-          <span className="sidebar__nav-label">Account</span>
-
-          <ul className="sidebar__list">
-            <li>
-              <NavLink
-                to="/parent/settings"
-                onClick={closeMobileMenu}
-                className={({ isActive }) =>
-                  `sidebar__link ${
-                    isActive ? "sidebar__link--active" : ""
-                  }`
-                }
-              >
-                <span className="sidebar__link-indicator" />
-                <Settings size={19} className="sidebar__link-icon" />
-                <span className="sidebar__link-text">Settings</span>
-              </NavLink>
-            </li>
-
-            <li>
-              <NavLink
-                to="/"
-                onClick={closeMobileMenu}
-                className="sidebar__link"
-              >
-                <span className="sidebar__link-indicator" />
-                <LogOut size={19} className="sidebar__link-icon" />
-                <span className="sidebar__link-text">Logout</span>
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-
-        <div className="sidebar__footer">
-          <div className="sidebar__user">
-            <span className="sidebar__user-avatar">
-              {initials}
-            </span>
-
-            <div className="sidebar__user-info">
-              <span className="sidebar__user-name">
-                {parent?.name || "Parent"}
-              </span>
-
-              <span className="sidebar__user-role">
-                {parent?.relationship || "Guardian"}
-              </span>
-            </div>
-          </div>
         </div>
       </aside>
     </>

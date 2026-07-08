@@ -32,7 +32,21 @@ import Reports from "./reports/Reports";
 import Settings from "./settings/Settings";
 import AdminStudentAttendanceDetail from "./attendance/pages/AdminStudentAttendanceDetail";
 
-const StudentLayout = () => {
+import ParentLayout from "./parent/layout/ParentLayout";
+import ParentDashboard from "./parent/pages/ParentDashboard";
+import AttendancePage from "./parent/pages/AttendancePage";
+import MarksPage from "./parent/pages/MarksPage";
+import AssignmentsPage from "./parent/pages/AssignmentsPage";
+import HomeworkPage from "./parent/pages/HomeworkPage";
+import ExaminationsPage from "./parent/pages/ExaminationsPage";
+import TimetablePage from "./parent/pages/TimetablePage";
+import FeesPage from "./parent/pages/FeesPage";
+import ParentNotificationsPage from "./parent/pages/NotificationsPage";
+import RemarksPage from "./parent/pages/RemarksPage";
+import SettingsPage from "./parent/pages/SettingsPage";
+
+
+const StudentLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
     <div className="flex bg-[#F8FAFF] min-h-screen">
@@ -57,7 +71,16 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Route element={<ProtectedRoute allowedRole="student"><StudentLayout /></ProtectedRoute>}>
+       
+        {/* Protected Student Routes */}
+        
+        <Route
+          element={
+            <ProtectedRoute allowedRole="student">
+              <StudentLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/profile" element={<Profile />} />
@@ -67,7 +90,16 @@ function App() {
           <Route path="/attendance-reports" element={<AttendanceReports />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRole="admin"><AdminLayout /></ProtectedRoute>}>
+        
+        {/* Admin Routes */}
+       
+        <Route
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/results" element={<AdminResultsDashboard />} />
           <Route path="/admin/students" element={<AdminStudents />} />
@@ -81,6 +113,28 @@ function App() {
           <Route path="/admin/reports" element={<Reports />} />
           <Route path="/admin/settings" element={<Settings />} />
         </Route>
+          
+        {/* Parent Routes */}
+        <Route
+          element={
+            <ProtectedRoute allowedRole="parent">
+              <ParentLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/parent/dashboard" element={<ParentDashboard />} />
+          <Route path="/parent/attendance" element={<AttendancePage />} />
+          <Route path="/parent/marks" element={<MarksPage />} />
+          <Route path="/parent/assignments" element={<AssignmentsPage />} />
+          <Route path="/parent/homework" element={<HomeworkPage />} />
+          <Route path="/parent/examinations" element={<ExaminationsPage />} />
+          <Route path="/parent/timetable" element={<TimetablePage />} />
+          <Route path="/parent/fees" element={<FeesPage />} />
+          <Route path="/parent/notifications" element={<ParentNotificationsPage />} />
+          <Route path="/parent/remarks" element={<RemarksPage />} />
+          <Route path="/parent/settings" element={<SettingsPage />} />
+        </Route>
+
 
         <Route element={<ProtectedRoute allowedRole="teacher"><TeacherLayout /></ProtectedRoute>}>
           <Route path="/teacher/assignments" element={<TeacherDashboard />} />

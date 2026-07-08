@@ -2,8 +2,8 @@ import { useLocation } from "react-router-dom";
 import { Bell } from "lucide-react";
 
 // Reuses the EXACT SAME stylesheet as the Admin Navbar
-import "../../components/Navbar.css";
-
+//import "../../components/Navbar.css";
+import "../../components/layout/Navbar.css";
 import { useParentPreview } from "../context/ParentPreviewContext.jsx";
 
 const PAGE_TITLES = {

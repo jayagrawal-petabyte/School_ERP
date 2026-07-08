@@ -1,27 +1,42 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import ParentSidebar from "../components/ParentSidebar.jsx";
-import ParentNavbar from "../components/ParentNavbar.jsx";
+import { Menu } from "lucide-react";
 
-// Reuses the EXACT SAME layout stylesheet as the Admin shell.
-import "../../components/AppLayout.css";
+import ParentSidebar from "../components/ParentSidebar";
+import CommonNavbar from "../../components/layout/CommonNavbar";
+import Footer from "../../components/layout/Footer";
 
-import { ParentPreviewProvider } from "../context/ParentPreviewContext.jsx";
+import { ParentPreviewProvider } from "../context/ParentPreviewContext";
 
-// Mirrors AppLayout.jsx's structure exactly, but swaps in the Parent-facing
-// sidebar/navbar and scopes the temporary preview context to this subtree only.
 function ParentLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <ParentPreviewProvider>
-      <div className="app-layout">
-        <ParentSidebar />
+      <div className="flex bg-[#F8FAFF] min-h-screen">
+        <ParentSidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
 
-        <div className="app-layout__main">
-          <ParentNavbar />
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="md:hidden fixed top-4 left-4 z-50 bg-[#2f3273] text-white p-2 rounded-lg shadow-lg"
+        >
+          <Menu size={22} />
+        </button>
 
-          <main className="app-layout__content">
-            <Outlet />
-          </main>
-        </div>
+        <main className="flex-1 p-6 overflow-y-auto">
+          <CommonNavbar
+            title="Parent Dashboard"
+            role="Parent"
+          />
+
+          <Outlet />
+
+          <Footer />
+        </main>
       </div>
     </ParentPreviewProvider>
   );

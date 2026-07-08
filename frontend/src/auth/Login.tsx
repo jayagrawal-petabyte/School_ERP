@@ -129,7 +129,8 @@ function Login() {
           break;
 
         case "parent":
-          navigate("/dashboard");
+      
+          navigate("/parent/dashboard");
           break;
 
         default:
