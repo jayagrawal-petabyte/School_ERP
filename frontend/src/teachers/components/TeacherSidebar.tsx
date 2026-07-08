@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { X, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { ClipboardList, BookOpen, UserCheck } from "lucide-react";
 
 type TeacherSidebarProps = {
   open: boolean;
@@ -21,6 +22,11 @@ const TeacherSidebar = ({ open, onClose }: TeacherSidebarProps) => {
       label: "Examination & Results",
       icon: "🎓",
       path: "/teacher/results",
+    },
+    {
+      label: "Attendance", 
+      icon: "✅", 
+      path: "/teacher/attendance",
     },
   ];
   
