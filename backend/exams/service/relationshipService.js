@@ -78,13 +78,16 @@ const setCachedValue = (cacheStore, id, value) => {
 };
 
 const fetchRowsByIds = async (table, ids, selectColumns) => {
+  console.log('[RelationshipService] fetchRowsByIds - Table:', table, 'IDs:', ids, 'Columns:', selectColumns);
   const client = getSupabaseClient();
   if (!client) {
+    console.warn('[RelationshipService] fetchRowsByIds - Supabase client not available');
     return null;
   }
 
   const normalizedIds = normalizeIds(ids);
   if (normalizedIds.length === 0) {
+    console.log('[RelationshipService] fetchRowsByIds - No normalized IDs');
     return [];
   }
 
@@ -97,24 +100,32 @@ const fetchRowsByIds = async (table, ids, selectColumns) => {
   if (response?.error) {
     const message = String(response.error?.message || '').toLowerCase();
     if (message.includes('does not exist') || message.includes('relation') || message.includes('not found')) {
+      console.warn('[RelationshipService] fetchRowsByIds - Table does not exist or relation not found');
       return [];
     }
 
+    console.error('[RelationshipService] fetchRowsByIds - Error fetching from', table, ':', response.error);
     throw new AppError(`Unable to fetch ${table} metadata`, 500, response.error);
   }
 
+  console.log('[RelationshipService] fetchRowsByIds - Fetched', (response?.data || []).length, 'rows from', table);
   return response?.data || [];
 };
 
 const fetchExamsByIds = async (ids) => {
+  console.log('[RelationshipService] fetchExamsByIds - IDs:', ids);
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
     .map((id) => getCachedValue(cache.exams, id))
     .filter((value) => value !== null);
+  console.log('[RelationshipService] fetchExamsByIds - Cached results:', cachedResults.length);
+  
   const missingIds = normalizedIds.filter((id) => getCachedValue(cache.exams, id) === null);
+  console.log('[RelationshipService] fetchExamsByIds - Missing IDs:', missingIds);
 
   const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id') : [];
   if (fetchedResults === null) {
+    console.warn('[RelationshipService] fetchExamsByIds - fetchRowsByIds returned null');
     return null;
   }
 
@@ -122,18 +133,25 @@ const fetchExamsByIds = async (ids) => {
     setCachedValue(cache.exams, String(exam.id), exam);
   }
 
-  return [...cachedResults, ...fetchedResults];
+  const result = [...cachedResults, ...fetchedResults];
+  console.log('[RelationshipService] fetchExamsByIds - Total results:', result.length);
+  return result;
 };
 
 const fetchSubjectsByIds = async (ids) => {
+  console.log('[RelationshipService] fetchSubjectsByIds - IDs:', ids);
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
     .map((id) => getCachedValue(cache.subjects, id))
     .filter((value) => value !== null);
+  console.log('[RelationshipService] fetchSubjectsByIds - Cached results:', cachedResults.length);
+  
   const missingIds = normalizedIds.filter((id) => getCachedValue(cache.subjects, id) === null);
+  console.log('[RelationshipService] fetchSubjectsByIds - Missing IDs:', missingIds);
 
   const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code') : [];
   if (fetchedResults === null) {
+    console.warn('[RelationshipService] fetchSubjectsByIds - fetchRowsByIds returned null');
     return null;
   }
 
@@ -141,16 +159,21 @@ const fetchSubjectsByIds = async (ids) => {
     setCachedValue(cache.subjects, String(subject.id), subject);
   }
 
-  return [...cachedResults, ...fetchedResults];
+  const result = [...cachedResults, ...fetchedResults];
+  console.log('[RelationshipService] fetchSubjectsByIds - Total results:', result.length);
+  return result;
 };
 
 const isParentOfStudent = async (parentId, studentId) => {
+  console.log('[RelationshipService] isParentOfStudent - ParentID:', parentId, 'StudentID:', studentId);
   if (!parentId || !studentId) {
+    console.error('[RelationshipService] isParentOfStudent - Invalid identifiers');
     throw new AppError('Invalid parent/student identifiers', 400);
   }
 
   const client = getSupabaseClient();
   if (!client) {
+    console.warn('[RelationshipService] isParentOfStudent - Supabase client not available');
     return false;
   }
 
@@ -163,19 +186,25 @@ const isParentOfStudent = async (parentId, studentId) => {
   );
 
   if (response?.error) {
+    console.error('[RelationshipService] isParentOfStudent - Error:', response.error);
     throw new AppError('Unable to resolve parent-student relationship', 500, response.error);
   }
 
-  return Boolean(response?.data);
+  const isParent = Boolean(response?.data);
+  console.log('[RelationshipService] isParentOfStudent - Result:', isParent);
+  return isParent;
 };
 
 const getParentStudentIds = async (parentId) => {
+  console.log('[RelationshipService] getParentStudentIds - ParentID:', parentId);
   if (!parentId) {
+    console.error('[RelationshipService] getParentStudentIds - Invalid parent identifier');
     throw new AppError('Invalid parent identifier', 400);
   }
 
   const client = getSupabaseClient();
   if (!client) {
+    console.warn('[RelationshipService] getParentStudentIds - Supabase client not available');
     return [];
   }
 
@@ -186,22 +215,29 @@ const getParentStudentIds = async (parentId) => {
   );
 
   if (response?.error) {
+    console.error('[RelationshipService] getParentStudentIds - Error:', response.error);
     throw new AppError('Unable to fetch parent-student relationships', 500, response.error);
   }
 
-  return (response?.data || [])
+  const result = (response?.data || [])
     .map((row) => row?.student_id)
     .filter((value) => value !== null && value !== undefined)
     .map((value) => String(value));
+  
+  console.log('[RelationshipService] getParentStudentIds - Found students:', result);
+  return result;
 };
 
 const getTeacherClassIds = async (teacherId) => {
+  console.log('[RelationshipService] getTeacherClassIds - TeacherID:', teacherId);
   if (!teacherId) {
+    console.error('[RelationshipService] getTeacherClassIds - Invalid teacher identifier');
     throw new AppError('Invalid teacher identifier', 400);
   }
 
   const client = getSupabaseClient();
   if (!client) {
+    console.warn('[RelationshipService] getTeacherClassIds - Supabase client not available');
     return [];
   }
 
@@ -214,16 +250,21 @@ const getTeacherClassIds = async (teacherId) => {
   if (response?.error) {
     const message = String(response.error?.message || '').toLowerCase();
     if (message.includes('does not exist') || message.includes('relation') || message.includes('not found')) {
+      console.warn('[RelationshipService] getTeacherClassIds - Table does not exist');
       return [];
     }
 
+    console.error('[RelationshipService] getTeacherClassIds - Error:', response.error);
     throw new AppError('Unable to fetch teacher-class relationships', 500, response.error);
   }
 
-  return (response?.data || [])
+  const result = (response?.data || [])
     .map((row) => row?.class_id)
     .filter((value) => value !== null && value !== undefined)
     .map((value) => String(value));
+  
+  console.log('[RelationshipService] getTeacherClassIds - Found classes:', result);
+  return result;
 };
 
 const isTeacherAssignedToClass = async (teacherId, classId) => {

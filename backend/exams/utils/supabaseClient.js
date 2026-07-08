@@ -46,33 +46,46 @@ const getSupabaseClient = () => {
 };
 
 const runQuery = async (queryBuilder) => {
-  if (!queryBuilder) return { data: [], error: null };
+  console.log('[SupabaseClient] runQuery - Executing query');
+  if (!queryBuilder) {
+    console.log('[SupabaseClient] runQuery - Query builder is null');
+    return { data: [], error: null };
+  }
 
   try {
     // already resolved response
     if (isResponseLike(queryBuilder)) {
+      console.log('[SupabaseClient] runQuery - Already resolved response');
       return queryBuilder;
     }
 
     // Supabase builder with maybeSingle/single
     if (typeof queryBuilder.maybeSingle === "function") {
+      console.log('[SupabaseClient] runQuery - Calling maybeSingle()');
       const res = await queryBuilder.maybeSingle();
+      console.log('[SupabaseClient] runQuery - maybeSingle response:', res);
       return normalizeResponse(res);
     }
 
     if (typeof queryBuilder.single === "function") {
+      console.log('[SupabaseClient] runQuery - Calling single()');
       const res = await queryBuilder.single();
+      console.log('[SupabaseClient] runQuery - single response:', res);
       return normalizeResponse(res);
     }
 
     // normal promise (select/in/etc.)
     if (typeof queryBuilder.then === "function") {
+      console.log('[SupabaseClient] runQuery - Awaiting promise');
       const res = await queryBuilder;
+      console.log('[SupabaseClient] runQuery - Promise response:', res);
       return normalizeResponse(res);
     }
 
+    console.log('[SupabaseClient] runQuery - Unknown query type');
     return normalizeResponse(null);
   } catch (error) {
+    console.error('[SupabaseClient] runQuery - Error:', error);
     return {
       data: null,
       error: createSupabaseError(error),

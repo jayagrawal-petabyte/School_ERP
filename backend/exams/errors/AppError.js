@@ -6,6 +6,7 @@ class AppError extends Error {
     this.details = details;
     this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
+    console.log('[AppError] Error created:', { message, statusCode, details });
   }
 }
 

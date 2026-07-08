@@ -57,7 +57,10 @@ const authorize = ({ ownership, requireOwnership = false } = {}) => {
     : (ownership || (requireOwnership ? { enabled: true } : {}));
 
   return async (req, res, next) => {
+    console.log('[Authorize] Checking authorization for user:', req.user?.id, 'Role:', req.user?.role);
+    
     if (!req.user || !req.user.role) {
+      console.warn('[Authorize] Missing user or role');
       return res.status(401).json({
         success: false,
         message: AUTH_MESSAGES.UNAUTHORIZED,
@@ -66,26 +69,34 @@ const authorize = ({ ownership, requireOwnership = false } = {}) => {
 
     if (ownershipConfig.enabled) {
       try {
+        console.log('[Authorize] Checking ownership...');
         const resourceContext = ownershipConfig.resolver
           ? await ownershipConfig.resolver(req)
           : (ownershipConfig.param ? req.params?.[ownershipConfig.param] : null);
 
         if (!resourceContext) {
+          console.warn('[Authorize] Resource context not found');
           return next(new AppError('Resource not found.', 404));
         }
 
+        console.log('[Authorize] Resource context obtained:', resourceContext);
         // Reuse the fetched result context in the service layer to avoid duplicate lookups.
         req.resourceOwner = resourceContext;
 
         const isOwner = await checkOwnership(req.user, resourceContext);
+        console.log('[Authorize] Ownership check result:', isOwner);
+        
         if (!isOwner) {
+          console.warn('[Authorize] User is not the owner');
           return next(new AppError(AUTH_MESSAGES.FORBIDDEN, 403));
         }
       } catch (error) {
+        console.error('[Authorize] Authorization error:', error);
         return next(error);
       }
     }
 
+    console.log('[Authorize] Authorization passed');
     return next();
   };
 };

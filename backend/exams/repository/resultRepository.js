@@ -72,9 +72,11 @@ const applyMemorySort = (rows, sortBy, order) => {
 };
 
 const create = async (resultData) => {
+  console.log('[Repository] create - Input data:', resultData);
   const client = getSupabaseClient();
   if (!client) {
     if (!isDevelopmentMode()) {
+      console.error('[Repository] create - Supabase client not configured');
       throw new AppError('Supabase client is not configured', 500);
     }
 
@@ -85,6 +87,7 @@ const create = async (resultData) => {
       updated_at: new Date().toISOString(),
     });
     results.push(result);
+    console.log('[Repository] create - Result created in memory:', result);
     return result;
   }
 
@@ -96,21 +99,26 @@ const create = async (resultData) => {
   );
 
   if (response?.error) {
+    console.error('[Repository] create - Error:', response.error);
     throw new AppError('Unable to create result', 500, response.error);
   }
 
+  console.log('[Repository] create - Result created in database:', response.data);
   return normalizeResult(response.data);
 };
 
 const update = async (id, updates) => {
+  console.log('[Repository] update - ID:', id, 'Updates:', updates);
   const client = getSupabaseClient();
   if (!client) {
     if (!isDevelopmentMode()) {
+      console.error('[Repository] update - Supabase client not configured');
       throw new AppError('Supabase client is not configured', 500);
     }
 
     const index = results.findIndex((result) => result.id === String(id));
     if (index === -1) {
+      console.warn('[Repository] update - Result not found in memory:', id);
       return null;
     }
 
@@ -122,6 +130,7 @@ const update = async (id, updates) => {
     });
 
     results[index] = updatedResult;
+    console.log('[Repository] update - Result updated in memory:', updatedResult);
     return updatedResult;
   }
 
@@ -134,20 +143,25 @@ const update = async (id, updates) => {
   );
 
   if (response?.error) {
+    console.error('[Repository] update - Error:', response.error);
     throw new AppError('Unable to update result', 500, response.error);
   }
 
+  console.log('[Repository] update - Result updated in database:', response.data);
   return response.data ? normalizeResult(response.data) : null;
 };
 
 const findById = async (id) => {
+  console.log('[Repository] findById - ID:', id);
   const client = getSupabaseClient();
   if (!client) {
     if (!isDevelopmentMode()) {
+      console.error('[Repository] findById - Supabase client not configured');
       throw new AppError('Supabase client is not configured', 500);
     }
 
     const result = results.find((item) => item.id === String(id));
+    console.log('[Repository] findById - Result from memory:', result);
     return result ? normalizeResult(result) : null;
   }
 
@@ -159,16 +173,20 @@ const findById = async (id) => {
   );
 
   if (response?.error) {
+    console.error('[Repository] findById - Error:', response.error);
     throw new AppError('Unable to fetch result', 500, response.error);
   }
 
+  console.log('[Repository] findById - Result from database:', response.data);
   return response.data ? normalizeResult(response.data) : null;
 };
 
 const findAll = async (filters = {}, options = {}) => {
+  console.log('[Repository] findAll - Filters:', filters, 'Options:', options);
   const client = getSupabaseClient();
   if (!client) {
     if (!isDevelopmentMode()) {
+      console.error('[Repository] findAll - Supabase client not configured');
       throw new AppError('Supabase client is not configured', 500);
     }
 
@@ -179,7 +197,7 @@ const findAll = async (filters = {}, options = {}) => {
     const limit = Math.max(1, Number(options.limit || 10));
     const start = (page - 1) * limit;
 
-    return {
+    const response = {
       success: true,
       page,
       limit,
@@ -187,6 +205,8 @@ const findAll = async (filters = {}, options = {}) => {
       totalPages: sortedResults.length === 0 ? 0 : Math.ceil(sortedResults.length / limit),
       data: sortedResults.slice(start, start + limit),
     };
+    console.log('[Repository] findAll - Memory results:', response);
+    return response;
   }
 
   let query = client.from('exam_marks').select('*', { count: 'exact', head: false });
@@ -220,12 +240,13 @@ const findAll = async (filters = {}, options = {}) => {
 
   const response = await runQuery(query);
   if (response?.error) {
+    console.error('[Repository] findAll - Error:', response.error);
     throw new AppError('Unable to fetch results', 500, response.error);
   }
 
   const data = (response.data || []).map((result) => normalizeResult(result));
   const total = typeof response.count === 'number' ? response.count : data.length;
-  return {
+  const result = {
     success: true,
     page,
     limit,
@@ -233,6 +254,8 @@ const findAll = async (filters = {}, options = {}) => {
     totalPages: total === 0 ? 0 : Math.ceil(total / limit),
     data,
   };
+  console.log('[Repository] findAll - Database results count:', data.length, 'Total:', total);
+  return result;
 };
 
 module.exports = {

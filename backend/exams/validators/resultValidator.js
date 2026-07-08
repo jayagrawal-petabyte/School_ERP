@@ -4,7 +4,7 @@ const LEGACY_RESULT_FIELD_MAP = {
   studentId: 'student_id',
   teacherId: 'teacher_id',
   classId: 'class_id',
-  examType: 'exam_id',
+  examId: 'exam_id',
   subject: 'subject_id',
   marks: 'marks_obtained',
   maxMarks: 'max_marks',
@@ -36,9 +36,11 @@ const normalizeResultPayload = (payload) => {
 };
 
 const validateMarks = (req, res, next) => {
+  console.log('[Validator] validateMarks - Original body:', req.body);
   if (req.body && typeof req.body === "object") {
     req.body = normalizeResultPayload(req.body);
   }
+  console.log('[Validator] validateMarks - Normalized body:', req.body);
 
   next();
 };
