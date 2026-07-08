@@ -10,7 +10,7 @@ const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex bg-[#F8FAFF] min-h-screen">
+    <div className="flex bg-[#F8FAFF] min-h-screen h-screen">
       {/* Sidebar */}
       <AdminSidebar
         open={sidebarOpen}

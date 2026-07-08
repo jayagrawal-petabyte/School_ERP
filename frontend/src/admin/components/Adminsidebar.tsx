@@ -45,7 +45,7 @@ const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-0 left-0
+          fixed md:static top-0 left-0
           h-screen
           w-[280px]
           bg-[#2f3273]
@@ -53,9 +53,8 @@ const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
           shadow-2xl
           z-40
 
-          transform
-          transition-transform
-          duration-300
+          transform md:transform
+          transition-transform duration-300
 
           ${
             open
@@ -63,10 +62,8 @@ const AdminSidebar = ({ open, onClose }: AdminSidebarProps) => {
               : "-translate-x-full"
           }
 
-          md:translate-x-0
-          md:sticky
-          md:flex
-          flex-col
+          md:translate-x-0 md:sticky md:flex flex-col
+          overflow-y-auto
         `}
       >
         {/* Mobile Close */}
