@@ -1,4 +1,5 @@
 const { getClientForUser } = require("../services/database.service");
+const crypto = require("crypto");
 
 
 function getSupabaseClient(authHeader) {
@@ -17,7 +18,11 @@ function getSupabaseClient(authHeader) {
 }
 
 async function addSubmission(data, file, authHeader) {
-    const storagePath = `${data.assignment_id}/${data.student_id}/${file.originalname}`;
+    const uniqueName =
+`${crypto.randomUUID()}-${file.originalname}`;
+
+const storagePath =
+`${data.assignment_id}/${data.student_id}/${uniqueName}`;
 
     const supabase = getSupabaseClient(authHeader);
     const { error: uploadError } = await supabase.storage
@@ -217,7 +222,7 @@ async function createDownloadUrl(filePath, authHeader) {
 
     const { data, error } = await supabase.storage
         .from("assignment-submissions")
-        .createSignedUrl(filePath, 60);
+        .createSignedUrl(filePath, 300);
 
     if (error) {
         throw new Error(error.message);
@@ -225,7 +230,24 @@ async function createDownloadUrl(filePath, authHeader) {
 
     return data.signedUrl;
 }
+async function getAssignmentDueDate(
+    assignmentId,
+    authHeader
+) {
+    const supabase = getSupabaseClient(authHeader);
 
+    const { data, error } = await supabase
+        .from("assignments")
+        .select("due_date")
+        .eq("id", assignmentId)
+        .single();
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    return data;
+}
 module.exports = {
     addSubmission,
     findSubmission,
@@ -236,5 +258,6 @@ module.exports = {
     removeSubmission,
     listSubmissions,
     findSubmissionStatus,
-    createDownloadUrl
+    createDownloadUrl,
+    getAssignmentDueDate
 };

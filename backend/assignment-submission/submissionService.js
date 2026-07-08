@@ -75,15 +75,13 @@ async function submitAssignment(payload, file, user, authHeader) {
     validateStudentOwnership(payload, user);
 
     const assignmentId = validateSubmission(payload, file);
-    const token = authHeader.split(" ")[1];
-    const supabase = getClientForUser(token);
 
     const existingSubmission =
-    await submissionStore.findSubmissionByAssignmentAndStudent(
-        assignmentId,
-        user.id,
-        authHeader
-    );
+        await submissionStore.findSubmissionByAssignmentAndStudent(
+            assignmentId,
+            user.id,
+            authHeader
+        );
 
     if (existingSubmission) {
         const error = new Error(
@@ -93,38 +91,34 @@ async function submitAssignment(payload, file, user, authHeader) {
         throw error;
     }
 
-    const { data: assignment, error } = await supabase
-    .from("assignments")
-    .select("due_date")
-    .eq("id", assignmentId)
-    .single();
+    const assignment =
+        await submissionStore.getAssignmentDueDate(
+            assignmentId,
+            authHeader
+        );
 
-if (error || !assignment) {
-    const err = new Error(
-        "Assignment not found."
-    );
-    err.statusCode = 404;
-    throw err;
-}
-
-const dueDate = assignment.due_date;
+    if (!assignment) {
+        const error = new Error("Assignment not found.");
+        error.statusCode = 404;
+        throw error;
+    }
 
     const submissionStatus =
-        calculateSubmissionStatus(dueDate);
+        calculateSubmissionStatus(assignment.due_date);
 
     return await submissionStore.addSubmission(
-    {
-        assignment_id: assignmentId,
-        student_id: user.id,
-        file_name: file.originalname,
-        file_type: file.mimetype,
-        file_size: file.size,
-        status: submissionStatus,
-        submitted_at: new Date().toISOString()
-    },
-    file,
-    authHeader
-);
+        {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            file_name: file.originalname,
+            file_type: file.mimetype,
+            file_size: file.size,
+            status: submissionStatus,
+            submitted_at: new Date().toISOString()
+        },
+        file,
+        authHeader
+    );
 }
 
 async function getSubmissionStatus(assignmentId, user, authHeader) {
