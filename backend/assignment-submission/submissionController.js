@@ -33,12 +33,12 @@ async function submitAssignment(req, res) {
     }
 }
 
-function getSubmissionStatus(req, res) {
+async function getSubmissionStatus(req, res) {
     try {
         const user = submissionService.readUser(req);
         const authHeader = req.get("Authorization");
 
-        const status = submissionService.getSubmissionStatus(
+        const status = await submissionService.getSubmissionStatus(
             req.params.assignmentId,
             user,
             authHeader
@@ -51,12 +51,12 @@ function getSubmissionStatus(req, res) {
     }
 }
 
-function getStudentSubmissions(req, res) {
+async function getStudentSubmissions(req, res) {
     try {
         const user = submissionService.readUser(req);
         const authHeader = req.get("Authorization");
 
-        const submissions = submissionService.getStudentSubmissions(
+        const submissions = await submissionService.getStudentSubmissions(
             user,
             authHeader
         );
@@ -68,12 +68,12 @@ function getStudentSubmissions(req, res) {
     }
 }
 
-function getAssignmentSubmissions(req, res) {
+async function getAssignmentSubmissions(req, res) {
     try {
         const user = submissionService.readUser(req);
         const authHeader = req.get("Authorization");
 
-        const submissions = submissionService.getAssignmentSubmissions(
+        const submissions = await submissionService.getAssignmentSubmissions(
             req.params.assignmentId,
             user,
             authHeader
@@ -86,13 +86,13 @@ function getAssignmentSubmissions(req, res) {
     }
 }
 
-function downloadSubmission(req, res) {
+async function downloadSubmission(req, res) {
     try {
         const user = submissionService.readUser(req);
         const authHeader = req.get("Authorization");
 
-        const submission = submissionService.downloadSubmission(
-            req.params.assignmentId,
+        const submission = await submissionService.downloadSubmission(
+            req.params.submissionId,
             user,
             authHeader
         );
