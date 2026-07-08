@@ -97,9 +97,6 @@ export const ProfileService = {
     return { ...user, children };
   },
 
-  // Assumption: standard Supabase self-edit pattern (auth.uid() = id) — a user can
-  // update their own full_name only. Confirm with whoever owns the RLS policies
-  // before this goes live; not explicitly stated in the schema doc.
   updateFullName: async (
     userId: string,
     fullName: string
@@ -127,5 +124,35 @@ export const DashboardService = {
   getDashboardCards: async (role: UserRole): Promise<DashboardCard[]> => {
     await delay(150);
     return DASHBOARD_CARDS.filter((card) => card.forRole.includes(role));
+  },
+};
+
+export const DEMO_USER_ID_BY_ROLE: Record<'student' | 'teacher' | 'parent', string> = {
+  student: '102',
+  teacher: 't1',
+  parent: 'p1',
+};
+
+const LOGIN_CREDENTIALS: Record<string, { userId: string; password: string }> = {
+  'sofia.morales@school.edu': { userId: '102', password: 'sofia1234' },
+  'lucas.henry@school.edu': { userId: '101', password: 'lucas1234' },
+  'shradha.sen@school.edu': { userId: 't1', password: 'shradha1234' },
+  'rajesh.rawat@school.edu': { userId: 't2', password: 'rajesh1234' },
+  'carlos.morales@gmail.com': { userId: 'p1', password: 'carlos1234' },
+  'ravi.sharma@gmail.com': { userId: 'p2', password: 'ravi1234' },
+};
+
+export const AuthService = {
+  login: async (
+    identifier: string,
+    password: string
+  ): Promise<{ success: boolean; userId?: string; role?: UserRole; message: string }> => {
+    await delay(300);
+    const record = LOGIN_CREDENTIALS[identifier.toLowerCase().trim()];
+    if (!record || record.password !== password) {
+      return { success: false, message: 'Invalid identifier or password' };
+    }
+    const user = USERS[record.userId];
+    return { success: true, userId: record.userId, role: user.role, message: 'Login successful' };
   },
 };

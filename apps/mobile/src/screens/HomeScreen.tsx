@@ -14,6 +14,8 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
+import { DashboardCard } from '../types';
+import { DashboardService, ProfileService } from '../services/profileApi';
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -34,13 +36,18 @@ interface AcademicItem {
 
 export default function HomeScreen({ route, navigation }: Props) {
   const { initialRole } = route.params || {};
-  const [role, setRole] = useState<'teacher' | 'student'>(initialRole || 'teacher');
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(initialRole || 'teacher');
+  const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
 
   React.useEffect(() => {
     if (initialRole) {
       setRole(initialRole);
     }
   }, [initialRole]);
+
+  React.useEffect(() => {
+    DashboardService.getDashboardCards(role).then(setAccountCards);
+  }, [role]);
 
   const getAcademicItems = (): AcademicItem[] => {
     const baseItems: AcademicItem[] = [
@@ -88,6 +95,27 @@ export default function HomeScreen({ route, navigation }: Props) {
         },
         ...baseItems
       ];
+    } else if (role === 'parent') {
+      // Parent panel items
+      return [
+        { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7' },
+        {
+          id: 'p_attendance',
+          title: 'Attendance',
+          emoji: '📋',
+          color: '#ECFDF5',
+          route: 'AttendanceHistory',
+          params: { classId: '1', className: 'Standard - 8 - C', defaultStudentName: 'Sofia Morales' }
+        },
+        {
+          id: 'p_results',
+          title: 'Results',
+          emoji: '📊',
+          color: '#E0F2FE',
+          route: 'StudentResults'
+        },
+        ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
+      ];
     } else {
       // Student panel items
       return [
@@ -111,6 +139,27 @@ export default function HomeScreen({ route, navigation }: Props) {
     }
   };
 
+  const { userId } = route.params || {};
+  const [displayName, setDisplayName] = useState('');
+
+  React.useEffect(() => {
+    if (!userId) return;
+
+    if (role === 'teacher') {
+      ProfileService.getTeacherProfile(userId).then((profile) => {
+        if (profile) setDisplayName(profile.full_name);
+      });
+    } else if (role === 'parent') {
+      ProfileService.getParentProfile(userId).then((profile) => {
+        if (profile) setDisplayName(profile.full_name);
+      });
+    } else {
+      ProfileService.getStudentProfile(userId).then((profile) => {
+        if (profile) setDisplayName(profile.full_name);
+      });
+    }
+  }, [role, userId]);
+
   const handlePressItem = (item: AcademicItem) => {
     if (item.route) {
       navigation.navigate(item.route as any, item.params);
@@ -132,7 +181,7 @@ export default function HomeScreen({ route, navigation }: Props) {
         <View style={styles.profileContainer}>
           <Text style={styles.greeting}>Hello</Text>
           <Text style={styles.userName}>
-            {role === 'teacher' ? 'Mrs. Shradha Sen' : 'Sofia Morales'}
+            {displayName || (role === 'teacher' ? 'Mrs. Shradha Sen' : role === 'parent' ? 'Mr. Carlos Morales' : 'Sofia Morales')}
           </Text>
         </View>
         <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
@@ -144,28 +193,39 @@ export default function HomeScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Temporary Role Switcher */}
-      <View style={styles.roleSwitcherContainer}>
-        <TouchableOpacity
-          style={[styles.roleTab, role === 'teacher' && styles.roleTabActive]}
-          onPress={() => setRole('teacher')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.roleTabText, role === 'teacher' && styles.roleTabTextActive]}>
-            Teacher Panel
-          </Text>
-        </TouchableOpacity>
+      {!initialRole && (
+        <View style={styles.roleSwitcherContainer}>
+          <TouchableOpacity
+            style={[styles.roleTab, role === 'teacher' && styles.roleTabActive]}
+            onPress={() => setRole('teacher')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.roleTabText, role === 'teacher' && styles.roleTabTextActive]}>
+              Teacher Panel
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.roleTab, role === 'student' && styles.roleTabActive]}
-          onPress={() => setRole('student')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.roleTabText, role === 'student' && styles.roleTabTextActive]}>
-            Student Panel
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.roleTab, role === 'student' && styles.roleTabActive]}
+            onPress={() => setRole('student')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.roleTabText, role === 'student' && styles.roleTabTextActive]}>
+              Student Panel
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.roleTab, role === 'parent' && styles.roleTabActive]}
+            onPress={() => setRole('parent')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.roleTabText, role === 'parent' && styles.roleTabTextActive]}>
+              Parent Panel
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Search Input bar */}
@@ -197,7 +257,32 @@ export default function HomeScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        {/* My Account Section — Profile & Settings, from ProfileService/DashboardService */}
+        <View style={styles.academicsSection}>
+          <Text style={styles.sectionTitle}>My Account</Text>
+          <View style={styles.grid}>
+            {accountCards.map((card) => (
+              <TouchableOpacity
+                key={card.id}
+                style={styles.gridItem}
+                activeOpacity={0.7}
+                onPress={() => Alert.alert(
+                  'Screen Placeholder',
+                  `The "${card.title}" screen is being built next.`,
+                  [{ text: 'OK' }]
+                )}
+              >
+                <View style={[styles.iconContainer, { backgroundColor: card.color }]}>
+                  <Text style={styles.gridEmoji}>{card.emoji}</Text>
+                </View>
+                <Text style={styles.gridLabel}>{card.title}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* E-Learning Section */}
+        
         <View style={styles.elearningSection}>
           <Text style={styles.sectionTitle}>E-Learning</Text>
           <View style={styles.elearningBanner}>

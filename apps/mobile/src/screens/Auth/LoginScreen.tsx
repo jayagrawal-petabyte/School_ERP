@@ -16,6 +16,7 @@ import SecureInput from '../../components/Auth/SecureInput';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
 import { COLORS } from '../../constants/theme';
 import { ROLES, SECURITY } from '../../constants/auth';
+import { AuthService } from '../../services/profileApi';
 import {
   isValidIdentifier,
   isAccountLocked,
@@ -79,12 +80,23 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       // ── Mock API call (replace with real endpoint) ──────────────────────
       // In production: POST /api/auth/login with { identifier, password, role }
-      // Headers must include: Content-Type: application/json
-      // Response: { token, refreshToken, user }
       await new Promise((res) => setTimeout(res, 1500));
 
+      let mockSuccess = false;
+      let resolvedUserId: string | undefined;
 
-      const mockSuccess = password.length >= 8;
+      if (selectedRole.key === 'admin') {
+        // No admin sample data yet — keep the old placeholder check for now
+        mockSuccess = password.length >= 8;
+      } else {
+        const authResult = await AuthService.login(identifier, password);
+        if (authResult.success && authResult.role !== selectedRole.key) {
+          setPasswordError(`This account is registered as ${authResult.role}, not ${selectedRole.key}.`);
+        } else if (authResult.success) {
+          mockSuccess = true;
+          resolvedUserId = authResult.userId;
+        }
+      }
 
       if (mockSuccess) {
         resetLoginAttempts(identifier);
@@ -92,14 +104,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         await storeToken('auth_token', 'mock_jwt_token_here');
         await storeToken('user_role', JSON.stringify(selectedRole));
 
-
         if (selectedRole.requiresMFA) {
           navigation.navigate('MFA', {
             role: selectedRole,
           });
-        } else if (selectedRole.key === 'student' || selectedRole.key === 'teacher') {
+        } else if (selectedRole.key === 'student' || selectedRole.key === 'teacher' || selectedRole.key === 'parent') {
           navigation.replace('Home', {
-            initialRole: selectedRole.key,
+            initialRole: selectedRole.key as 'student' | 'teacher' | 'parent',
+            userId: resolvedUserId,
           });
         } else {
           navigation.replace('Dashboard', {
@@ -111,7 +123,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         const remaining = getRemainingAttempts(identifier);
         if (remaining === 0) {
           setPasswordError('Account locked. Too many failed attempts.');
-        } else {
+        } else if (!passwordError) {
           setPasswordError(`Incorrect password. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`);
         }
       }

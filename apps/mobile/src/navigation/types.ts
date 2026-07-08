@@ -2,7 +2,7 @@ import { Role } from '../constants/auth';
 
 export type RootStackParamList = {
   // Academics Module
-  Home: { initialRole?: 'student' | 'teacher' } | undefined;
+  Home: { initialRole?: 'student' | 'teacher' | 'parent'; userId?: string } | undefined;
   AttendanceList: undefined;
   MarkAttendance: { classId: string; className: string };
   AttendanceHistory: { classId: string; className: string; defaultStudentName?: string };
