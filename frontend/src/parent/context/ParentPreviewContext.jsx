@@ -1,19 +1,3 @@
-// ─── Parent Preview Context (TEMPORARY — dev-only) ─────────────────────────
-// Parent Authentication does not exist yet. Until it does, this context
-// stands in for "the logged-in parent's session": it reads ERPContext (the
-// single source of truth) and lets a developer pick which parent to preview
-// the portal as, via the "PREVIEW MODE" switcher in ParentNavbar.
-//
-// Nothing here duplicates ERP state — parents/students are read directly
-// from useERP() on every render. This file only tracks *which* parent is
-// currently being previewed.
-//
-// REMOVAL PLAN: once real Parent Authentication ships, delete this file and
-// the <PreviewAsSwitcher /> block in ParentNavbar.jsx, then replace the
-// `parent` value below with whatever the auth session resolves to. Every
-// other Parent Portal component reads only `{ parent, child, linkedStudents }`
-// from useParentPreview(), so nothing else needs to change.
-
 import { createContext, useContext, useMemo, useState } from "react";
 import { useERP } from "../../pages/ERPContext.jsx";
 
