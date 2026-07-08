@@ -1,20 +1,21 @@
-/**
- * TeacherReport.jsx — School ERP | Reports Module
- *
- * Reads exclusively from ERPContext (teachers). No duplicate state, no
- * hardcoded/sample data. Visually matches the existing Admin Dashboard /
- * Analytics Dashboard via reportShared.jsx.
- */
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useERP } from "../ERPContext.jsx";
 import {
   ReportShell, SummaryCard, ProgressBar, DistributionBar, AnalyticsPanel,
   StatusBadge, SearchBox, FilterSelect, SortableTh, PaginationBar, EmptyState,
-  IdChip, thStyle, tdStyle,
+  IdChip, ExportButtons, thStyle, tdStyle,
 } from "./reportShared.jsx";
+import { exportReportToPDF } from "../../utils/exportPDF.js";
+import { exportReportToExcel } from "../../utils/exportExcel.js";
 
 const RECORDS_PER_PAGE = 8;
+
+// Columns for the Teacher Report table — shared verbatim between the on-screen
+// table, the PDF export, and the Excel export so all three always match.
+const EXPORT_COLUMNS = [
+  "Teacher ID", "Teacher Name", "Subject", "Qualification", "Experience",
+  "Joining Date", "Phone", "Email", "Status",
+];
 
 // Experience buckets are a display/categorization choice, not ERP data —
 // every count inside each bucket is still computed live from `teachers`.
@@ -119,6 +120,45 @@ export default function TeacherReport() {
   const handleFilterSubject = (v) => { setFilterSubject(v); setPage(1); };
   const handleFilterStatus = (v) => { setFilterStatus(v); setPage(1); };
 
+  // ── Export — always the full filtered + sorted dataset (`sorted`), never
+  //     just the current page and never the raw unfiltered ERPContext data ──
+  const buildExportRows = useCallback(() => sorted.map((t) => [
+    t.id ?? "",
+    t.name ?? "",
+    t.subject ?? "",
+    t.qualification ?? "",
+    `${getExp(t)} yrs`,
+    t.joiningDate ? new Date(t.joiningDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—",
+    t.phone ?? "",
+    t.email ?? "",
+    t.active ? "Active" : "Inactive",
+  ]), [sorted]);
+
+  const handleExportPDF = useCallback(() => {
+    exportReportToPDF({
+      title: "Teacher Report",
+      summary: [
+        { label: "Total Teachers", value: totalTeachers },
+        { label: "Active", value: activeTeachers },
+        { label: "Inactive", value: inactiveTeachers },
+        { label: "Subjects Covered", value: totalSubjects },
+        { label: "Avg. Experience", value: `${avgExperience.toFixed(1)} yrs` },
+      ],
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Teacher_Report",
+    });
+  }, [buildExportRows, totalTeachers, activeTeachers, inactiveTeachers, totalSubjects, avgExperience]);
+
+  const handleExportExcel = useCallback(() => {
+    exportReportToExcel({
+      sheetName: "Teacher Report",
+      columns: EXPORT_COLUMNS,
+      rows: buildExportRows(),
+      fileName: "Teacher_Report",
+    });
+  }, [buildExportRows]);
+
   return (
     <ReportShell
       eyebrow="Reports"
@@ -186,6 +226,7 @@ export default function TeacherReport() {
               <FilterSelect label="Subject" value={filterSubject} onChange={handleFilterSubject} options={[["all", "All Subjects"], ...subjectOptions.map((s) => [s, s])]} />
               <FilterSelect label="Status" value={filterStatus} onChange={handleFilterStatus} options={[["all", "All Status"], ["active", "Active"], ["inactive", "Inactive"]]} />
               <SearchBox value={search} onChange={handleSearch} placeholder="Search by ID, name, subject, phone, email…" />
+              <ExportButtons onExportPDF={handleExportPDF} onExportExcel={handleExportExcel} disabled={sorted.length === 0} />
             </div>
 
             {/* Table */}
