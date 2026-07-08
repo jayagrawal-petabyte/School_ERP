@@ -1,18 +1,3 @@
-/**
- * reportShared.jsx — School ERP | Reports Module (shared visual layer)
- *
- * These primitives intentionally mirror the visual language already used in
- * AdminDashboard.jsx (SummaryCard, ProgressBar, PaginationBar, th/td tokens,
- * search bar, dashed empty-state) so the Reports module "visually matches
- * the existing Admin Dashboard and Analytics Dashboard" without redesigning
- * anything. AdminDashboard.jsx's own SummaryCard/ProgressBar/PaginationBar
- * are not exported, so they can't be imported directly without modifying a
- * protected reference file — these are the same look, defined once here and
- * shared by every report so StudentReport.jsx and TeacherReport.jsx never
- * duplicate this code between themselves.
- */
-
-// ─── Page-level style tokens (match AdminDashboard.jsx) ──────────────────────
 export const PAGE_BG = "#f4f5fb";
 export const ACCENT = "#2e4fa3";
 
@@ -265,6 +250,49 @@ export function EmptyState({ icon = "📋", title, message }) {
       <div style={{ fontSize: "15px", fontWeight: 700, color: "#4a4f6a" }}>{title}</div>
       <div style={{ fontSize: "12px", color: "#9fa5b8", marginTop: "6px", maxWidth: "420px", marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
         {message}
+      </div>
+    </div>
+  );
+}
+
+// ─── Export Buttons (PDF / Excel) — sits beside the existing filter controls.
+//     Matches FilterSelect's label+control column so it lines up in the same
+//     flex-end filter bar without any layout changes to existing reports. ──
+const EXCEL_GREEN = "#1e7145";
+
+function exportButtonStyle(color) {
+  return {
+    display: "inline-flex", alignItems: "center", gap: "6px",
+    padding: "8px 14px", fontSize: "12px", fontWeight: 700,
+    border: `1px solid ${color}`, borderRadius: "6px",
+    background: "#fff", color, cursor: "pointer",
+    fontFamily: "inherit", whiteSpace: "nowrap", height: "34px",
+  };
+}
+
+export function ExportButtons({ onExportPDF, onExportExcel, disabled = false }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+      <label style={{ fontSize: "11px", fontWeight: 600, color: "transparent", userSelect: "none" }}>Export</label>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button
+          type="button"
+          onClick={onExportPDF}
+          disabled={disabled}
+          style={{ ...exportButtonStyle(ACCENT), opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+          title="Export the currently filtered data as a PDF"
+        >
+          📄 Export PDF
+        </button>
+        <button
+          type="button"
+          onClick={onExportExcel}
+          disabled={disabled}
+          style={{ ...exportButtonStyle(EXCEL_GREEN), opacity: disabled ? 0.6 : 1, cursor: disabled ? "not-allowed" : "pointer" }}
+          title="Export the currently filtered data as an Excel workbook"
+        >
+          📊 Export Excel
+        </button>
       </div>
     </div>
   );
