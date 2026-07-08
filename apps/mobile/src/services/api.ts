@@ -423,8 +423,9 @@ const ASSIGNMENTS_DB: Assignment[] = [
 ];
 
 export const AssignmentService = {
-  getAssignments: async (classId: string): Promise<Assignment[]> => {
+  getAssignments: async (classId?: string): Promise<Assignment[]> => {
     await delay(300);
+    if (!classId) return ASSIGNMENTS_DB;
     return ASSIGNMENTS_DB.filter((a) => a.classId === classId);
   },
 
