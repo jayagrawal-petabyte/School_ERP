@@ -59,16 +59,22 @@
 
 // export default TeacherAttendanceCalendar;
 
-import React, { useState } from "react";
+import { useState, type FC } from "react";
+
+interface AttendanceHistoryItem {
+  date?: string;
+  day?: number;
+  status: string;
+}
 
 // 1. MUST HAVE THIS INTERFACE
 interface CalendarProps {
-  initialHistory: any[];
+  initialHistory: AttendanceHistoryItem[];
   onUpdate: (newStatus: string, oldStatus: string) => void;
 }
 
 // 2. MUST APPLY THE INTERFACE TO THE COMPONENT
-const TeacherAttendanceCalendar: React.FC<CalendarProps> = ({ initialHistory, onUpdate }) => {
+const TeacherAttendanceCalendar: FC<CalendarProps> = ({ initialHistory, onUpdate }) => {
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
