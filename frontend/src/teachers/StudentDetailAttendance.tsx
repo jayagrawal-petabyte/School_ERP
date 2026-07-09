@@ -49,13 +49,13 @@
 // export default StudentDetailAttendance;
 
 
-import React from 'react';
+import type { FC } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockClassResults } from './mockData';
 import { mockTeacherAttendance } from './mockAttendanceData';
 import AttendanceDetails from './components/common/AttendanceDetails';
 
-const StudentDetailAttendance: React.FC = () => {
+const StudentDetailAttendance: FC = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
 
@@ -81,7 +81,7 @@ const StudentDetailAttendance: React.FC = () => {
       <button onClick={() => navigate(-1)} className="mb-6 text-indigo-600 hover:underline">
         ← Back to Class Overview
       </button>
-      <AttendanceDetails studentName={student.name} data={attendance} />
+      <AttendanceDetails studentName={student.name} data={dynamicData} />
     </div>
   );
 };
