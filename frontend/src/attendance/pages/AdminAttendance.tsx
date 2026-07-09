@@ -496,7 +496,7 @@
 //   );
 // }
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 // --- DYNAMIC DATA GENERATOR ---
@@ -509,9 +509,18 @@ const getRandomName = () => {
   return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
 };
 
+interface Student {
+  id: number;
+  name: string;
+  idCode: string;
+  grade: string;
+  section: string;
+  attendancePercentage: number;
+}
+
 const generateStudentData = () => {
   let globalId = 1;
-  const allStudents = [];
+  const allStudents: Student[] = [];
 
   grades.forEach((grade) => {
     sections.forEach((section) => {
@@ -593,29 +602,29 @@ export default function AdminAttendance() {
   // Set defaults to match the generator arrays
   const [grade, setGrade] = useState(grades[0]); 
   const [section, setSection] = useState(sections[0]);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // Filter students based on dropdowns
   const filteredStudents = useMemo(() => {
     return studentData.filter(s => s.grade === grade && s.section === section);
   }, [grade, section]);
 
-  const handleTabChange = (tab) => {
+  const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     if (tab === "teachers") setStaffRecords(teacherData);
     else if (tab === "staff") setStaffRecords(staffData);
   };
 
-  const showToast = (msg) => {
+  const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleStaffStatusChange = (id, newStatus) => {
+  const handleStaffStatusChange = (id: number, newStatus: string) => {
     setStaffRecords(staffRecords.map(r => r.id === id ? { ...r, status: newStatus } : r));
   };
 
-  const getProgressBarColor = (percentage) => {
+  const getProgressBarColor = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-500';
     if (percentage >= 65) return 'bg-yellow-500';
     return 'bg-red-500';
@@ -713,7 +722,7 @@ export default function AdminAttendance() {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="4" className="p-6 text-center text-gray-500">No students found for this class and section.</td>
+                    <td colSpan={4} className="p-6 text-center text-gray-500">No students found for this class and section.</td>
                   </tr>
                 )}
               </tbody>
