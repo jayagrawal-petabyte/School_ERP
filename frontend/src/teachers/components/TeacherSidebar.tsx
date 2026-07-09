@@ -1,7 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { X, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { ClipboardList, BookOpen, UserCheck } from "lucide-react";
 
 type TeacherSidebarProps = {
   open: boolean;
