@@ -1,4 +1,4 @@
-//This client is admin/principal only and must never be used for student or teacher routes//
+//This client is admin/principal only and must never be used for student or teacher routes
 const { createClient } = require('@supabase/supabase-js');
 
 const DATABASE_CONFIG = require('../config/database.config');
