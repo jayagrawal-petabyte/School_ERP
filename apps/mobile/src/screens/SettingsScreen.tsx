@@ -24,6 +24,12 @@ interface Props {
 export default function SettingsScreen({ navigation }: Props) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
+  const [savedMessage, setSavedMessage] = useState(false);
+
+  const flashSaved = () => {
+    setSavedMessage(true);
+    setTimeout(() => setSavedMessage(false), 1500);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -38,6 +44,12 @@ export default function SettingsScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.content}>
+        {savedMessage && (
+          <View style={styles.savedBanner}>
+            <Text style={styles.savedBannerText}>✓ Preferences saved</Text>
+          </View>
+        )}
+
         <View style={styles.settingsCard}>
           <View style={styles.settingRow}>
             <View style={styles.settingTextWrap}>
@@ -46,7 +58,10 @@ export default function SettingsScreen({ navigation }: Props) {
             </View>
             <Switch
               value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
+              onValueChange={(value) => {
+                setNotificationsEnabled(value);
+                flashSaved();
+              }}
               trackColor={{ false: COLORS.border, true: COLORS.primary }}
             />
           </View>
@@ -58,7 +73,10 @@ export default function SettingsScreen({ navigation }: Props) {
             </View>
             <Switch
               value={emailAlerts}
-              onValueChange={setEmailAlerts}
+              onValueChange={(value) => {
+                setEmailAlerts(value);
+                flashSaved();
+              }}
               trackColor={{ false: COLORS.border, true: COLORS.primary }}
             />
           </View>
@@ -76,6 +94,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: COLORS.primary },
   headerSpacer: { width: 38 },
   content: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
+  savedBanner: { backgroundColor: COLORS.presentLight ?? '#ECFDF3', borderRadius: 8, paddingVertical: SPACING.sm, alignItems: 'center', marginBottom: SPACING.md },
+  savedBannerText: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.success },
   settingsCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingHorizontal: SPACING.md, borderWidth: 1, borderColor: COLORS.border, ...SHADOWS.sm },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: SPACING.md },
   settingTextWrap: { flex: 1, paddingRight: SPACING.md },
