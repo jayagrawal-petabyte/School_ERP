@@ -1,12 +1,12 @@
-const supabase = require('../database/supabaseClient'); 
+const supabase = require('./supabaseClient');
 const { validateAttendanceDate, validateAttendanceStatus } = require('./validation');
 
 const markAttendance = async (req, res) => {
     try {
-        const { role, user_id } = req.user; 
+        const { id, appRole } = req.user; 
         const { date, studentId, status, classId } = req.body;
 
-        const normalizedRole = role ? role.toLowerCase() : '';
+        const normalizedRole = appRole ? appRole.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
@@ -55,11 +55,11 @@ const markAttendance = async (req, res) => {
 
 const updateAttendance = async (req, res) => {
     try {
-        const { role } = req.user;
+        const { appRole } = req.user;
         const { id } = req.params; 
         const { date, status } = req.body;
 
-        const normalizedRole = role ? role.toLowerCase() : '';
+        const normalizedRole = appRole ? appRole.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
@@ -101,17 +101,17 @@ const updateAttendance = async (req, res) => {
 
 const viewAttendance = async (req, res) => {
     try {
-        const { role, user_id } = req.user;
+        const { appRole, id } = req.user;
         const { classId, date } = req.query; 
         
-        const normalizedRole = role ? role.toLowerCase() : '';
+        const normalizedRole = appRole ? appRole.toLowerCase() : '';
         let query = supabase.from('attendance_records').select('*');
 
         if (normalizedRole === 'student') {
-            console.log(`Enforcing structural query isolation. Filtering target student_id: ${user_id}`);
-            query = query.eq('student_id', user_id);
+            console.log(`Enforcing structural query isolation. Filtering target student_id: ${id}`);
+            query = query.eq('student_id', id);
         } else {
-            console.log(`Role '${role}' authorized to request cross-sectional attendance logs.`);
+            console.log(`Role '${appRole}' authorized to request cross-sectional attendance logs.`);
             if (classId) query = query.eq('class_id', classId);
             if (date) query = query.eq('date', date);
         }
