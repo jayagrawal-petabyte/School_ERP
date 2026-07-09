@@ -1,4 +1,5 @@
 import React from 'react';
+export { default } from './button';
 import {
   TouchableOpacity,
   Text,
