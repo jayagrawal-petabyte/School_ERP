@@ -1,26 +1,24 @@
 // src/notifications/pages/Notifications.tsx
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, type FC } from "react";
 import type { Notification, NotificationType } from "../types/notification";
 import { getNotifications } from "../services/notificationService";
 import { NotificationCard } from "../components/NotificationCard";
 import { NotificationFilter } from "../components/NotificationFilter";
 import type { FilterOption } from "../components/NotificationFilter";
 
-export const NotificationsPage: React.FC = () => {
+export const NotificationsPage: FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [filtered, setFiltered] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterOption>("all");
 
   useEffect(() => {
     // fetch dummy data
     getNotifications().then((data) => {
       setNotifications(data);
-      setFiltered(data);
     });
   }, []);
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     let result = notifications;
     if (filter === "unread") {
       result = result.filter((n) => !n.read);
@@ -28,7 +26,7 @@ export const NotificationsPage: React.FC = () => {
       const type = filter as NotificationType;
       result = result.filter((n) => n.type === type);
     }
-    setFiltered(result);
+    return result;
   }, [filter, notifications]);
 
   return (
