@@ -16,6 +16,8 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService, DailyAttendance, Student, StudentHistoryRecord, AttendanceStatus } from '../services/api';
+import { API_CONFIG } from '../config/apiConfig';
+import attendanceApi from '../services/attendanceApi';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type AttendanceHistoryScreenRouteProp = RouteProp<RootStackParamList, 'AttendanceHistory'>;
@@ -90,7 +92,7 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
   const loadStudentCalendar = async () => {
     setLoading(true);
     try {
-      const studentList = await AttendanceService.getStudents(classId);
+      const studentList = await attendanceApi.getStudents(classId);
       setStudents(studentList);
       
       const foundStudent = studentList.find((s) =>
@@ -99,12 +101,31 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
 
       if (foundStudent) {
         setTargetStudent(foundStudent);
-        const records = await AttendanceService.getStudentMonthlyAttendance(
-          foundStudent.name,
-          classId,
-          currentYear,
-          currentMonth
-        );
+        
+        let records: StudentHistoryRecord[] = [];
+        if (API_CONFIG.BASE_URL) {
+          const responseData = await attendanceApi.viewAttendance(classId);
+          records = responseData
+            .filter((item: any) => {
+              const itemDate = new Date(item.date);
+              return (
+                item.student_id === foundStudent.id &&
+                itemDate.getFullYear() === currentYear &&
+                (itemDate.getMonth() + 1) === currentMonth
+              );
+            })
+            .map((item: any) => ({
+              date: item.date,
+              status: item.status as AttendanceStatus,
+            }));
+        } else {
+          records = await AttendanceService.getStudentMonthlyAttendance(
+            foundStudent.name,
+            classId,
+            currentYear,
+            currentMonth
+          );
+        }
         setStudentRecords(records);
       } else {
         setTargetStudent(null);
@@ -138,21 +159,17 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
     let present = 0;
     let absent = 0;
     let late = 0;
-    let earlyOff = 0;
-    let festival = 0;
 
     records.forEach((r) => {
       if (r.status === 'present') present++;
       else if (r.status === 'absent') absent++;
       else if (r.status === 'late') late++;
-      else if (r.status === 'earlyOff') earlyOff++;
-      else if (r.status === 'festival') festival++;
     });
 
     const total = records.length;
-    const rate = total > 0 ? Math.round(((present + late + earlyOff + festival) / total) * 100) : 0;
+    const rate = total > 0 ? Math.round(((present + late) / total) * 100) : 0;
 
-    return { present, absent, late, earlyOff, festival, rate };
+    return { present, absent, late, earlyOff: 0, festival: 0, rate };
   };
 
   const getStatusStyle = (status: string) => {
@@ -249,7 +266,6 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
             <Text style={[styles.summaryItem, { color: COLORS.present }]}>P: {stats.present}</Text>
             <Text style={[styles.summaryItem, { color: COLORS.late }]}>L: {stats.late}</Text>
             <Text style={[styles.summaryItem, { color: COLORS.absent }]}>A: {stats.absent}</Text>
-            <Text style={[styles.summaryItem, { color: COLORS.earlyOff }]}>E: {stats.earlyOff}</Text>
           </View>
 
           <View style={styles.progressBarContainer}>
@@ -324,21 +340,6 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
       {/* Top Search Controls (Visible only for Teachers/Admin) */}
       {!defaultStudentName && (
         <View style={styles.filterSection}>
-          <View style={styles.radioContainer}>
-            <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('student')}>
-              <View style={[styles.radioCircle, role === 'student' && styles.radioCircleChecked]}>
-                {role === 'student' && <View style={styles.radioDot} />}
-              </View>
-              <Text style={[styles.radioLabel, role === 'student' && styles.radioLabelActive]}>Student</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.radioButtonWrapper} onPress={() => setRole('teacher')}>
-              <View style={[styles.radioCircle, role === 'teacher' && styles.radioCircleChecked]}>
-                {role === 'teacher' && <View style={styles.radioDot} />}
-              </View>
-              <Text style={[styles.radioLabel, role === 'teacher' && styles.radioLabelActive]}>Teachers</Text>
-            </TouchableOpacity>
-          </View>
 
           <View style={styles.formContainer}>
             <View style={styles.searchBox}>
@@ -470,14 +471,6 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
                 <View style={styles.legendItem}>
                   <View style={[styles.legendBox, { backgroundColor: COLORS.absent }]} />
                   <Text style={styles.legendLabel}>Absent</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendBox, { backgroundColor: COLORS.festival }]} />
-                  <Text style={styles.legendLabel}>Festival</Text>
-                </View>
-                <View style={styles.legendItem}>
-                  <View style={[styles.legendBox, { backgroundColor: COLORS.earlyOff }]} />
-                  <Text style={styles.legendLabel}>Early Off</Text>
                 </View>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendBox, { backgroundColor: COLORS.late }]} />

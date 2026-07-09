@@ -48,9 +48,9 @@ const CLASSES: ClassInfo[] = [
 // Prepopulated static history for Lucas Henry (101) in May 2023 to match Dribbble screenshot exactly
 const LUCAS_HENRY_MAY_2023: Record<number, AttendanceStatus> = {
   1: 'present', 2: 'present', 3: 'present', 4: 'present', 5: 'present',
-  7: 'present', 8: 'earlyOff', 9: 'present', 10: 'present', 11: 'absent', 12: 'present',
-  14: 'present', 15: 'present', 16: 'festival',
-  21: 'present', 22: 'present', 23: 'present', 24: 'late', 25: 'present', 26: 'festival',
+  7: 'present', 8: 'late', 9: 'present', 10: 'present', 11: 'absent', 12: 'present',
+  14: 'present', 15: 'present', 16: 'present',
+  21: 'present', 22: 'present', 23: 'present', 24: 'late', 25: 'present', 26: 'present',
   28: 'absent', 29: 'present', 30: 'present', 31: 'present'
 };
 
@@ -73,9 +73,7 @@ const generateMockHistory = (): DailyAttendance[] => {
         // Others get random statuses
         const rand = (std.id.charCodeAt(2) * 3 + day * 7) % 100;
         if (rand < 5) status = 'absent';
-        else if (rand < 10) status = 'late';
-        else if (rand < 13) status = 'earlyOff';
-        else if (rand < 15) status = 'festival';
+        else if (rand < 15) status = 'late';
       }
 
       return { studentId: std.id, status };
@@ -105,9 +103,8 @@ const generateMockHistory = (): DailyAttendance[] => {
       const records: AttendanceRecord[] = students.map((std, idx) => {
         const rand = (idx * 11 + i * 17) % 100;
         let status: AttendanceStatus = 'present';
-        if (rand < 8) status = 'absent';
-        else if (rand < 14) status = 'late';
-        else if (rand < 18) status = 'earlyOff';
+        if (rand < 10) status = 'absent';
+        else if (rand < 20) status = 'late';
         
         return { studentId: std.id, status };
       });
