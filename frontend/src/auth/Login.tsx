@@ -37,25 +37,25 @@ function Login() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockTime, setLockTime] = useState(0);
 
-  // Clear fields whenever Login page opens
-  useEffect(() => {
-    setEmail("");
-    setPassword("");
-    setRememberMe(false);
-  }, []);
+
 
   // Lock timer
   useEffect(() => {
     if (lockTime <= 0) {
-      setErrors((prev) => ({
-        ...prev,
-        login: "",
-      }));
       return;
     }
 
     const timer = setInterval(() => {
-      setLockTime((prev) => prev - 1);
+      setLockTime((prev) => {
+        if (prev <= 1) {
+          setErrors((prevErr) => ({
+            ...prevErr,
+            login: "",
+          }));
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
