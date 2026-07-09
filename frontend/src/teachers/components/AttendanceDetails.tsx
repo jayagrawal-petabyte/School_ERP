@@ -51,10 +51,10 @@
 
 
 import type { FC } from "react";
-import TeacherAttendanceCalendar from "../TeacherAttendanceCalendar";
-import AttendanceSummary from "../../../attendance/components/AttendanceSummary";
-import AttendanceTable from "../../../attendance/components/AttendanceTable";
-import AttendanceTrend from "../../../attendance/components/AttendanceTrend";
+import TeacherAttendanceCalendar from "./TeacherAttendanceCalendar";
+import AttendanceSummary from "../../attendance/components/AttendanceSummary";
+import AttendanceTable from "../../attendance/components/AttendanceTable";
+import AttendanceTrend from "../../attendance/components/AttendanceTrend";
 
 interface AttendanceHistoryItem {
   date: string;

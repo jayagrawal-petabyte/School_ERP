@@ -63,7 +63,7 @@ interface AttendanceDetailsProps {
 
 const AttendanceDetails: React.FC<AttendanceDetailsProps> = ({ studentName, data }) => {
   // Initialize state with data from props to make summary cards dynamic
-  const [summary, setSummary] = useState({
+  const [, setSummary] = useState({
     present: data?.present || 0,
     absent: data?.absent || 0,
   });
