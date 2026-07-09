@@ -18,7 +18,7 @@ const DashboardStats = () => {
     },
   ];
 
-  const valueColor = (title) => {
+  const valueColor = (title: string) => {
     switch (title) {
       case "Attendance":
         return "text-blue-600";
