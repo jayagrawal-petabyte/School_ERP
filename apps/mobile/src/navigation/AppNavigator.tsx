@@ -24,6 +24,10 @@ import TeacherMarksEntryScreen from '../screens/TeacherMarksEntry';
 import { RootStackParamList } from './types';
 export { RootStackParamList };
 import { theme } from '../theme';
+import TeacherProfileScreen from '../screens/TeacherProfileScreen';
+import ParentProfileScreen from '../screens/ParentProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -131,6 +135,26 @@ export default function AppNavigator() {
         name="StudentProfile"
         component={StudentProfileScreen}
         options={{ title: 'My Profile' }}
+      />
+      <Stack.Screen
+        name="TeacherProfile"
+        component={TeacherProfileScreen}
+        options={{ title: 'My Profile' }}
+      />
+      <Stack.Screen
+        name="ParentProfile"
+        component={ParentProfileScreen}
+        options={{ title: 'My Profile' }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ title: 'Edit Profile' }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ title: 'Settings' }}
       />
     </Stack.Navigator>
   );

@@ -4,6 +4,10 @@ export type RootStackParamList = {
   // Academics Module
   Home: { initialRole?: 'student' | 'teacher' | 'parent'; userId?: string } | undefined;
   StudentProfile: { userId: string };
+  TeacherProfile: { userId: string };
+  ParentProfile: { userId: string };
+  EditProfile: { userId: string; role: 'student' | 'teacher' | 'parent'; currentName: string };
+  Settings: undefined;
   AttendanceList: undefined;
   MarkAttendance: { classId: string; className: string };
   AttendanceHistory: { classId: string; className: string; defaultStudentName?: string };

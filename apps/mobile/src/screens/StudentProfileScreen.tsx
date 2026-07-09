@@ -120,11 +120,7 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
           <TouchableOpacity
             style={styles.editButton}
             activeOpacity={0.8}
-            onPress={() =>
-              Alert.alert('Screen Placeholder', 'The "Edit Profile" screen is being built next.', [
-                { text: 'OK' },
-              ])
-            }
+            onPress={() => navigation.navigate('EditProfile', { userId: profile.id, role: 'student', currentName: profile.full_name })}
           >
             <Text style={styles.editButtonText}>Edit Profile</Text>
           </TouchableOpacity>

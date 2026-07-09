@@ -270,6 +270,12 @@ export default function HomeScreen({ route, navigation }: Props) {
                 onPress={() => {
                   if (card.route === 'StudentProfile' && userId) {
                     navigation.navigate('StudentProfile', { userId });
+                  } else if (card.route === 'TeacherProfile' && userId) {
+                    navigation.navigate('TeacherProfile', { userId });
+                  } else if (card.route === 'ParentProfile' && userId) {
+                    navigation.navigate('ParentProfile', { userId });
+                  } else if (card.route === 'Settings') {
+                    navigation.navigate('Settings');
                   } else {
                     Alert.alert(
                       'Screen Placeholder',
