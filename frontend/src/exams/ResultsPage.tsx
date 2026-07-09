@@ -1,16 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, type FC } from 'react';
 import ResultStatistics from './ResultStatistics';
 import MarksTable from './MarksTable'; 
 import PerformanceChart from './PerformanceChart';
 import { useAuth } from "../context/AuthContext"; 
 
-const getRemarks = (subjects: any[]) => {
+interface Subject {
+  name: string;
+  maxMarks: number;
+  obtained: number;
+  grade: string;
+}
+
+const getRemarks = (subjects: Subject[]) => {
   const strong = subjects.filter(s => s.obtained >= 90).map(s => s.name);
   const weak = subjects.filter(s => s.obtained < 75).map(s => s.name);
   return { strong, weak };
 };
 
-const ResultsPage: React.FC = () => {
+const ResultsPage: FC = () => {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -47,18 +54,21 @@ const ResultsPage: React.FC = () => {
 
   useEffect(() => {
     if (user === undefined) return;
-    if (!user) {
-      setError('Unauthorized access. Please log in.');
+    const timer = setTimeout(() => {
+      if (!user) {
+        setError('Unauthorized access. Please log in.');
+        setLoading(false);
+        return;
+      }
+      const normalizedRole = user.role?.toLowerCase();
+      if (!['student', 'teacher', 'admin'].includes(normalizedRole)) {
+        setError(`Unauthorized role: ${user.role}`);
+        setLoading(false);
+        return;
+      }
       setLoading(false);
-      return;
-    }
-    const normalizedRole = user.role?.toLowerCase();
-    if (!['student', 'teacher', 'admin'].includes(normalizedRole)) {
-      setError(`Unauthorized role: ${user.role}`);
-      setLoading(false);
-      return;
-    }
-    setLoading(false);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [user]);
 
   if (loading) return <div className="p-6 text-center">Loading...</div>;
