@@ -31,6 +31,11 @@ const getInitials = (name: string) => {
   return parts[0][0] + parts[parts.length - 1][0];
 };
 
+const formatDate = (iso: string | null) => {
+  if (!iso) return 'Never';
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
 export default function ParentProfileScreen({ route, navigation }: Props) {
   const { userId } = route.params;
   const [profile, setProfile] = useState<ParentProfileView | null>(null);
@@ -46,13 +51,13 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
 
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={styles.backButtonTextDark}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <Text style={styles.headerTitleDark}>My Profile</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -63,24 +68,46 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.avatarSection}>
-            <Avatar initials={getInitials(profile.full_name)} size="large" />
+            <View style={styles.avatarRing}>
+              <Avatar initials={getInitials(profile.full_name)} size="large" />
+            </View>
             <Text style={styles.name}>{profile.full_name}</Text>
             <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeText}>Parent</Text>
+              <Text style={styles.roleBadgeText}>👨‍👩‍👧  PARENT</Text>
             </View>
           </View>
 
           <View style={styles.infoCard}>
+            <Text style={styles.cardTitle}>Account Details</Text>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Account Status</Text>
+              <Text style={styles.infoIcon}>🆔</Text>
+              <Text style={styles.infoLabel}>Parent ID</Text>
+              <Text style={styles.infoValue}>{profile.id}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>{profile.account_status === 'active' ? '🟢' : '🔴'}</Text>
+              <Text style={styles.infoLabel}>Status</Text>
               <Text style={[styles.infoValue, { color: profile.account_status === 'active' ? COLORS.success : COLORS.error }]}>
                 {profile.account_status === 'active' ? 'Active' : 'Inactive'}
               </Text>
             </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>🕐</Text>
+              <Text style={styles.infoLabel}>Last Login</Text>
+              <Text style={styles.infoValue}>{formatDate(profile.last_login_at)}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>📅</Text>
+              <Text style={styles.infoLabel}>Member Since</Text>
+              <Text style={styles.infoValue}>{formatDate(profile.created_at)}</Text>
+            </View>
           </View>
 
           <View style={styles.infoCard}>
-            <Text style={styles.sectionLabel}>My Children</Text>
+            <Text style={styles.cardTitle}>My Children</Text>
             {profile.children.length === 0 ? (
               <Text style={styles.emptyText}>No linked children yet</Text>
             ) : (
@@ -101,10 +128,10 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
 
           <TouchableOpacity
             style={styles.editButton}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             onPress={() => navigation.navigate('EditProfile', { userId: profile.id, role: 'parent', currentName: profile.full_name })}
           >
-            <Text style={styles.editButtonText}>Edit Profile</Text>
+            <Text style={styles.editButtonText}>✏️  Edit Profile</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -114,25 +141,28 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
-  customHeader: { height: 56, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  customHeader: { height: 56, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md },
   backButton: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 20, fontWeight: 'bold', color: COLORS.primary },
-  headerTitle: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: COLORS.primary },
+  backButtonTextDark: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' },
+  headerTitleDark: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF' },
   headerSpacer: { width: 38 },
-  scrollContent: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg, paddingBottom: SPACING.xl },
-  avatarSection: { alignItems: 'center', marginBottom: SPACING.lg },
-  name: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: COLORS.textPrimary, marginTop: SPACING.sm },
-  roleBadge: { backgroundColor: COLORS.primaryLight, borderRadius: 12, paddingHorizontal: SPACING.sm, paddingVertical: 3, marginTop: 4 },
-  roleBadgeText: { fontSize: 11, fontWeight: FONT_WEIGHT.semibold, color: COLORS.primary },
-  infoCard: { backgroundColor: '#FFFFFF', borderRadius: 10, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.md, ...SHADOWS.sm },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: SPACING.xs },
-  infoLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted },
-  infoValue: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.textPrimary },
-  sectionLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, marginBottom: SPACING.sm },
+  scrollContent: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
+  avatarSection: { alignItems: 'center', backgroundColor: COLORS.primary, paddingBottom: SPACING.lg, marginHorizontal: -SPACING.lg, paddingTop: SPACING.md, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, marginBottom: SPACING.lg },
+  avatarRing: { borderWidth: 3, borderColor: '#FFFFFF', borderRadius: 40, ...SHADOWS.md },
+  name: { fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF', marginTop: SPACING.sm },
+  roleBadge: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 12, paddingHorizontal: SPACING.md, paddingVertical: 4, marginTop: SPACING.xs },
+  roleBadgeText: { fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF', letterSpacing: 0.5 },
+  infoCard: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.md, ...SHADOWS.sm },
+  cardTitle: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: SPACING.sm },
+  infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.sm },
+  infoIcon: { fontSize: 14, width: 26 },
+  infoLabel: { flex: 1, fontSize: FONT_SIZE.xs, color: COLORS.textSecondary },
+  infoValue: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: COLORS.textPrimary },
+  divider: { height: 1, backgroundColor: COLORS.borderLight },
   emptyText: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, fontStyle: 'italic' },
   childRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.sm, gap: SPACING.sm },
   childName: { flex: 1, fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.textPrimary },
   chevron: { fontSize: 18, color: COLORS.textMuted },
-  editButton: { backgroundColor: COLORS.primary, borderRadius: 8, paddingVertical: SPACING.md, alignItems: 'center', marginTop: SPACING.sm },
+  editButton: { backgroundColor: COLORS.primary, borderRadius: 10, paddingVertical: SPACING.md, alignItems: 'center', marginTop: SPACING.xs, ...SHADOWS.sm },
   editButtonText: { color: COLORS.textLight, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold },
 });

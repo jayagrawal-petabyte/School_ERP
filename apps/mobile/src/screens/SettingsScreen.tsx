@@ -24,7 +24,6 @@ interface Props {
 export default function SettingsScreen({ navigation }: Props) {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [emailAlerts, setEmailAlerts] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,24 +62,7 @@ export default function SettingsScreen({ navigation }: Props) {
               trackColor={{ false: COLORS.border, true: COLORS.primary }}
             />
           </View>
-          <View style={styles.divider} />
-          <View style={styles.settingRow}>
-            <View style={styles.settingTextWrap}>
-              <Text style={styles.settingLabel}>Dark Mode</Text>
-              <Text style={styles.settingDesc}>Coming soon</Text>
-            </View>
-            <Switch
-              value={darkMode}
-              onValueChange={setDarkMode}
-              disabled
-              trackColor={{ false: COLORS.border, true: COLORS.primary }}
-            />
-          </View>
         </View>
-
-        <Text style={styles.footnote}>
-          These preferences are stored on this device only for now.
-        </Text>
       </View>
     </SafeAreaView>
   );
