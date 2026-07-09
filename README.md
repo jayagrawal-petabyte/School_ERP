@@ -74,7 +74,7 @@ The Assignments Module provides student task-tracking and submission features.
 
 ### In Progress: Profile & Dashboard Module (Assigned to: Krishna Karanwal)
 
-The Profile & Dashboard module will provide the data layer for Student, Teacher, and Parent profiles, along with role-based dashboard cards. Service layer and UI screens are pending.
+The Profile & Dashboard module provides the data layer for Student, Teacher, and Parent profiles, role-based dashboard cards, and now connects real login to the Home Dashboard. Dedicated Profile/Settings/Edit Profile screens are pending.
 
 #### Implemented so far:
 1. **User & Profile Types (`types/index.ts`)**:
@@ -82,13 +82,31 @@ The Profile & Dashboard module will provide the data layer for Student, Teacher,
    - `TeacherProfileView` and `ParentProfileView`, joining teacher-to-classes and parent-to-children relations.
    - `StudentProfileView` scaffolded with a placeholder class join, pending confirmation of the student-class relation in the schema.
    - `DashboardCard` type for role-based dashboard grid items.
+2. **Mock Service Layer (`profileApi.ts`)**:
+   - `ProfileService.getStudentProfile`, `getTeacherProfile`, `getParentProfile` — return role-specific profile data with related classes/children.
+   - `ProfileService.updateFullName` — validates and updates a user's name (mock write, follows Supabase self-edit assumption pending RLS confirmation).
+   - `DashboardService.getDashboardCards` — returns dashboard cards filtered by user role.
+   - `AuthService.login` — looks up a real sample user by identifier + password instead of a length-only mock check. Sample credentials provided below for Student, Teacher, and Parent roles.
+   - Settings intentionally excluded from this layer — handled as local device preferences, not backend-persisted.
+3. **Login & Dashboard Integration**:
+   - Fixed routing so Parent logins land on the real Home Dashboard instead of the old placeholder screen (previously only Student/Teacher did).
+   - Removed the manual role-switcher toggle when arriving via real login — dashboard now locks to the actual logged-in role. Toggle still available for dev/testing when Home is opened directly.
+   - Added a **My Account** section (My Profile, Settings cards) sourced live from `DashboardService`.
+   - Dashboard greeting name now pulled from `ProfileService` using the logged-in user's real profile.
+
+#### Test credentials:
+| Role | Email | Password |
+|---|---|---|
+| Student | sofia.morales@school.edu | sofia1234 |
+| Student | lucas.henry@school.edu | lucas1234 |
+| Teacher | shradha.sen@school.edu | shradha1234 |
+| Teacher | rajesh.rawat@school.edu | rajesh1234 |
+| Parent | carlos.morales@gmail.com | carlos1234 |
+| Parent | ravi.sharma@gmail.com | ravi1234 |
 
 #### Pending:
-- Mock/real service layer for profile fetch and update operations.
-- Dashboard card service filtered by role.
 - Student, Teacher, Parent Profile screens, Settings screen, Edit Profile screen.
-
----
+- Confirm student-class relation in schema.
 
 ### Service API Layer (`api.ts`)
 - Configured a simulated network client database with simulated delay.
