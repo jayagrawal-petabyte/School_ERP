@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import TeacherAttendanceCalendar from "../../teachers/components/TeacherAttendanceCalendar";
 
@@ -10,9 +10,9 @@ export default function AdminStudentAttendanceDetail() {
   const [summary, setSummary] = useState({ present: 18, absent: 2, late: 1 });
 
   // Update summary cards dynamically when the calendar is clicked
-  const handleUpdate = (newStatus, oldStatus) => {
+  const handleUpdate = (newStatus: string, oldStatus: string) => {
     setSummary((prev) => {
-      let updated = { ...prev };
+      const updated = { ...prev };
       // Remove old status count
       if (oldStatus === "Present") updated.present--;
       if (oldStatus === "Absent") updated.absent--;
