@@ -1,11 +1,11 @@
-import React from 'react';
+import type { FC } from 'react';
 
 interface AttendanceProps {
   studentName: string;
-  data: any; 
+  data?: unknown; 
 }
 
-const AttendanceDetails: React.FC<AttendanceProps> = ({ studentName, data }) => {
+const AttendanceDetails: FC<AttendanceProps> = ({ studentName }) => {
   return (
     <div className="p-6">
       {/* 1. Header & Summary Cards (The ones you liked!) */}
