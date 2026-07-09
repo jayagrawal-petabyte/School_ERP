@@ -102,7 +102,7 @@ const attachMetadata = (results, exams = [], subjects = []) => {
   const subjectMap = new Map((subjects || []).map((subject) => [String(subject.id), subject]));
 
   return results.map((result) => {
-    const examId = String(result.exam_id ?? result.examType ?? '');
+    const examId = String(result.exam_id ?? '');
     const subjectId = String(result.subject_id ?? result.subject ?? '');
     const exam = examMap.get(examId) || null;
     const subject = subjectMap.get(subjectId) || null;
@@ -135,7 +135,7 @@ const enrichResultsWithMetadata = async (results) => {
     return results;
   }
 
-  const examIds = normalizeIds(results.map((result) => result.exam_id ?? result.examType));
+  const examIds = normalizeIds(results.map((result) => result.exam_id));
   const subjectIds = normalizeIds(results.map((result) => result.subject_id ?? result.subject));
 
   const [exams, subjects] = await Promise.all([
@@ -150,7 +150,7 @@ const normalizeResultPayload = (data, user, { isUpdate = false, existingResult =
   const studentId = getFieldValue(data, ['student_id', 'studentId'], getExistingValue(existingResult, ['student_id', 'studentId']));
   const teacherId = getFieldValue(data, ['teacher_id', 'teacherId'], getExistingValue(existingResult, ['teacher_id', 'teacherId']));
   const subjectId = getFieldValue(data, ['subject_id', 'subject'], getExistingValue(existingResult, ['subject_id', 'subject']));
-  const examId = getFieldValue(data, ['exam_id', 'examType'], getExistingValue(existingResult, ['exam_id', 'examType']));
+  const examId = getFieldValue(data, ['exam_id', 'examId'], getExistingValue(existingResult, ['exam_id', 'examId']));
   const classId = getFieldValue(data, ['class_id', 'classId'], getExistingValue(existingResult, ['class_id', 'classId']));
   const marksObtained = getFieldValue(data, ['marks_obtained', 'marks'], getExistingValue(existingResult, ['marks_obtained', 'marks']));
   const maxMarks = getFieldValue(data, ['max_marks', 'maxMarks'], getExistingValue(existingResult, ['max_marks', 'maxMarks']));
@@ -267,7 +267,7 @@ const updateResult = async (id, data, options = {}) => {
   if (data?.subject_id !== undefined || data?.subject !== undefined) {
     updates.subject_id = normalizedPayload.subject_id;
   }
-  if (data?.exam_id !== undefined || data?.examType !== undefined) {
+  if (data?.exam_id !== undefined || data?.examId !== undefined) {
     updates.exam_id = normalizedPayload.exam_id;
   }
   if (data?.class_id !== undefined || data?.classId !== undefined) {

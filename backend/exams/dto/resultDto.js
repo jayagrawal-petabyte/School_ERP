@@ -4,7 +4,7 @@ const toResultResponse = (result, role) => {
     studentId: result.student_id ?? result.studentId,
     teacherId: result.teacher_id ?? result.teacherId,
     classId: result.class_id ?? result.classId,
-    examId: result.exam_id ?? result.examType,
+    examId: result.exam_id, 
     subjectId: result.subject_id ?? result.subject,
     marksObtained: result.marks_obtained ?? result.marks,
     maxMarks: result.max_marks ?? 100,
