@@ -5,3 +5,5 @@ export * from './Loader';
 export * from './Header';
 export * from './Avatar';
 export * from './EmptyState';
+export { default as Button } from './Button';
+export { default as Input } from './Input';

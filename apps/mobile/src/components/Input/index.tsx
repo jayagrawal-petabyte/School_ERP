@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+export { default } from './Input';
 import {
   View,
   TextInput,
