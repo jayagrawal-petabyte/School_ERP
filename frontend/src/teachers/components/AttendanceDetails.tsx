@@ -1,28 +1,109 @@
-import type { FC } from 'react';
+// import React, { useState } from "react";
+// import TeacherAttendanceCalendar from "../TeacherAttendanceCalendar";
+// import AttendanceSummary from "../../../attendance/components/AttendanceSummary";
+// import AttendanceTable from "../../../attendance/components/AttendanceTable";
+// import AttendanceTrend from "../../../attendance/components/AttendanceTrend";
 
-interface AttendanceProps {
-  studentName: string;
-  data?: unknown; 
+// interface AttendanceDetailsProps {
+//   studentName: string;
+//   data: any; 
+// }
+
+// const AttendanceDetails: React.FC<AttendanceDetailsProps> = ({ studentName, data }) => {
+//   // Initialize state with data from props to make summary cards dynamic
+//   const [summary, setSummary] = useState({
+//     present: data.present || 0,
+//     absent: data.absent || 0,
+//   });
+
+//   const handleUpdate = (newStatus: string, oldStatus: string) => {
+//     setSummary((prev) => ({
+//       present: newStatus === "Present" ? prev.present + 1 : (oldStatus === "Present" ? prev.present - 1 : prev.present),
+//       absent: newStatus === "Absent" ? prev.absent + 1 : (oldStatus === "Absent" ? prev.absent - 1 : prev.absent),
+//     }));
+//   };
+
+//   return (
+//     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-100 space-y-6">
+//       <div className="flex justify-between items-center">
+//         <h2 className="text-xl font-bold text-gray-800">Attendance Report: {studentName}</h2>
+//         <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+//           Edit Attendance
+//         </button>
+//       </div>
+      
+//       {/* AttendanceSummary needs to be updated to accept these props in its own file */}
+//       <AttendanceSummary /> 
+      
+//       {/* Pass required props to prevent crash */}
+//       <TeacherAttendanceCalendar 
+//         initialHistory={data.history || []} 
+//         onUpdate={handleUpdate} 
+//       />
+      
+//       <AttendanceTrend />
+//       <AttendanceTable recent={data.history || []} />
+//     </div>
+//   );
+// };
+
+// export default AttendanceDetails;
+
+
+import type { FC } from "react";
+import TeacherAttendanceCalendar from "../TeacherAttendanceCalendar";
+import AttendanceSummary from "../../../attendance/components/AttendanceSummary";
+import AttendanceTable from "../../../attendance/components/AttendanceTable";
+import AttendanceTrend from "../../../attendance/components/AttendanceTrend";
+
+interface AttendanceHistoryItem {
+  date: string;
+  day?: number;
+  status: string;
 }
 
-const AttendanceDetails: FC<AttendanceProps> = ({ studentName }) => {
+interface AttendanceData {
+  id?: number;
+  overall?: number;
+  present?: number;
+  absent?: number;
+  late?: number;
+  history?: AttendanceHistoryItem[];
+}
+
+interface AttendanceDetailsProps {
+  studentName: string;
+  data?: AttendanceData | null;
+}
+
+const AttendanceDetails: FC<AttendanceDetailsProps> = ({ studentName, data }) => {
+  // Handler to update local state when calendar is toggled
+  const handleUpdate = (newStatus: string, oldStatus: string) => {
+    console.log(`Attendance status updated from ${oldStatus} to ${newStatus}`);
+  };
+
   return (
-    <div className="p-6">
-      {/* 1. Header & Summary Cards (The ones you liked!) */}
-      <h1 className="text-2xl font-bold mb-6">{studentName} - Attendance Report</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow"> {/* Summary Card */} ... </div>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-100 space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-800">Attendance Report: {studentName}</h2>
+        <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+          Edit Attendance
+        </button>
       </div>
       
-      {/* 2. The Calendar Grid (The one from your screenshot) */}
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
-        {/* Your calendar logic here */}
-      </div>
-
-      {/* 3. The Status History Table */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        {/* Your history table here */}
-      </div>
+      {/* Summary display component */}
+      <AttendanceSummary /> 
+      
+      {/* Interactive Calendar with required props passed */}
+      <TeacherAttendanceCalendar 
+        initialHistory={data?.history || []} 
+        onUpdate={handleUpdate} 
+      />
+      
+      <AttendanceTrend />
+      
+      {/* Data table for recent history */}
+      <AttendanceTable recent={(data?.history || []) as { date: string; status: "Present" | "Absent" }[]} />
     </div>
   );
 };
