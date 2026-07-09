@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
+import StudentProfileScreen from '../screens/StudentProfileScreen';
 import AttendanceListScreen from '../screens/AttendanceListScreen';
 import MarkAttendanceScreen from '../screens/MarkAttendanceScreen';
 import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
@@ -125,6 +126,11 @@ export default function AppNavigator() {
         name="TeacherMarksEntry"
         component={TeacherMarksEntryScreen}
         options={{ title: 'Marks Entry' }}
+      />
+      <Stack.Screen
+        name="StudentProfile"
+        component={StudentProfileScreen}
+        options={{ title: 'My Profile' }}
       />
     </Stack.Navigator>
   );

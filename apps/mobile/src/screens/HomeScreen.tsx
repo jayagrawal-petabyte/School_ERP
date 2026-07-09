@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
   ScrollView,
   SafeAreaView,
   StatusBar,
@@ -266,11 +267,17 @@ export default function HomeScreen({ route, navigation }: Props) {
                 key={card.id}
                 style={styles.gridItem}
                 activeOpacity={0.7}
-                onPress={() => Alert.alert(
-                  'Screen Placeholder',
-                  `The "${card.title}" screen is being built next.`,
-                  [{ text: 'OK' }]
-                )}
+                onPress={() => {
+                  if (card.route === 'StudentProfile' && userId) {
+                    navigation.navigate('StudentProfile', { userId });
+                  } else {
+                    Alert.alert(
+                      'Screen Placeholder',
+                      `The "${card.title}" screen is being built next.`,
+                      [{ text: 'OK' }]
+                    );
+                  }
+                }}
               >
                 <View style={[styles.iconContainer, { backgroundColor: card.color }]}>
                   <Text style={styles.gridEmoji}>{card.emoji}</Text>
@@ -282,7 +289,7 @@ export default function HomeScreen({ route, navigation }: Props) {
         </View>
 
         {/* E-Learning Section */}
-        
+
         <View style={styles.elearningSection}>
           <Text style={styles.sectionTitle}>E-Learning</Text>
           <View style={styles.elearningBanner}>
