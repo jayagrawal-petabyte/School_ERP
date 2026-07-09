@@ -143,12 +143,26 @@
 
 // export default ClassResultsPage;
 
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState, type FC } from 'react';
 import { mockClassResults } from './mockData';
 
-const ClassResultsPage: React.FC = () => {
+interface SubjectDetail {
+  name: string;
+  m: number;
+}
+
+interface StudentResult {
+  id: number;
+  name: string;
+  subjects: SubjectDetail[];
+  total: number;
+  avg: number;
+  status: string;
+}
+
+const ClassResultsPage: FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(null);
 
   // Process data: Calculate total, avg, and status for each student
   const processedData = useMemo(() => {
@@ -283,7 +297,7 @@ const ClassResultsPage: React.FC = () => {
                     {selectedStudent ? `Edit Marks: ${selectedStudent.name}` : "Upload New Marks"}
                 </h2>
                 {selectedStudent ? (
-                    selectedStudent.subjects.map((s: any) => (
+                    selectedStudent.subjects.map((s: SubjectDetail) => (
                         <div key={s.name} className="flex justify-between py-2 border-b">
                             <span className="text-gray-700">{s.name}</span>
                             <input type="number" defaultValue={s.m} className="w-20 border rounded text-center p-1" />
