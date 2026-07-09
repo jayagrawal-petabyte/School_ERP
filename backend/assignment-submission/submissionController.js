@@ -14,49 +14,55 @@ function handleError(res, error) {
     });
 }
 
-function submitAssignment(req, res) {
+async function submitAssignment(req, res) {
     try {
         const user = submissionService.readUser(req);
+        const authHeader = req.get("Authorization");
 
-        const submission = submissionService.submitAssignment(
+        const submission = await submissionService.submitAssignment(
             req.body,
             req.file,
-            user
+            user,
+            authHeader
         );
 
         return sendResponse(res, 201, submission);
+
     } catch (error) {
         return handleError(res, error);
     }
 }
 
 function getSubmissionStatus(req, res) {
-
     try {
-
         const user = submissionService.readUser(req);
+        const authHeader = req.get("Authorization");
 
-        const status =
-            submissionService.getSubmissionStatus(
-                req.params.assignmentId,
-                user
-            );
+        const status = submissionService.getSubmissionStatus(
+            req.params.assignmentId,
+            user,
+            authHeader
+        );
 
         return sendResponse(res, 200, status);
 
     } catch (error) {
-
         return handleError(res, error);
-
     }
 }
+
 function getStudentSubmissions(req, res) {
     try {
         const user = submissionService.readUser(req);
+        const authHeader = req.get("Authorization");
 
-        const submissions = submissionService.getStudentSubmissions(user);
+        const submissions = submissionService.getStudentSubmissions(
+            user,
+            authHeader
+        );
 
         return sendResponse(res, 200, submissions);
+
     } catch (error) {
         return handleError(res, error);
     }
@@ -65,13 +71,16 @@ function getStudentSubmissions(req, res) {
 function getAssignmentSubmissions(req, res) {
     try {
         const user = submissionService.readUser(req);
+        const authHeader = req.get("Authorization");
 
         const submissions = submissionService.getAssignmentSubmissions(
             req.params.assignmentId,
-            user
+            user,
+            authHeader
         );
 
         return sendResponse(res, 200, submissions);
+
     } catch (error) {
         return handleError(res, error);
     }
@@ -80,13 +89,16 @@ function getAssignmentSubmissions(req, res) {
 function downloadSubmission(req, res) {
     try {
         const user = submissionService.readUser(req);
+        const authHeader = req.get("Authorization");
 
         const submission = submissionService.downloadSubmission(
-            req.params.submissionId,
-            user
+            req.params.assignmentId,
+            user,
+            authHeader
         );
 
         return sendResponse(res, 200, submission);
+
     } catch (error) {
         return handleError(res, error);
     }

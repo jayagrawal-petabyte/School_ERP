@@ -22,7 +22,7 @@ router.post(
 );
 
 router.get(
-    "/status/:submissionId",
+    "/status/:assignmentId",
     authenticateToken,
     authorizeRoles("student"),
     getSubmissionStatus

@@ -1,106 +1,253 @@
 const { getClientForUser } = require("../services/database.service");
-const submissions = [];
+const crypto = require("crypto");
 
-let nextId = 1;
 
-function now() {
-    return new Date().toISOString();
+function getSupabaseClient(authHeader) {
+    if (!authHeader) {
+        throw new Error("Authorization header is required.");
+    }
+    const parts = authHeader.split(" ");
+
+    if (parts.length !== 2 || parts[0] !== "Bearer") {
+        throw new Error("Invalid Authorization header.");
+    }
+
+    const token = parts[1];
+
+    return getClientForUser(token);
 }
 
-function addSubmission(data, token) {
+async function addSubmission(data, file, authHeader) {
+    const uniqueName =
+`${crypto.randomUUID()}-${file.originalname}`;
 
-    const submission = {
-    id: String(nextId++),
-    assignment_id: data.assignment_id,
-    student_id: data.student_id,
-    file_url: data.file_url,
-    file_name: data.file_name,
-    file_type: data.file_type,
-    file_size: data.file_size,
-    status: data.status,
-    submitted_at: data.submitted_at,
-    created_at: now(),
-    updated_at: now()
-};
+const storagePath =
+`${data.assignment_id}/${data.student_id}/${uniqueName}`;
 
-    submissions.push(submission);
+    const supabase = getSupabaseClient(authHeader);
+    const { error: uploadError } = await supabase.storage
+        .from("assignment-submissions")
+        .upload(
+            storagePath,
+            file.buffer,
+            {
+                contentType: file.mimetype,
+                upsert: false
+            }
+        );
+
+    if (uploadError) {
+        throw new Error(uploadError.message);
+    }
+
+    const { data: submission, error } = await supabase
+        .from("assignment_submissions")
+        .insert({
+            assignment_id: data.assignment_id,
+            student_id: data.student_id,
+            file_url: storagePath,
+            file_name: file.originalname,
+            file_type: file.mimetype,
+            file_size: file.size,
+            status: data.status,
+            submitted_at: data.submitted_at
+        })
+        .select()
+        .single();
+
+    if (error) {
+
+    await supabase.storage
+        .from("assignment-submissions")
+        .remove([storagePath]);
+
+    throw new Error(error.message);
+}
 
     return submission;
 }
 
-function findSubmission(id) {
-    return submissions.find(
-        (submission) => submission.id === String(id)
-    );
+async function findSubmission(id, authHeader) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+        .from("assignment_submissions")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        return null;
+    }
+
+    return data;
 }
 
-function findSubmissionByAssignmentAndStudent(
+async function findSubmissionByAssignmentAndStudent(
     assignmentId,
-    studentId
+    studentId,
+    authHeader
 ) {
-    return submissions.find(
-        (submission) =>
-            submission.assignment_id === String(assignmentId) &&
-            submission.student_id === String(studentId)
-    );
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("*")
+    .eq("assignment_id", assignmentId)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+if (error) {
+    throw new Error(error.message);
 }
 
-function findStudentSubmissions(studentId) {
-    return submissions.filter(
-        (submission) =>
-            submission.student_id === String(studentId)
-    );
+return data;
 }
 
-function findAssignmentSubmissions(assignmentId) {
-    return submissions.filter(
-        (submission) =>
-            submission.assignment_id === String(assignmentId)
-    );
+async function findStudentSubmissions(studentId, authHeader) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("*")
+    .eq("student_id", studentId);
+
+if (error) {
+    throw new Error(error.message);
 }
 
-function updateSubmission(id, changes) {
+return data;
+}
 
-    const submission = findSubmission(id);
+async function findAssignmentSubmissions(
+    assignmentId,
+    authHeader
+) {
 
-    if (!submission) {
-        return null;
+    const supabase = getSupabaseClient(authHeader);
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("*")
+    .eq("assignment_id", assignmentId);
+
+if (error) {
+    throw new Error(error.message);
+}
+
+return data;
+}
+
+async function updateSubmission(
+    id,
+    changes,
+    authHeader
+) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .update(changes)
+    .eq("id", id)
+    .select()
+    .single();
+
+if (error) {
+    throw new Error(error.message);
+}
+
+return data;
+}
+
+async function removeSubmission(id, authHeader) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .delete()
+    .eq("id", id)
+    .select()
+    .single();
+
+if (error) {
+    throw new Error(error.message);
+}
+
+return data;
+}
+
+async function listSubmissions(authHeader) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+   const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("*");
+
+if (error) {
+    throw new Error(error.message);
+}
+
+return data;
+}
+
+async function findSubmissionStatus(
+    assignmentId,
+    studentId,
+    authHeader
+) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase
+    .from("assignment_submissions")
+    .select("status, submitted_at")
+    .eq("assignment_id", assignmentId)
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+if (error) {
+    throw new Error(error.message);
+}
+
+return data;
+}
+async function createDownloadUrl(filePath, authHeader) {
+
+    const supabase = getSupabaseClient(authHeader);
+
+    const { data, error } = await supabase.storage
+        .from("assignment-submissions")
+        .createSignedUrl(filePath, 300);
+
+    if (error) {
+        throw new Error(error.message);
     }
 
-    Object.assign(submission, changes, {
-        updated_at: now()
-    });
-
-    return submission;
+    return data.signedUrl;
 }
+async function getAssignmentDueDate(
+    assignmentId,
+    authHeader
+) {
+    const supabase = getSupabaseClient(authHeader);
 
-function removeSubmission(id) {
+    const { data, error } = await supabase
+        .from("assignments")
+        .select("due_date")
+        .eq("id", assignmentId)
+        .single();
 
-    const index = submissions.findIndex(
-        (submission) => submission.id === String(id)
-    );
-
-    if (index === -1) {
-        return null;
+    if (error) {
+        throw new Error(error.message);
     }
 
-    const [removed] = submissions.splice(index, 1);
-
-    return removed;
+    return data;
 }
-
-function listSubmissions() {
-    return submissions;
-}
-function findSubmissionStatus(assignmentId, studentId) {
-
-    return submissions.find(
-        (submission) =>
-            submission.assignment_id === String(assignmentId) &&
-            submission.student_id === String(studentId)
-    );
-}
-
 module.exports = {
     addSubmission,
     findSubmission,
@@ -110,5 +257,7 @@ module.exports = {
     updateSubmission,
     removeSubmission,
     listSubmissions,
-    findSubmissionStatus
+    findSubmissionStatus,
+    createDownloadUrl,
+    getAssignmentDueDate
 };

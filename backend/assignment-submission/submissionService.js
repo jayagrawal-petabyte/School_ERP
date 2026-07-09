@@ -1,5 +1,5 @@
 const submissionStore = require("./submissionStore");
-
+const { getClientForUser } = require("../services/database.service");
 function readUser(req) {
     return req.user || req.currentUser || {};
 }
@@ -68,7 +68,8 @@ function calculateSubmissionStatus(dueDate, isSubmitted = true) {
         : "submitted";
 }
 
-function submitAssignment(payload, file, user) {
+async function submitAssignment(payload, file, user, authHeader) {
+
     requireStudent(user);
 
     validateStudentOwnership(payload, user);
@@ -76,9 +77,10 @@ function submitAssignment(payload, file, user) {
     const assignmentId = validateSubmission(payload, file);
 
     const existingSubmission =
-        submissionStore.findSubmissionByAssignmentAndStudent(
+        await submissionStore.findSubmissionByAssignmentAndStudent(
             assignmentId,
-            user.id
+            user.id,
+            authHeader
         );
 
     if (existingSubmission) {
@@ -89,34 +91,47 @@ function submitAssignment(payload, file, user) {
         throw error;
     }
 
-    const dueDate = null;
+    const assignment =
+        await submissionStore.getAssignmentDueDate(
+            assignmentId,
+            authHeader
+        );
+
+    if (!assignment) {
+        const error = new Error("Assignment not found.");
+        error.statusCode = 404;
+        throw error;
+    }
 
     const submissionStatus =
-        calculateSubmissionStatus(dueDate);
+        calculateSubmissionStatus(assignment.due_date);
 
-    return submissionStore.addSubmission({
-    assignment_id: assignmentId,
-    student_id: user.id,
-    file_url: null, // TODO: Replace with Supabase Storage URL
-    file_name: file.originalname,
-    file_type: file.mimetype,
-    file_size: file.size,
-    status: submissionStatus,
-    submitted_at: new Date().toISOString()
-});
+    return await submissionStore.addSubmission(
+        {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            file_name: file.originalname,
+            file_type: file.mimetype,
+            file_size: file.size,
+            status: submissionStatus,
+            submitted_at: new Date().toISOString()
+        },
+        file,
+        authHeader
+    );
 }
 
-function getSubmissionStatus(assignmentId, user) {
+async function getSubmissionStatus(assignmentId, user, authHeader) {
 
     requireStudent(user);
 
     const submission =
-        submissionStore.findSubmissionStatus(
+        await submissionStore.findSubmissionStatus(
             assignmentId,
-            user.id
+            user.id,
+            authHeader
         );
 
-    // Student has not submitted yet
     if (!submission) {
         return {
             assignmentId,
@@ -133,18 +148,22 @@ function getSubmissionStatus(assignmentId, user) {
     };
 }
 
-function getStudentSubmissions(user) {
+async function getStudentSubmissions(user, authHeader) {
+
     requireStudent(user);
 
-    return submissionStore.findStudentSubmissions(
-        user.id
+    return await submissionStore.findStudentSubmissions(
+        user.id,
+        authHeader
     );
 }
 
-function getAssignmentSubmissions(
+async function getAssignmentSubmissions(
     assignmentId,
-    user
+    user,
+    authHeader
 ) {
+
     const role = String(user.role || "").toLowerCase();
 
     if (
@@ -159,14 +178,19 @@ function getAssignmentSubmissions(
         throw error;
     }
 
-    return submissionStore.findAssignmentSubmissions(
-        assignmentId
+    return await submissionStore.findAssignmentSubmissions(
+        assignmentId,
+        authHeader
     );
 }
 
-function downloadSubmission(id, user) {
+async function downloadSubmission(id, user, authHeader) {
 
-    const submission = submissionStore.findSubmission(id);
+    const submission =
+        await submissionStore.findSubmission(
+            id,
+            authHeader
+        );
 
     if (!submission) {
         const error = new Error("Submission not found.");
@@ -176,7 +200,6 @@ function downloadSubmission(id, user) {
 
     const role = String(user.role || "").toLowerCase();
 
-    // Student: can download only their own submission
     if (role === "student") {
         if (String(submission.student_id) !== String(user.id)) {
             const error = new Error(
@@ -187,7 +210,6 @@ function downloadSubmission(id, user) {
         }
     }
 
-    // Parent: no access
     if (role === "parent") {
         const error = new Error(
             "You are not authorized to access this submission."
@@ -196,8 +218,16 @@ function downloadSubmission(id, user) {
         throw error;
     }
 
-    // Teachers, admins and principals are allowed
-    return submission;
+    const downloadUrl =
+    await submissionStore.createDownloadUrl(
+        submission.file_url,
+        authHeader
+    );
+
+return {
+    ...submission,
+    downloadUrl
+};
 }
 
 module.exports = {
