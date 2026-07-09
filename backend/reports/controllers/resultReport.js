@@ -9,7 +9,8 @@ const getResultsReport = async (req, res) => {
         const token = authHeader.split(' ')[1];
         const supabase = getClientForUser(token);
         
-        let query = supabase.from('exam_marks').select('*');
+        // Select only the two fields we compute on — never fetch raw student data
+        let query = supabase.from('exam_marks').select('marks_obtained, passing_marks');
         
         // Scope the query
         if (req.scopedClasses !== null) {
