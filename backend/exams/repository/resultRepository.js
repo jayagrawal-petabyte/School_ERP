@@ -1,6 +1,13 @@
 const AppError = require('../errors/AppError');
 const { normalizeResultShape } = require('../utils/resultUtils');
 const { getSupabaseClient, runQuery } = require('../utils/supabaseClient');
+const {
+  applyMemoryFilters,
+  sortRows,
+  paginateRows,
+  applySupabaseFilters,
+  applySupabaseSortAndRange,
+} = require('../utils/queryUtils');
 
 let results = [];
 let nextId = 1;
@@ -21,55 +28,6 @@ const mapFilterKey = (key) => {
   return map[key] || key;
 };
 
-const getSortColumn = (sortBy) => {
-  const allowed = ['id', 'student_id', 'teacher_id', 'class_id', 'exam_id', 'subject_id', 'marks_obtained', 'max_marks', 'passing_marks', 'status', 'created_at', 'updated_at'];
-  return allowed.includes(sortBy) ? sortBy : 'created_at';
-};
-
-const getSortOrder = (order) => (String(order || '').toLowerCase() === 'desc' ? 'desc' : 'asc');
-
-const applyMemoryFilters = (rows, filters = {}) => rows.filter((row) => Object.entries(filters).every(([key, value]) => {
-  if (value === undefined || value === null || value === '') {
-    return true;
-  }
-
-  const normalizedKey = mapFilterKey(key);
-  const rowValue = row?.[normalizedKey];
-
-  if (Array.isArray(value)) {
-    return value.some((entry) => String(entry) === String(rowValue));
-  }
-
-  return String(rowValue) === String(value);
-}));
-
-const applyMemorySort = (rows, sortBy, order) => {
-  const safeSortBy = getSortColumn(sortBy);
-  const direction = getSortOrder(order) === 'desc' ? -1 : 1;
-
-  return [...rows].sort((left, right) => {
-    const leftValue = left?.[safeSortBy];
-    const rightValue = right?.[safeSortBy];
-
-    if (leftValue === rightValue) {
-      return 0;
-    }
-
-    if (leftValue === undefined || leftValue === null) {
-      return 1;
-    }
-
-    if (rightValue === undefined || rightValue === null) {
-      return -1;
-    }
-
-    if (typeof leftValue === 'number' && typeof rightValue === 'number') {
-      return (leftValue - rightValue) * direction;
-    }
-
-    return String(leftValue).localeCompare(String(rightValue)) * direction;
-  });
-};
 
 const create = async (resultData) => {
   const client = getSupabaseClient();
@@ -173,52 +131,25 @@ const findAll = async (filters = {}, options = {}) => {
     }
 
     const allResults = (results || []).map((result) => normalizeResult(result));
-    const filteredResults = applyMemoryFilters(allResults, filters);
-    const sortedResults = applyMemorySort(filteredResults, options.sortBy, options.order);
-    const page = Math.max(1, Number(options.page || 1));
-    const limit = Math.max(1, Number(options.limit || 10));
-    const start = (page - 1) * limit;
-
-    return {
-      success: true,
-      page,
-      limit,
-      total: sortedResults.length,
-      totalPages: sortedResults.length === 0 ? 0 : Math.ceil(sortedResults.length / limit),
-      data: sortedResults.slice(start, start + limit),
-    };
+    const filteredResults = applyMemoryFilters(allResults, filters, mapFilterKey);
+    const sortedResults = sortRows(filteredResults, options.sortBy, options.order, ['id', 'student_id', 'teacher_id', 'class_id', 'exam_id', 'subject_id', 'marks_obtained', 'max_marks', 'passing_marks', 'status', 'created_at', 'updated_at'], 'created_at');
+    return paginateRows(sortedResults, options.page, options.limit);
   }
 
   let query = client.from('exam_marks').select('*', { count: 'exact', head: false });
-  Object.entries(filters || {}).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
+  query = applySupabaseFilters(query, filters, mapFilterKey);
 
-    const column = mapFilterKey(key);
-    if (Array.isArray(value) && value.length > 0) {
-      query = query.in(column, value);
-      return;
-    }
+  const { query: orderedQuery, safePage, safeLimit } = applySupabaseSortAndRange(
+    query,
+    options.sortBy,
+    options.order,
+    ['id', 'student_id', 'teacher_id', 'class_id', 'exam_id', 'subject_id', 'marks_obtained', 'max_marks', 'passing_marks', 'status', 'created_at', 'updated_at'],
+    'created_at',
+    options.page,
+    options.limit
+  );
 
-    query = query.eq(column, value);
-  });
-
-  const sortBy = getSortColumn(options.sortBy);
-  const ascending = getSortOrder(options.order) !== 'desc';
-  const page = Math.max(1, Number(options.page || 1));
-  const limit = Math.max(1, Number(options.limit || 10));
-  const start = (page - 1) * limit;
-
-  if (typeof query.order === 'function') {
-    query = query.order(sortBy, { ascending });
-  }
-
-  if (typeof query.range === 'function') {
-    query = query.range(start, start + limit - 1);
-  }
-
-  const response = await runQuery(query);
+  const response = await runQuery(orderedQuery);
   if (response?.error) {
     throw new AppError('Unable to fetch results', 500, response.error);
   }
@@ -227,10 +158,10 @@ const findAll = async (filters = {}, options = {}) => {
   const total = typeof response.count === 'number' ? response.count : data.length;
   return {
     success: true,
-    page,
-    limit,
+    page: safePage,
+    limit: safeLimit,
     total,
-    totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+    totalPages: total === 0 ? 0 : Math.ceil(total / safeLimit),
     data,
   };
 };

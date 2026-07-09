@@ -1,53 +1,6 @@
 const AppError = require('../errors/AppError');
-
-const getSupabaseClient = () => {
-  if (globalThis.__examsRelationshipSupabaseClient) {
-    return globalThis.__examsRelationshipSupabaseClient;
-  }
-
-  if (globalThis.supabase) {
-    return globalThis.supabase;
-  }
-
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    return null;
-  }
-
-  try {
-    const { createClient } = require('@supabase/supabase-js');
-    const client = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-    globalThis.__examsRelationshipSupabaseClient = client;
-    return client;
-  } catch (error) {
-    return null;
-  }
-};
-
-const runQuery = async (queryBuilder) => {
-  if (!queryBuilder) {
-    return { data: [], error: null };
-  }
-
-  if (typeof queryBuilder.then === 'function') {
-    return queryBuilder.then((result) => result);
-  }
-
-  if (Object.prototype.hasOwnProperty.call(queryBuilder, 'data') || Object.prototype.hasOwnProperty.call(queryBuilder, 'error')) {
-    return queryBuilder;
-  }
-
-  if (typeof queryBuilder.maybeSingle === 'function') {
-    return queryBuilder.maybeSingle();
-  }
-
-  return queryBuilder;
-};
-
-const normalizeIds = (ids = []) => [...new Set(
-  (Array.isArray(ids) ? ids : [ids])
-    .filter((value) => value !== undefined && value !== null)
-    .map((value) => String(value))
-)];
+const { getSupabaseClient, runQuery } = require('../utils/supabaseClient');
+const { normalizeIds } = require('../utils/queryUtils');
 
 const getCacheTtlMs = () => Number(process.env.EXAMS_METADATA_CACHE_TTL_MS || 300000);
 
@@ -235,6 +188,16 @@ const isTeacherAssignedToClass = async (teacherId, classId) => {
   return teacherClassIds.includes(String(classId));
 };
 
+const invalidateExamCache = (id) => {
+  if (!id) return;
+  cache.exams.delete(String(id));
+};
+
+const invalidateSubjectCache = (id) => {
+  if (!id) return;
+  cache.subjects.delete(String(id));
+};
+
 module.exports = {
   isParentOfStudent,
   getParentStudentIds,
@@ -242,4 +205,6 @@ module.exports = {
   isTeacherAssignedToClass,
   fetchExamsByIds,
   fetchSubjectsByIds,
+  invalidateExamCache,
+  invalidateSubjectCache,
 };
