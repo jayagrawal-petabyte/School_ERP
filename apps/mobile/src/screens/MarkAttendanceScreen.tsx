@@ -160,7 +160,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
       }
     } catch (error: any) {
       console.error('Error saving attendance:', error);
-      Alert.alert('Error', error.message || 'Failed to save. Please try again.');
+      Alert.alert('Error', 'Failed to save. Please try again.');
     } finally {
       setSubmitting(false);
     }
