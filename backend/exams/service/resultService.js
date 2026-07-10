@@ -44,7 +44,7 @@ const assertResultAccess = async (user, result, { requireOwnership = false } = {
   }
 
   if (role === ROLES.PARENT) {
-    const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
+    const parentStudentIds = await relationshipService.getParentStudentIds(user.id, user);
     if (!parentStudentIds.includes(String(getResultStudentId(result)))) {
       throw new AppError('Forbidden', 403);
     }
@@ -52,7 +52,7 @@ const assertResultAccess = async (user, result, { requireOwnership = false } = {
   }
 
   if (role === ROLES.TEACHER) {
-    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
+    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id, user);
     const teacherOwnsResult = String(getResultTeacherId(result)) === String(user.id);
     const classAssigned = teacherClassIds.includes(String(getResultClassId(result)));
 
@@ -130,7 +130,7 @@ const attachMetadata = (results, exams = [], subjects = []) => {
   });
 };
 
-const enrichResultsWithMetadata = async (results) => {
+const enrichResultsWithMetadata = async (results, user) => {
   if (!Array.isArray(results) || results.length === 0) {
     return results;
   }
@@ -139,8 +139,8 @@ const enrichResultsWithMetadata = async (results) => {
   const subjectIds = normalizeIds(results.map((result) => result.subject_id ?? result.subject));
 
   const [exams, subjects] = await Promise.all([
-    examIds.length > 0 ? relationshipService.fetchExamsByIds(examIds) : [],
-    subjectIds.length > 0 ? relationshipService.fetchSubjectsByIds(subjectIds) : [],
+    examIds.length > 0 ? relationshipService.fetchExamsByIds(examIds, user) : [],
+    subjectIds.length > 0 ? relationshipService.fetchSubjectsByIds(subjectIds, user) : [],
   ]);
 
   return attachMetadata(results, exams || [], subjects || []);
@@ -196,12 +196,12 @@ const normalizeResultPayload = (data, user, { isUpdate = false, existingResult =
   };
 };
 
-const ensureExamExists = async (examId) => {
+const ensureExamExists = async (examId, user) => {
   if (!examId) {
     return false;
   }
 
-  const exams = await relationshipService.fetchExamsByIds([examId]);
+  const exams = await relationshipService.fetchExamsByIds([examId], user);
   if (exams === null) {
     return true;
   }
@@ -209,12 +209,12 @@ const ensureExamExists = async (examId) => {
   return Array.isArray(exams) && exams.length > 0;
 };
 
-const ensureSubjectExists = async (subjectId) => {
+const ensureSubjectExists = async (subjectId, user) => {
   if (!subjectId) {
     return false;
   }
 
-  const subjects = await relationshipService.fetchSubjectsByIds([subjectId]);
+  const subjects = await relationshipService.fetchSubjectsByIds([subjectId], user);
   if (subjects === null) {
     return true;
   }
@@ -225,17 +225,17 @@ const ensureSubjectExists = async (subjectId) => {
 const createResult = async (data, user) => {
   const resultPayload = normalizeResultPayload(data, user, { isUpdate: false });
 
-  if (!(await ensureExamExists(resultPayload.exam_id))) {
+  if (!(await ensureExamExists(resultPayload.exam_id, user))) {
     throw new AppError('exam_id does not reference an existing exam', 400);
   }
 
-  if (!(await ensureSubjectExists(resultPayload.subject_id))) {
+  if (!(await ensureSubjectExists(resultPayload.subject_id, user))) {
     throw new AppError('subject_id does not reference an existing subject', 400);
   }
 
   // Teachers may only create results for their assigned classes or for their own assigned result records.
   if (!isAdminOrPrincipal(user) && getUserRole(user) === ROLES.TEACHER) {
-    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
+    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id, user);
     const classAllowed = teacherClassIds.includes(String(resultPayload.class_id));
     const teacherOwnsResult = String(resultPayload.teacher_id) === String(user.id);
     if (!classAllowed && !teacherOwnsResult) {
@@ -243,12 +243,13 @@ const createResult = async (data, user) => {
     }
   }
 
-  const result = await resultRepository.create(resultPayload);
-  return enrichResultsWithMetadata([result]).then((items) => items[0]);
+  const result = await resultRepository.create(resultPayload, user);
+  return enrichResultsWithMetadata([result], user).then((items) => items[0]);
 };
 
 const updateResult = async (id, data, options = {}) => {
-  const existingResult = options.resourceOwner || await resultRepository.findById(id);
+  const user = options.user || {};
+  const existingResult = options.resourceOwner || await resultRepository.findById(id, user);
   if (!existingResult) {
     throw new AppError('Result not found', 404);
   }
@@ -284,28 +285,29 @@ const updateResult = async (id, data, options = {}) => {
     updates.status = normalizedPayload.status;
   }
 
-  if (updates.exam_id && !(await ensureExamExists(updates.exam_id))) {
+  if (updates.exam_id && !(await ensureExamExists(updates.exam_id, user))) {
     throw new AppError('exam_id does not reference an existing exam', 400);
   }
 
-  if (updates.subject_id && !(await ensureSubjectExists(updates.subject_id))) {
+  if (updates.subject_id && !(await ensureSubjectExists(updates.subject_id, user))) {
     throw new AppError('subject_id does not reference an existing subject', 400);
   }
 
   if (Object.keys(updates).length === 0) {
-    const [enriched] = await enrichResultsWithMetadata([existingResult]);
+    const [enriched] = await enrichResultsWithMetadata([existingResult], user);
     return enriched;
   }
 
-  const updatedResult = await resultRepository.update(id, updates);
-  return enrichResultsWithMetadata([updatedResult]).then((items) => items[0]);
+  const updatedResult = await resultRepository.update(id, updates, user);
+  return enrichResultsWithMetadata([updatedResult], user).then((items) => items[0]);
 };
 
 const getResultById = async (id, options = {}) => {
-  const result = options.resourceOwner || await resultRepository.findById(id);
-  await assertResultAccess(options.user || {}, result);
+  const user = options.user || {};
+  const result = options.resourceOwner || await resultRepository.findById(id, user);
+  await assertResultAccess(user, result);
 
-  const [enriched] = await enrichResultsWithMetadata([result]);
+  const [enriched] = await enrichResultsWithMetadata([result], user);
   return enriched;
 };
 
@@ -327,27 +329,27 @@ const fetchRoleScopedResults = async (user, filters = {}, options = {}) => {
   const role = String(user.role).toLowerCase();
 
   if (role === ROLES.ADMIN || role === ROLES.PRINCIPAL) {
-    return resultRepository.findAll(filters, options);
+    return resultRepository.findAll(filters, options, user);
   }
 
   if (role === ROLES.STUDENT) {
-    return resultRepository.findAll({ ...filters, student_id: user.id }, options);
+    return resultRepository.findAll({ ...filters, student_id: user.id }, options, user);
   }
 
   if (role === ROLES.PARENT) {
-    const parentStudentIds = await relationshipService.getParentStudentIds(user.id);
+    const parentStudentIds = await relationshipService.getParentStudentIds(user.id, user);
     if (!Array.isArray(parentStudentIds) || parentStudentIds.length === 0) {
       return createEmptyResponse(options);
     }
 
-    return resultRepository.findAll({ ...filters, student_id: parentStudentIds }, options);
+    return resultRepository.findAll({ ...filters, student_id: parentStudentIds }, options, user);
   }
 
   if (role === ROLES.TEACHER) {
-    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id);
-    const teacherQuery = resultRepository.findAll({ ...filters, teacher_id: user.id }, { ...options, page: 1, limit: 1000 });
+    const teacherClassIds = await relationshipService.getTeacherClassIds(user.id, user);
+    const teacherQuery = resultRepository.findAll({ ...filters, teacher_id: user.id }, { ...options, page: 1, limit: 1000 }, user);
     const classQuery = teacherClassIds.length > 0
-      ? resultRepository.findAll({ ...filters, class_id: teacherClassIds }, { ...options, page: 1, limit: 1000 })
+      ? resultRepository.findAll({ ...filters, class_id: teacherClassIds }, { ...options, page: 1, limit: 1000 }, user)
       : Promise.resolve(createEmptyResponse({ ...options, page: 1, limit: 1000 }));
 
     const [teacherResponse, classResponse] = await Promise.all([teacherQuery, classQuery]);
@@ -381,7 +383,7 @@ const getAllResults = async (user, options = {}) => {
   const results = Array.isArray(response?.data) ? response.data : [];
   const sortedResults = sortResults(results, normalizedOptions.sortBy, normalizedOptions.order);
   const paginated = paginateResults(sortedResults, normalizedOptions);
-  const enriched = await enrichResultsWithMetadata(paginated.data);
+  const enriched = await enrichResultsWithMetadata(paginated.data, user);
   return { ...paginated, data: enriched };
 };
 
@@ -458,12 +460,12 @@ const paginateResults = (results, options = {}) => {
 };
 
 const getMyResults = async (user) => {
-  const response = await resultRepository.findAll({ student_id: user.id }, { page: 1, limit: 1000 });
-  return enrichResultsWithMetadata(response?.data || []);
+  const response = await resultRepository.findAll({ student_id: user.id }, { page: 1, limit: 1000 }, user);
+  return enrichResultsWithMetadata(response?.data || [], user);
 };
 
-const getOwnershipContext = async (id) => {
-  const result = await resultRepository.findById(id);
+const getOwnershipContext = async (id, user) => {
+  const result = await resultRepository.findById(id, user);
   if (!result) {
     return null;
   }

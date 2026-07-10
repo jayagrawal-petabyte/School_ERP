@@ -29,8 +29,8 @@ const mapFilterKey = (key) => {
 };
 
 
-const create = async (resultData) => {
-  const client = getSupabaseClient();
+const create = async (resultData, user) => {
+  const client = getSupabaseClient(user);
   if (!client) {
     if (!isDevelopmentMode()) {
       throw new AppError('Supabase client is not configured', 500);
@@ -60,8 +60,8 @@ const create = async (resultData) => {
   return normalizeResult(response.data);
 };
 
-const update = async (id, updates) => {
-  const client = getSupabaseClient();
+const update = async (id, updates, user) => {
+  const client = getSupabaseClient(user);
   if (!client) {
     if (!isDevelopmentMode()) {
       throw new AppError('Supabase client is not configured', 500);
@@ -98,8 +98,8 @@ const update = async (id, updates) => {
   return response.data ? normalizeResult(response.data) : null;
 };
 
-const findById = async (id) => {
-  const client = getSupabaseClient();
+const findById = async (id, user) => {
+  const client = getSupabaseClient(user);
   if (!client) {
     if (!isDevelopmentMode()) {
       throw new AppError('Supabase client is not configured', 500);
@@ -123,8 +123,8 @@ const findById = async (id) => {
   return response.data ? normalizeResult(response.data) : null;
 };
 
-const findAll = async (filters = {}, options = {}) => {
-  const client = getSupabaseClient();
+const findAll = async (filters = {}, options = {}, user) => {
+  const client = getSupabaseClient(user);
   if (!client) {
     if (!isDevelopmentMode()) {
       throw new AppError('Supabase client is not configured', 500);

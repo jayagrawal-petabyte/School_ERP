@@ -2,7 +2,7 @@ const examService = require('../service/examService');
 const examDto = require('../dto/examDto');
 
 const createExam = async (req, res) => {
-  const exam = await examService.createExam(req.body);
+  const exam = await examService.createExam(req.body, req.user);
   return res.status(201).json({ success: true, data: examDto.toExamResponse(exam) });
 };
 
@@ -16,7 +16,7 @@ const getAllExams = async (req, res) => {
     term: req.query.term,
     academicYear: req.query.academicYear,
     classId: req.query.classId,
-  });
+  }, req.user);
 
   return res.status(200).json({
     success: true,
@@ -29,17 +29,17 @@ const getAllExams = async (req, res) => {
 };
 
 const getExamById = async (req, res) => {
-  const exam = await examService.getExamById(req.params.id);
+  const exam = await examService.getExamById(req.params.id, req.user);
   return res.status(200).json({ success: true, data: examDto.toExamResponse(exam) });
 };
 
 const updateExam = async (req, res) => {
-  const exam = await examService.updateExam(req.params.id, req.body);
+  const exam = await examService.updateExam(req.params.id, req.body, req.user);
   return res.status(200).json({ success: true, data: examDto.toExamResponse(exam) });
 };
 
 const deleteExam = async (req, res) => {
-  await examService.deleteExam(req.params.id);
+  await examService.deleteExam(req.params.id, req.user);
   return res.status(200).json({ success: true, message: 'Exam deleted successfully' });
 };
 

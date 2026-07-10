@@ -15,56 +15,48 @@ const normalizeResponse = (result) => {
   return { data: result ?? null, error: null };
 };
 
-const getSupabaseClient = () => {
-  const cached =
+const extractToken = (userOrToken) => {
+  if (!userOrToken) return null;
+  if (typeof userOrToken === "string") return userOrToken.trim() || null;
+  return userOrToken.token?.trim() || null;
+};
+
+const getInjectedClient = () => {
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+
+  return (
     globalThis.__examsSupabaseClient ||
     globalThis.__examsResultSupabaseClient ||
     globalThis.__examsRelationshipSupabaseClient ||
-    globalThis.supabase;
+    null
+  );
+};
 
-  if (cached) return cached;
+const getSupabaseClient = (userOrToken) => {
+  const token = extractToken(userOrToken);
 
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    return null;
+  if (token) {
+    try {
+      const { getClientForUser } = require("../../services/database.service");
+      return getClientForUser(token);
+    } catch {
+      return null;
+    }
   }
 
-  try {
-    const { createClient } = require("@supabase/supabase-js");
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-    const key = serviceRoleKey || process.env.SUPABASE_ANON_KEY;
-    const client = createClient(process.env.SUPABASE_URL, key);
-
-    globalThis.__examsSupabaseClient = client;
-    globalThis.__examsResultSupabaseClient = client;
-    globalThis.__examsRelationshipSupabaseClient = client;
-
-    return client;
-  } catch {
-    return null;
-  }
+  return getInjectedClient();
 };
 
 const runQuery = async (queryBuilder) => {
   if (!queryBuilder) return { data: [], error: null };
 
   try {
-    // already resolved response
     if (isResponseLike(queryBuilder)) {
       return queryBuilder;
     }
 
-    // Supabase builder with maybeSingle/single
-    if (typeof queryBuilder.maybeSingle === "function") {
-      const res = await queryBuilder.maybeSingle();
-      return normalizeResponse(res);
-    }
-
-    if (typeof queryBuilder.single === "function") {
-      const res = await queryBuilder.single();
-      return normalizeResponse(res);
-    }
-
-    // normal promise (select/in/etc.)
     if (typeof queryBuilder.then === "function") {
       const res = await queryBuilder;
       return normalizeResponse(res);

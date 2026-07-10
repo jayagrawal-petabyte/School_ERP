@@ -2,12 +2,12 @@ const subjectService = require('../service/subjectService');
 const subjectDto = require('../dto/subjectDto');
 
 const createSubject = async (req, res) => {
-  const subject = await subjectService.createSubject(req.body);
+  const subject = await subjectService.createSubject(req.body, req.user);
   return res.status(201).json({ success: true, data: subjectDto.toSubjectResponse(subject) });
 };
 
 const getAllSubjects = async (req, res) => {
-  const subjects = await subjectService.getAllSubjects({
+  const subjects = await subjectService.getAllSubjects(req.user, {
     page: req.query.page,
     limit: req.query.limit,
     sortBy: req.query.sortBy,
@@ -28,17 +28,17 @@ const getAllSubjects = async (req, res) => {
 };
 
 const getSubjectById = async (req, res) => {
-  const subject = await subjectService.getSubjectById(req.params.id);
+  const subject = await subjectService.getSubjectById(req.params.id, req.user);
   return res.status(200).json({ success: true, data: subjectDto.toSubjectResponse(subject) });
 };
 
 const updateSubject = async (req, res) => {
-  const subject = await subjectService.updateSubject(req.params.id, req.body);
+  const subject = await subjectService.updateSubject(req.params.id, req.body, req.user);
   return res.status(200).json({ success: true, data: subjectDto.toSubjectResponse(subject) });
 };
 
 const deleteSubject = async (req, res) => {
-  await subjectService.deleteSubject(req.params.id);
+  await subjectService.deleteSubject(req.params.id, req.user);
   return res.status(200).json({ success: true, message: 'Subject deleted successfully' });
 };
 
