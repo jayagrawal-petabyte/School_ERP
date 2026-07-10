@@ -14,10 +14,11 @@ function handleError(res, error) {
   });
 }
 
-function createNotification(req, res) {
+async function createNotification(req, res) {
   try {
     const user = service.readUser(req);
-    const notification = service.createNotification(req.body, user);
+    const token = service.readToken(req);
+    const notification = await service.createNotification(req.body, user, token);
 
     return sendResponse(res, 201, notification);
   } catch (error) {
@@ -25,10 +26,11 @@ function createNotification(req, res) {
   }
 }
 
-function sendNotification(req, res) {
+async function sendNotification(req, res) {
   try {
     const user = service.readUser(req);
-    const notification = service.sendNotification(req.params.id, user);
+    const token = service.readToken(req);
+    const notification = await service.sendNotification(req.params.id, user, token);
 
     return sendResponse(res, 200, notification);
   } catch (error) {
@@ -36,10 +38,11 @@ function sendNotification(req, res) {
   }
 }
 
-function createAndSendNotification(req, res) {
+async function createAndSendNotification(req, res) {
   try {
     const user = service.readUser(req);
-    const notification = service.createAndSendNotification(req.body, user);
+    const token = service.readToken(req);
+    const notification = await service.createAndSendNotification(req.body, user, token);
 
     return sendResponse(res, 201, notification);
   } catch (error) {
@@ -47,9 +50,10 @@ function createAndSendNotification(req, res) {
   }
 }
 
-function notificationHistory(req, res) {
+async function notificationHistory(req, res) {
   try {
-    const history = service.notificationHistory(req.query);
+    const token = service.readToken(req);
+    const history = await service.notificationHistory(req.query, token);
 
     return sendResponse(res, 200, history);
   } catch (error) {
@@ -57,10 +61,11 @@ function notificationHistory(req, res) {
   }
 }
 
-function myNotifications(req, res) {
+async function myNotifications(req, res) {
   try {
     const user = service.readUser(req);
-    const notifications = service.notificationsForUser(user);
+    const token = service.readToken(req);
+    const notifications = await service.notificationsForUser(user, token);
 
     return sendResponse(res, 200, notifications);
   } catch (error) {
@@ -68,10 +73,11 @@ function myNotifications(req, res) {
   }
 }
 
-function updateAnnouncement(req, res) {
+async function updateAnnouncement(req, res) {
   try {
     const user = service.readUser(req);
-    const announcement = service.updateAnnouncement(req.params.id, req.body, user);
+    const token = service.readToken(req);
+    const announcement = await service.updateAnnouncement(req.params.id, req.body, user, token);
 
     return sendResponse(res, 200, announcement);
   } catch (error) {
@@ -79,10 +85,11 @@ function updateAnnouncement(req, res) {
   }
 }
 
-function deleteAnnouncement(req, res) {
+async function deleteAnnouncement(req, res) {
   try {
     const user = service.readUser(req);
-    const announcement = service.deleteAnnouncement(req.params.id, user);
+    const token = service.readToken(req);
+    const announcement = await service.deleteAnnouncement(req.params.id, user, token);
 
     return sendResponse(res, 200, announcement);
   } catch (error) {
