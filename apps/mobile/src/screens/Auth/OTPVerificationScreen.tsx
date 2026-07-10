@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import authApi from '../../services/authApi';
 import OTPInput from '../../components/Auth/OTPInput';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
 import { COLORS } from '../../constants/theme';
@@ -35,33 +36,50 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  const handleResend = async () => {
-    if (!canResend) return;
-    setCountdown(SECURITY.OTP_RESEND_COOLDOWN);
-    setCanResend(false);
-    setOtp(Array(6).fill(''));
+ const handleResend = async () => {
+  if (!canResend) return;
 
-    Alert.alert('Code sent', `A new code has been sent to your ${type}.`);
-  };
+  try {
+    const result = await authApi.forgotPassword(identifier);
+
+    if (result.success) {
+      setCountdown(SECURITY.OTP_RESEND_COOLDOWN);
+      setCanResend(false);
+      setOtp(Array(6).fill(''));
+
+      Alert.alert('Code sent', result.message);
+    } else {
+      Alert.alert('Error', result.message);
+    }
+  } catch {
+    Alert.alert('Error', 'Unable to resend OTP.');
+  }
+};
 
   const handleVerify = async () => {
-    const code = otp.join('');
-    if (code.length < 6) {
-      Alert.alert('Incomplete', 'Please enter all 6 digits.');
-      return;
-    }
-    setLoading(true);
-    try {
+  const code = otp.join('');
 
-      await new Promise((res) => setTimeout(res, 1200));
+  if (code.length < 6) {
+    Alert.alert('Incomplete', 'Please enter all 6 digits.');
+    return;
+  }
 
+  setLoading(true);
+
+  try {
+    const result = await authApi.verifyOTP(identifier, code);
+
+    if (result.success) {
       navigation.navigate('NewPassword', { identifier });
-    } catch {
-      Alert.alert('Invalid code', 'The code you entered is incorrect. Please try again.');
-    } finally {
-      setLoading(false);
+    } else {
+      Alert.alert('Invalid code', result.message);
     }
-  };
+  } catch {
+    Alert.alert('Error', 'Unable to verify OTP.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const maskedIdentifier =
     type === 'email'

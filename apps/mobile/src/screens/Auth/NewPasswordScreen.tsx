@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import authApi from '../../services/authApi';
 import SecureInput from '../../components/Auth/SecureInput';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
 import { COLORS } from '../../constants/theme';
@@ -63,18 +64,27 @@ const NewPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleReset = async () => {
-    if (!validate()) return;
-    setLoading(true);
-    try {
+  if (!validate()) return;
 
-      await new Promise((res) => setTimeout(res, 1500));
+  setLoading(true);
+
+  try {
+    const result = await authApi.resetPassword(
+      identifier,
+      newPassword
+    );
+
+    if (result.success) {
       navigation.navigate('PasswordSuccess');
-    } catch {
-      Alert.alert('Error', 'Could not reset password. Please try again.');
-    } finally {
-      setLoading(false);
+    } else {
+      Alert.alert('Error', result.message);
     }
-  };
+  } catch {
+    Alert.alert('Error', 'Could not reset password. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safe}>

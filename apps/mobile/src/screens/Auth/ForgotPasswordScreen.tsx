@@ -10,6 +10,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import authApi from '../../services/authApi';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import SecureInput from '../../components/Auth/SecureInput';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
@@ -65,12 +66,18 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
     if (!validate()) return;
     setLoading(true);
     try {
-      // ── Mock API: POST /api/auth/forgot-password ─────────────────────────
-      await new Promise((res) => setTimeout(res, 1500));
-      navigation.navigate('OTPVerification', {
-        identifier: email || phone,
-        type: email ? 'email' : 'phone',
-      });
+      const identifier = email || phone;
+
+const result = await authApi.forgotPassword(identifier);
+
+if (result.success) {
+  navigation.navigate('OTPVerification', {
+    identifier,
+    type: email ? 'email' : 'phone',
+  });
+} else {
+  Alert.alert('Error', result.message);
+}
     } catch {
       Alert.alert('Error', 'Could not send reset code. Try again.');
     } finally {
