@@ -28,6 +28,7 @@ import TeacherProfileScreen from '../screens/TeacherProfileScreen';
 import ParentProfileScreen from '../screens/ParentProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import DrawerNavigator from './DrawerNavigator';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -65,10 +66,10 @@ export default function AppNavigator() {
 
       {/* Main app screens */}
       <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: 'Home Dashboard' }}
-      />
+  name="Home"
+  component={DrawerNavigator}
+  options={{ headerShown: false }}
+/>
       <Stack.Screen
         name="AttendanceList"
         component={AttendanceListScreen}

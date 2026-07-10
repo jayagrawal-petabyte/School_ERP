@@ -16,6 +16,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 import { DashboardCard } from '../types';
 import { DashboardService, ProfileService } from '../services/profileApi';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -240,21 +241,30 @@ export default function HomeScreen({ route, navigation }: Props) {
           <Text style={styles.dashboardTitle}>{ROLE_LABEL[role]} Dashboard</Text>
           <Text style={styles.dashboardSubtitle}>{ROLE_LABEL[role]} Portal</Text>
         </View>
+
         <View style={styles.headerRight}>
-          <Text style={styles.dateText}>{todayLabel}</Text>
-          <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
-            <View style={styles.bellOutline}>
-              <View style={styles.bellCap} />
-              <View style={styles.bellBody} />
-              <View style={styles.bellClapper} />
-            </View>
-            <View style={styles.bellBadge} />
-          </TouchableOpacity>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-          </View>
-        </View>
-      </View>
+  <Text style={styles.dateText}>{todayLabel}</Text>
+
+  <TouchableOpacity
+    style={styles.bellButton}
+    onPress={() =>
+      Alert.alert('Notifications', 'No new notifications.')
+    }
+  >
+    <View style={styles.bellOutline}>
+      <View style={styles.bellCap} />
+      <View style={styles.bellBody} />
+      <View style={styles.bellClapper} />
+    </View>
+    <View style={styles.bellBadge} />
+  </TouchableOpacity>
+
+  <View style={styles.avatarCircle}>
+    <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+  </View>
+</View>
+
+         
 
       {!initialRole && (
         <View style={styles.roleSwitcherContainer}>
@@ -649,6 +659,12 @@ const styles = StyleSheet.create({
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textPrimary,
   },
+  menuButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+},
   bannerDesc: {
     fontSize: 11,
     color: COLORS.textSecondary,
