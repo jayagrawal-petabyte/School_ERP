@@ -16,7 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 import { DashboardCard } from '../types';
-import { DashboardService, ProfileService } from '../services/profileApi';
+import { DashboardService, ProfileService, DEMO_USER_ID_BY_ROLE } from '../services/profileApi';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
@@ -365,14 +365,15 @@ useEffect(() => {
                   style={styles.card}
                   activeOpacity={0.7}
                   onPress={() => {
-                    if (card.route === 'StudentProfile' && userId) {
-                      navigation.navigate('StudentProfile', { userId });
-                    } else if (card.route === 'TeacherProfile' && userId) {
-                      navigation.navigate('TeacherProfile', { userId });
-                    } else if (card.route === 'ParentProfile' && userId) {
-                      navigation.navigate('ParentProfile', { userId });
-                    } else if (card.route === 'Settings') {
+                    const effectiveUserId = userId || DEMO_USER_ID_BY_ROLE[role];
+                    if (card.route === 'Settings') {
                       navigation.navigate('Settings');
+                    } else if (
+                      card.route === 'StudentProfile' ||
+                      card.route === 'TeacherProfile' ||
+                      card.route === 'ParentProfile'
+                    ) {
+                      navigation.navigate(card.route, { userId: effectiveUserId });
                     } else {
                       Alert.alert(
                         'Screen Placeholder',
