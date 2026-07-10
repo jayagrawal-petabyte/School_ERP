@@ -78,59 +78,68 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      // ── Mock API call (replace with real endpoint) ──────────────────────
-      // In production: POST /api/auth/login with { identifier, password, role }
-      await new Promise((res) => setTimeout(res, 1500));
+      
 
-      let mockSuccess = false;
-      let resolvedUserId: string | undefined;
+     let loginSuccess = false;
+let resolvedUserId: string | undefined;
 
-      if (selectedRole.key === 'admin') {
-        // No admin sample data yet — keep the old placeholder check for now
-        mockSuccess = password.length >= 8;
-      } else {
-        const authResult = await authApi.login(
+      const authResult = await authApi.login(
   identifier,
   password,
   selectedRole.key
 );
-        if (authResult.success && authResult.role !== selectedRole.key) {
-          setPasswordError(`This account is registered as ${authResult.role}, not ${selectedRole.key}.`);
-        } else if (authResult.success) {
-          mockSuccess = true;
-          resolvedUserId = authResult.userId;
-        }
-      }
 
-      if (mockSuccess) {
-        resetLoginAttempts(identifier);
+if (!authResult.success) {
+  recordFailedAttempt(identifier);
 
-        await storeToken('auth_token', 'mock_jwt_token_here');
-       await storeToken('user_role', selectedRole.key);
+  const remaining = getRemainingAttempts(identifier);
 
-        if (selectedRole.requiresMFA) {
-          navigation.navigate('MFA', {
-            role: selectedRole,
-          });
-        } else if (selectedRole.key === 'student' || selectedRole.key === 'teacher' || selectedRole.key === 'parent') {
-          navigation.replace('Home', {
-            initialRole: selectedRole.key as 'student' | 'teacher' | 'parent',
-            userId: resolvedUserId,
-          });
-        } else {
-          navigation.replace('Dashboard', {
-            role: selectedRole,
-          });
-        }
-      } else {
-        recordFailedAttempt(identifier);
-        const remaining = getRemainingAttempts(identifier);
-        if (remaining === 0) {
-          setPasswordError('Account locked. Too many failed attempts.');
-        } else if (!passwordError) {
-          setPasswordError(`Incorrect password. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`);
-        }
-      }
+  setPasswordError(
+    remaining > 0
+      ? `${authResult.message}. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
+      : 'Account locked. Too many failed attempts.'
+  );
+
+  return;
+}
+
+await storeToken('auth_token', authResult.accessToken);
+await storeToken('refresh_token', authResult.refreshToken);
+
+resolvedUserId =
+  authResult.user?.id ||
+  authResult.user?.user_metadata?.id;
+loginSuccess = true;
+
+
+
+      if (loginSuccess) {
+  resetLoginAttempts(identifier);
+
+  await storeToken('user_role', selectedRole.key);
+
+  if (selectedRole.requiresMFA) {
+    navigation.navigate('MFA', {
+      role: selectedRole,
+    });
+  } else if (
+    selectedRole.key === 'student' ||
+    selectedRole.key === 'teacher' ||
+    selectedRole.key === 'parent'
+  ) {
+    navigation.replace('Home', {
+      initialRole: selectedRole.key as
+        | 'student'
+        | 'teacher'
+        | 'parent',
+      userId: resolvedUserId,
+    });
+  } else {
+    navigation.replace('Dashboard', {
+      role: selectedRole,
+    });
+  }
+}
     } catch (error) {
       Alert.alert('Error', 'Unable to connect. Please try again.');
     } finally {

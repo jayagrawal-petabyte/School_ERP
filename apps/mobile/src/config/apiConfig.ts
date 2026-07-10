@@ -1,8 +1,7 @@
 import { getToken } from '../utils/security';
 
 export const API_CONFIG = {
-  // Replace this with your confidential deployed backend link for testing
-  BASE_URL: '',
+  BASE_URL: 'https://school-erp-p1g6.onrender.com',
 };
 
 export async function getAuthHeaders() {

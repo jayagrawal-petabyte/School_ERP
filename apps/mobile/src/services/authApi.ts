@@ -1,81 +1,126 @@
-import { UserRole } from '../types';
+import { API_CONFIG } from '../config/apiConfig';
+import { getToken, removeToken } from '../utils/security';
 
 const delay = (ms: number = 300) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-const LOGIN_CREDENTIALS: Record<
-  string,
-  {
-    userId: string;
-    password: string;
-    role: UserRole;
-  }
-> = {
-  'sofia.morales@school.edu': {
-    userId: '102',
-    password: 'sofia1234',
-    role: 'student',
-  },
-  'lucas.henry@school.edu': {
-    userId: '101',
-    password: 'lucas1234',
-    role: 'student',
-  },
-  'shradha.sen@school.edu': {
-    userId: 't1',
-    password: 'shradha1234',
-    role: 'teacher',
-  },
-  'rajesh.rawat@school.edu': {
-    userId: 't2',
-    password: 'rajesh1234',
-    role: 'teacher',
-  },
-  'carlos.morales@gmail.com': {
-    userId: 'p1',
-    password: 'carlos1234',
-    role: 'parent',
-  },
-  'ravi.sharma@gmail.com': {
-    userId: 'p2',
-    password: 'ravi1234',
-    role: 'parent',
-  },
-};
-
 const authApi = {
+  // ================= LOGIN =================
   login: async (
     identifier: string,
     password: string,
-    role: string
+    _role: string
   ) => {
-    await delay();
+    try {
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/api/auth/login`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: identifier,
+            password,
+          }),
+        }
+      );
 
-    const record =
-      LOGIN_CREDENTIALS[identifier.toLowerCase().trim()];
+      const result = await response.json();
 
-    if (!record || record.password !== password) {
+      if (!response.ok || !result.success) {
+        return {
+          success: false,
+          message: result.message || 'Login failed',
+        };
+      }
+
+      return {
+        success: result.success,
+        ...result.data,
+      };
+    } catch (error) {
+      console.error('Login Error:', error);
+
       return {
         success: false,
-        message: 'Invalid identifier or password',
+        message: 'Unable to connect to server',
       };
     }
-
-    if (record.role !== role) {
-      return {
-        success: false,
-        role: record.role,
-        message: `This account belongs to ${record.role}`,
-      };
-    }
-
-    return {
-      success: true,
-      userId: record.userId,
-      role: record.role,
-      message: 'Login successful',
-    };
   },
+
+  // ================= CURRENT USER =================
+  getCurrentUser: async () => {
+    try {
+      const token = await getToken('auth_token');
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/api/auth/me`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        return {
+          success: false,
+          message: result.message || 'Unable to fetch current user',
+        };
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Get Current User Error:', error);
+
+      return {
+        success: false,
+        message: 'Unable to fetch current user',
+      };
+    }
+  },
+
+  // ================= LOGOUT =================
+  logout: async () => {
+    try {
+      const token = await getToken('auth_token');
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/api/auth/logout`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        await removeToken('auth_token');
+        await removeToken('refresh_token');
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Logout Error:', error);
+
+      return {
+        success: false,
+        message: 'Logout failed',
+      };
+    }
+  },
+
+  // ================= TEMPORARY MOCKS =================
+  // Replace these when backend APIs become available.
 
   forgotPassword: async (_identifier: string) => {
     await delay();
@@ -102,23 +147,15 @@ const authApi = {
     };
   },
 
- resetPassword: async (
-  _identifier: string,
-  _newPassword: string
-) => {
+  resetPassword: async (
+    _identifier: string,
+    _newPassword: string
+  ) => {
     await delay();
 
     return {
       success: true,
       message: 'Password reset successfully',
-    };
-  },
-
-  logout: async () => {
-    await delay();
-
-    return {
-      success: true,
     };
   },
 };
