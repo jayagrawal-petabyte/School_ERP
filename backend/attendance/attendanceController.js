@@ -1,18 +1,22 @@
-const supabase = require('./supabaseClient');
+const { getClientForUser } = require('../services/database.service');
 const { validateAttendanceDate, validateAttendanceStatus } = require('./validation');
 
 const markAttendance = async (req, res) => {
     try {
-        const { id, appRole } = req.user; 
-        const { date, studentId, status, classId } = req.body;
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
 
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const role = req.user.role; 
+        const normalizedRole = role ? role.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
                 error: "Access denied. Only authorized staff can mark attendance." 
             });
         }
+
+        const { date, studentId, status, classId } = req.body;
 
         const dateCheck = validateAttendanceDate(date);
         if (!dateCheck.valid) {
@@ -55,17 +59,21 @@ const markAttendance = async (req, res) => {
 
 const updateAttendance = async (req, res) => {
     try {
-        const { appRole } = req.user;
-        const { id } = req.params; 
-        const { date, status } = req.body;
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
 
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
                 error: "Access denied. Only authorized staff can update attendance records." 
             });
         }
+
+        const { id } = req.params; 
+        const { date, status } = req.body;
 
         const dateCheck = validateAttendanceDate(date);
         if (!dateCheck.valid) {
@@ -101,17 +109,22 @@ const updateAttendance = async (req, res) => {
 
 const viewAttendance = async (req, res) => {
     try {
-        const { appRole, id } = req.user;
-        const { classId, date } = req.query; 
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+
+        const userId = req.user.id;
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
         
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const { classId, date } = req.query; 
         let query = supabase.from('attendance_records').select('*');
 
         if (normalizedRole === 'student') {
-            console.log(`Enforcing structural query isolation. Filtering target student_id: ${id}`);
-            query = query.eq('student_id', id);
+            console.log(`Enforcing structural query isolation. Filtering target student_id: ${userId}`);
+            query = query.eq('student_id', userId);
         } else {
-            console.log(`Role '${appRole}' authorized to request cross-sectional attendance logs.`);
+            console.log(`Role '${role}' authorized to request cross-sectional attendance logs.`);
             if (classId) query = query.eq('class_id', classId);
             if (date) query = query.eq('date', date);
         }
