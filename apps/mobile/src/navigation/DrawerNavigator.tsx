@@ -21,7 +21,7 @@ export default function DrawerNavigator() {
   return (
     <Drawer.Navigator
       initialRouteName="Dashboard"
-      drawerContent={(props) => <DrawerContent {...props} />}
+      drawerContent={(props: any) => <DrawerContent {...props} />}
       screenOptions={{
         headerShown: true,
         drawerStyle: {
@@ -38,7 +38,7 @@ export default function DrawerNavigator() {
     >
       <Drawer.Screen
         name="Dashboard"
-        component={HomeScreen}
+        component={HomeScreen as any}
         initialParams={route.params}
         options={{
           title: 'Dashboard',
@@ -52,7 +52,7 @@ export default function DrawerNavigator() {
 
       <Drawer.Screen
         name="Assignments"
-        component={AssignmentListScreen}
+        component={AssignmentListScreen as any}
       />
 
       <Drawer.Screen
@@ -72,7 +72,7 @@ export default function DrawerNavigator() {
 
       <Drawer.Screen
         name="Profile"
-        component={StudentProfileScreen}
+        component={StudentProfileScreen as any}
       />
 
       <Drawer.Screen

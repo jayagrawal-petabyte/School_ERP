@@ -70,7 +70,7 @@ const NewPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
 
   try {
     const result = await authApi.resetPassword(
-      identifier,
+      identifier || '',
       newPassword
     );
 

@@ -40,7 +40,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   if (!canResend) return;
 
   try {
-    const result = await authApi.forgotPassword(identifier);
+    const result = await authApi.forgotPassword(identifier || '');
 
     if (result.success) {
       setCountdown(SECURITY.OTP_RESEND_COOLDOWN);
@@ -67,7 +67,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
   setLoading(true);
 
   try {
-    const result = await authApi.verifyOTP(identifier, code);
+    const result = await authApi.verifyOTP(identifier || '', code);
 
     if (result.success) {
       navigation.navigate('NewPassword', { identifier });

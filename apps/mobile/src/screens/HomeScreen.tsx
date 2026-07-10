@@ -23,8 +23,8 @@ type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 interface Props {
-  route: HomeScreenRouteProp;
-  navigation: HomeScreenNavigationProp;
+  route?: any;
+  navigation?: any;
 }
 
 type Section = 'academic' | 'services';
@@ -47,15 +47,15 @@ const ROLE_LABEL: Record<'teacher' | 'student' | 'parent', string> = {
 };
 
 export default function HomeScreen({ route, navigation }: Props) {
- const { initialRole, userId } = route.params || {};
+  const { initialRole, userId } = route?.params || {};
 
-const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
-  initialRole || 'teacher'
-);
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
+    initialRole || 'teacher'
+  );
 
-const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
-const [displayName, setDisplayName] = useState('');
-const [profileLoading, setProfileLoading] = useState(!!userId);
+  const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
+  const [displayName, setDisplayName] = useState('');
+  const [profileLoading, setProfileLoading] = useState(!!userId);
 
 useEffect(() => {
   const loadRole = async () => {
