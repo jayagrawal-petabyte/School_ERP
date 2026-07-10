@@ -144,8 +144,73 @@ const viewAttendance = async (req, res) => {
     }
 };
 
+const getTeacherClasses = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+        
+        const teacherId = req.user.id;
+
+        const { data, error } = await supabase
+            .from('class_teachers')
+            .select(`
+                class_id,
+                classes (
+                    id,
+                    class_name,
+                    section
+                )
+            `)
+            .eq('teacher_id', teacherId);
+
+        if (error) throw error;
+
+        const formattedClasses = data.map(item => item.classes).filter(Boolean);
+        return res.status(200).json({ success: true, data: formattedClasses });
+    } catch (error) {
+        console.error("Error in getTeacherClasses:", error);
+        return res.status(500).json({ success: false, error: "Internal server error." });
+    }
+};
+
+const getStudentsByClass = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+        
+        const { classId } = req.query;
+        if (!classId) {
+            return res.status(400).json({ error: "classId parameter is required." });
+        }
+
+        const { data, error } = await supabase
+            .from('class_students') 
+            .select(`
+                student_id,
+                users (
+                    id,
+                    name,
+                    email
+                )
+            `)
+            .eq('class_id', classId);
+
+        if (error) throw error;
+
+        const roster = data.map(item => item.users).filter(Boolean);
+        return res.status(200).json({ success: true, data: roster });
+    } catch (error) {
+        console.error("Error in getStudentsByClass:", error);
+        return res.status(500).json({ success: false, error: "Internal server error." });
+    }
+};
+
 module.exports = {
     markAttendance,
     updateAttendance,
-    viewAttendance
+    viewAttendance,
+    getTeacherClasses,
+    getStudentsByClass
 };

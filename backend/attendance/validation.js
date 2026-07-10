@@ -1,12 +1,27 @@
 const validateAttendanceDate = (dateString) => {
     const inputDate = new Date(dateString);
-    const currentDate = new Date();
-    inputDate.setHours(0, 0, 0, 0);
-    currentDate.setHours(0, 0, 0, 0);
+    if (isNaN(inputDate.getTime())) {
+        return { valid: false, message: "Invalid date format." };
+    }
 
-    if (inputDate > currentDate) {
+    const currentDate = new Date();
+    
+    const inputYear = inputDate.getUTCFullYear();
+    const inputMonth = inputDate.getUTCMonth();
+    const inputDay = inputDate.getUTCDate();
+
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentDay = currentDate.getDate();
+
+    if (
+        inputYear > currentYear ||
+        (inputYear === currentYear && inputMonth > currentMonth) ||
+        (inputYear === currentYear && inputMonth === currentMonth && inputDay > currentDay)
+    ) {
         return { valid: false, message: "Attendance date cannot be in the future." };
     }
+
     return { valid: true };
 };
 
