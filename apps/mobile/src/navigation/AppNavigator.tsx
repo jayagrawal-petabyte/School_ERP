@@ -17,7 +17,7 @@ import OTPVerificationScreen from '../screens/Auth/OTPVerificationScreen';
 import NewPasswordScreen from '../screens/Auth/NewPasswordScreen';
 import PasswordSuccessScreen from '../screens/Auth/PasswordSuccessScreen';
 import MFAScreen from '../screens/Auth/MFAScreen';
-import DashboardScreen from '../screens/Auth/DashboardScreen';
+
 import ReportCardScreen from '../screens/ReportCard';
 import StudentResultsScreen from '../screens/StudentResults';
 import TeacherMarksEntryScreen from '../screens/TeacherMarksEntry';
@@ -62,7 +62,7 @@ export default function AppNavigator() {
       <Stack.Screen name="NewPassword" component={NewPasswordScreen} />
       <Stack.Screen name="PasswordSuccess" component={PasswordSuccessScreen} />
       <Stack.Screen name="MFA" component={MFAScreen} />
-      <Stack.Screen name="Dashboard" component={DashboardScreen} />
+    
 
       {/* Main app screens */}
       <Stack.Screen

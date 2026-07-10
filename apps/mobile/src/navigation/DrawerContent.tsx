@@ -1,11 +1,9 @@
-import React from 'react';
-import { Alert } from 'react-native';
-import { clearAllTokens } from '../utils/security';
+import React, { useEffect, useState } from 'react';
+import { Alert, View, Text, StyleSheet } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItem,
 } from '@react-navigation/drawer';
-import { View, Text, StyleSheet } from 'react-native';
 import {
   MaterialCommunityIcons,
   MaterialIcons,
@@ -13,10 +11,43 @@ import {
   FontAwesome5,
 } from '@expo/vector-icons';
 
+import { clearAllTokens, getToken } from '../utils/security';
+
 export default function DrawerContent(props: any) {
+  const [role, setRole] = useState('parent');
+
+  useEffect(() => {
+    const loadRole = async () => {
+      const savedRole = await getToken('user_role');
+
+      if (
+        savedRole === 'teacher' ||
+        savedRole === 'student' ||
+        savedRole === 'parent'
+      ) {
+        setRole(savedRole);
+      }
+    };
+
+    loadRole();
+  }, []);
+
+  const roleTitle =
+    role.charAt(0).toUpperCase() + role.slice(1);
+
+  const roleSubtitle =
+    role === 'teacher'
+      ? 'Faculty'
+      : role === 'student'
+      ? 'Student'
+      : 'Guardian';
+
   return (
     <View style={styles.container}>
-      <DrawerContentScrollView {...props} showsVerticalScrollIndicator={false}>
+      <DrawerContentScrollView
+        {...props}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <MaterialCommunityIcons
             name="school"
@@ -24,9 +55,13 @@ export default function DrawerContent(props: any) {
             color="#fff"
           />
 
-          <Text style={styles.title}>School ERP</Text>
+          <Text style={styles.title}>
+            School ERP
+          </Text>
 
-          <Text style={styles.subtitle}>Parent Portal</Text>
+          <Text style={styles.subtitle}>
+            {roleTitle} Portal
+          </Text>
         </View>
 
         <DrawerItem
@@ -93,45 +128,53 @@ export default function DrawerContent(props: any) {
           labelStyle={styles.label}
           onPress={() => props.navigation.navigate('Settings')}
         />
-      </DrawerContentScrollView>
+              </DrawerContentScrollView>
 
       <View style={styles.footer}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>P</Text>
+          <Text style={styles.avatarText}>
+            {roleTitle.charAt(0)}
+          </Text>
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={styles.name}>Parent</Text>
-          <Text style={styles.role}>Guardian</Text>
+          <Text style={styles.name}>
+            {roleTitle}
+          </Text>
+
+          <Text style={styles.role}>
+            {roleSubtitle}
+          </Text>
         </View>
 
-       <MaterialIcons
-  name="logout"
-  size={24}
-  color="#fff"
-  onPress={() => {
-    Alert.alert(
-      'Sign Out',
-      'Do you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          onPress: async () => {
-            await clearAllTokens();
-            props.navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            });
-          },
-        },
-      ]
-    );
-  }}
-/>
+        <MaterialIcons
+          name="logout"
+          size={24}
+          color="#fff"
+          onPress={() => {
+            Alert.alert(
+              'Sign Out',
+              'Do you want to sign out?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'Sign Out',
+                  onPress: async () => {
+                    await clearAllTokens();
+
+                    props.navigation.reset({
+                      index: 0,
+                      routes: [{ name: 'Login' }],
+                    });
+                  },
+                },
+              ]
+            );
+          }}
+        />
       </View>
     </View>
   );
@@ -158,6 +201,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#d7d7d7',
     marginTop: 4,
+    fontSize: 14,
   },
 
   label: {
@@ -193,6 +237,7 @@ const styles = StyleSheet.create({
   name: {
     color: '#fff',
     fontWeight: '700',
+    fontSize: 16,
   },
 
   role: {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { useRoute } from '@react-navigation/native';
 
 import HomeScreen from '../screens/HomeScreen';
 import AttendanceListScreen from '../screens/AttendanceListScreen';
@@ -15,8 +16,11 @@ import DrawerContent from './DrawerContent';
 const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator() {
+  const route: any = useRoute();
+
   return (
     <Drawer.Navigator
+      initialRouteName="Dashboard"
       drawerContent={(props) => <DrawerContent {...props} />}
       screenOptions={{
         headerShown: true,
@@ -33,10 +37,13 @@ export default function DrawerNavigator() {
       }}
     >
       <Drawer.Screen
-  name="Home"
-  component={HomeScreen}
-  options={{ title: 'Dashboard' }}
-/>
+        name="Dashboard"
+        component={HomeScreen}
+        initialParams={route.params}
+        options={{
+          title: 'Dashboard',
+        }}
+      />
 
       <Drawer.Screen
         name="Attendance"
@@ -49,6 +56,21 @@ export default function DrawerNavigator() {
       />
 
       <Drawer.Screen
+        name="Results"
+        component={StudentResultsScreen}
+      />
+
+      <Drawer.Screen
+        name="Report Card"
+        component={ReportCardScreen}
+      />
+
+      <Drawer.Screen
+        name="Leave"
+        component={LeaveRequestScreen}
+      />
+
+      <Drawer.Screen
         name="Profile"
         component={StudentProfileScreen}
       />
@@ -56,22 +78,7 @@ export default function DrawerNavigator() {
       <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
-        
       />
-      <Drawer.Screen
-    name="Results"
-    component={StudentResultsScreen}
-/>
-
-<Drawer.Screen
-    name="Report Card"
-    component={ReportCardScreen}
-/>
-
-<Drawer.Screen
-    name="Leave"
-    component={LeaveRequestScreen}
-/>
     </Drawer.Navigator>
   );
 }
