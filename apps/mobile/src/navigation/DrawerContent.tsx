@@ -14,9 +14,17 @@ import {
 import { clearAllTokens, getToken } from '../utils/security';
 
 export default function DrawerContent(props: any) {
-  const [role, setRole] = useState('parent');
+  const homeRoute = props.state?.routes?.find((r: any) => r.name === 'Dashboard');
+  const userId: string | undefined = homeRoute?.params?.userId;
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
+    homeRoute?.params?.initialRole || 'parent'
+  );
 
   useEffect(() => {
+    if (homeRoute?.params?.initialRole) {
+      setRole(homeRoute.params.initialRole);
+      return;
+    }
     const loadRole = async () => {
       const savedRole = await getToken('user_role');
 
@@ -113,7 +121,20 @@ export default function DrawerContent(props: any) {
             />
           )}
           labelStyle={styles.label}
-          onPress={() => props.navigation.navigate('Profile')}
+          onPress={() => {
+            if (!userId) {
+              Alert.alert('Profile Unavailable', 'Could not find your profile. Please log in again.');
+              return;
+            }
+            const routeName =
+              role === 'teacher' ? 'TeacherProfile' : role === 'parent' ? 'ParentProfile' : 'StudentProfile';
+            const parentNav = props.navigation.getParent();
+            if (parentNav) {
+              parentNav.navigate(routeName, { userId });
+            } else {
+              props.navigation.navigate(routeName, { userId });
+            }
+          }}
         />
 
         <DrawerItem
