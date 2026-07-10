@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  TextInput,
   ScrollView,
   SafeAreaView,
   StatusBar,
@@ -35,9 +36,12 @@ interface AcademicItem {
 }
 
 export default function HomeScreen({ route, navigation }: Props) {
-  const { initialRole } = route.params || {};
+  const { initialRole, userId } = route.params || {};
   const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(initialRole || 'teacher');
   const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [profileLoading, setProfileLoading] = useState(!!userId);
 
   React.useEffect(() => {
     if (initialRole) {
@@ -49,30 +53,49 @@ export default function HomeScreen({ route, navigation }: Props) {
     DashboardService.getDashboardCards(role).then(setAccountCards);
   }, [role]);
 
+  React.useEffect(() => {
+    if (!userId) {
+      setProfileLoading(false);
+      return;
+    }
+    setProfileLoading(true);
+    const fetchProfile =
+      role === 'teacher'
+        ? ProfileService.getTeacherProfile(userId)
+        : role === 'parent'
+        ? ProfileService.getParentProfile(userId)
+        : ProfileService.getStudentProfile(userId);
+
+    fetchProfile.then((profile) => {
+      if (profile) setDisplayName(profile.full_name);
+      setProfileLoading(false);
+    });
+  }, [role, userId]);
+
   const getAcademicItems = (): AcademicItem[] => {
     const baseItems: AcademicItem[] = [
       { id: '1', title: 'Teachers', emoji: '👩‍🏫', color: '#FCE7F3' },
       { id: '2', title: 'Syllabus', emoji: '📖', color: '#F3F4F6' },
       { id: '3', title: 'Time Table', emoji: '🗓️', color: '#EFF6FF' },
-      { 
-        id: '4', 
-        title: 'Assignments', 
-        emoji: '📝', 
+      {
+        id: '4',
+        title: 'Assignments',
+        emoji: '📝',
         color: '#FFF9E6',
         route: 'AssignmentList',
         params: { classId: '1', className: 'Standard - 8 - C' }
       },
-      { 
-        id: '5', 
-        title: 'Exams', 
-        emoji: '✍️', 
+      {
+        id: '5',
+        title: 'Exams',
+        emoji: '✍️',
         color: '#FEE4E2',
         route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
       },
-      { 
-        id: '6', 
-        title: 'Results', 
-        emoji: '📊', 
+      {
+        id: '6',
+        title: 'Results',
+        emoji: '📊',
         color: '#E0F2FE',
         route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
       },
@@ -83,20 +106,18 @@ export default function HomeScreen({ route, navigation }: Props) {
     ];
 
     if (role === 'teacher') {
-      // Teacher panel items
       return [
         { id: 't0', title: 'Students', emoji: '🧑‍🎓', color: '#E0F2FE' },
-        { 
-          id: 't_attendance', 
-          title: 'Attendance', 
-          emoji: '📋', 
+        {
+          id: 't_attendance',
+          title: 'Attendance',
+          emoji: '📋',
           color: '#ECFDF5',
           route: 'AttendanceList'
         },
         ...baseItems
       ];
     } else if (role === 'parent') {
-      // Parent panel items
       return [
         { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7' },
         {
@@ -117,19 +138,18 @@ export default function HomeScreen({ route, navigation }: Props) {
         ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
       ];
     } else {
-      // Student panel items
       return [
-        { 
-          id: 's_leave', 
-          title: 'Apply Leave', 
-          emoji: '✉️', 
+        {
+          id: 's_leave',
+          title: 'Apply Leave',
+          emoji: '✉️',
           color: '#FFF6ED',
           route: 'LeaveRequest'
         },
-        { 
-          id: 's_attendance', 
-          title: 'Attendance', 
-          emoji: '📋', 
+        {
+          id: 's_attendance',
+          title: 'Attendance',
+          emoji: '📋',
           color: '#ECFDF5',
           route: 'AttendanceHistory',
           params: { classId: '1', className: 'Standard - 8 - C', defaultStudentName: 'Sofia Morales' }
@@ -138,27 +158,6 @@ export default function HomeScreen({ route, navigation }: Props) {
       ];
     }
   };
-
-  const { userId } = route.params || {};
-  const [displayName, setDisplayName] = useState('');
-
-  React.useEffect(() => {
-    if (!userId) return;
-
-    if (role === 'teacher') {
-      ProfileService.getTeacherProfile(userId).then((profile) => {
-        if (profile) setDisplayName(profile.full_name);
-      });
-    } else if (role === 'parent') {
-      ProfileService.getParentProfile(userId).then((profile) => {
-        if (profile) setDisplayName(profile.full_name);
-      });
-    } else {
-      ProfileService.getStudentProfile(userId).then((profile) => {
-        if (profile) setDisplayName(profile.full_name);
-      });
-    }
-  }, [role, userId]);
 
   const handlePressItem = (item: AcademicItem) => {
     if (item.route) {
@@ -172,6 +171,15 @@ export default function HomeScreen({ route, navigation }: Props) {
     }
   };
 
+  const query = searchQuery.trim().toLowerCase();
+  const filteredAcademicItems = getAcademicItems().filter((item) =>
+    item.title.toLowerCase().includes(query)
+  );
+  const filteredAccountCards = accountCards.filter((card) =>
+    card.title.toLowerCase().includes(query)
+  );
+  const hasNoResults = query.length > 0 && filteredAcademicItems.length === 0 && filteredAccountCards.length === 0;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -180,9 +188,13 @@ export default function HomeScreen({ route, navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.profileContainer}>
           <Text style={styles.greeting}>Hello</Text>
-          <Text style={styles.userName}>
-            {displayName || (role === 'teacher' ? 'Mrs. Shradha Sen' : role === 'parent' ? 'Mr. Carlos Morales' : 'Sofia Morales')}
-          </Text>
+          {profileLoading ? (
+            <View style={styles.nameSkeleton} />
+          ) : (
+            <Text style={styles.userName}>
+              {displayName || (role === 'teacher' ? 'Mrs. Shradha Sen' : role === 'parent' ? 'Mr. Carlos Morales' : 'Sofia Morales')}
+            </Text>
+          )}
         </View>
         <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
           <View style={styles.bellOutline}>
@@ -232,16 +244,22 @@ export default function HomeScreen({ route, navigation }: Props) {
         <View style={styles.searchSection}>
           <View style={styles.searchBox}>
             <Text style={styles.searchIcon}>🔍</Text>
-            <Text style={styles.searchPlaceholder}>Search</Text>
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search Academics or My Account"
+              placeholderTextColor={COLORS.textMuted}
+            />
           </View>
         </View>
 
         {/* Academics Grid Section */}
         <View style={styles.academicsSection}>
           <Text style={styles.sectionTitle}>Academics</Text>
-          
+
           <View style={styles.grid}>
-            {getAcademicItems().map((item) => (
+            {filteredAcademicItems.map((item) => (
               <TouchableOpacity
                 key={item.id}
                 style={styles.gridItem}
@@ -257,20 +275,32 @@ export default function HomeScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        {/* My Account Section — Profile & Settings, from ProfileService/DashboardService */}
+        {/* My Account Section */}
         <View style={styles.academicsSection}>
           <Text style={styles.sectionTitle}>My Account</Text>
           <View style={styles.grid}>
-            {accountCards.map((card) => (
+            {filteredAccountCards.map((card) => (
               <TouchableOpacity
                 key={card.id}
                 style={styles.gridItem}
                 activeOpacity={0.7}
-                onPress={() => Alert.alert(
-                  'Screen Placeholder',
-                  `The "${card.title}" screen is being built next.`,
-                  [{ text: 'OK' }]
-                )}
+                onPress={() => {
+                  if (card.route === 'StudentProfile' && userId) {
+                    navigation.navigate('StudentProfile', { userId });
+                  } else if (card.route === 'TeacherProfile' && userId) {
+                    navigation.navigate('TeacherProfile', { userId });
+                  } else if (card.route === 'ParentProfile' && userId) {
+                    navigation.navigate('ParentProfile', { userId });
+                  } else if (card.route === 'Settings') {
+                    navigation.navigate('Settings');
+                  } else {
+                    Alert.alert(
+                      'Screen Placeholder',
+                      `The "${card.title}" screen is being built next.`,
+                      [{ text: 'OK' }]
+                    );
+                  }
+                }}
               >
                 <View style={[styles.iconContainer, { backgroundColor: card.color }]}>
                   <Text style={styles.gridEmoji}>{card.emoji}</Text>
@@ -281,8 +311,13 @@ export default function HomeScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        {hasNoResults && (
+          <View style={styles.academicsSection}>
+            <Text style={styles.noResultsText}>No matches for "{searchQuery}"</Text>
+          </View>
+        )}
+
         {/* E-Learning Section */}
-        
         <View style={styles.elearningSection}>
           <Text style={styles.sectionTitle}>E-Learning</Text>
           <View style={styles.elearningBanner}>
@@ -327,6 +362,13 @@ const styles = StyleSheet.create({
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.primary,
     marginTop: 1,
+  },
+  nameSkeleton: {
+    width: 130,
+    height: 16,
+    borderRadius: 4,
+    backgroundColor: COLORS.borderLight,
+    marginTop: 4,
   },
   bellButton: {
     width: 38,
@@ -416,9 +458,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginRight: SPACING.xs,
   },
-  searchPlaceholder: {
+  searchInput: {
+    flex: 1,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textPrimary,
+    paddingVertical: 0,
+  },
+  noResultsText: {
     fontSize: FONT_SIZE.xs,
     color: COLORS.textMuted,
+    textAlign: 'center',
+    paddingVertical: SPACING.md,
   },
   academicsSection: {
     paddingHorizontal: SPACING.lg,

@@ -3,23 +3,20 @@ import { AppUser, ClassRecord, StudentProfileView, TeacherProfileView, ParentPro
 const delay = (ms: number = 300) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const USERS: Record<string, AppUser> = {
-  // students — ids match api.ts Standard-8 C roster
   '101': mkUser('101', 'student', 'Lucas Henry'),
   '102': mkUser('102', 'student', 'Sofia Morales'),
   '103': mkUser('103', 'student', 'Henry Conaway'),
   '104': mkUser('104', 'student', 'Daniel Rowell'),
   '105': mkUser('105', 'student', 'Aarav Sharma'),
   '106': mkUser('106', 'student', 'Ananya Iyer'),
-  // students — ids match api.ts Standard-10 B roster
+
   '201': mkUser('201', 'student', 'Aditya Das'),
   '202': mkUser('202', 'student', 'Bhavna Roy'),
 
-  // teachers — names match assignedBy fields already used in api.ts
   't1': mkUser('t1', 'teacher', 'Mrs. Shradha Sen'),
   't2': mkUser('t2', 'teacher', 'Mr. Rajesh Rawat'),
   't3': mkUser('t3', 'teacher', 'Mrs. Priya Sharma'),
 
-  // parents — not present elsewhere in the repo, added fresh
   'p1': mkUser('p1', 'parent', 'Mr. Carlos Morales'),
   'p2': mkUser('p2', 'parent', 'Mr. Ravi Sharma'),
 };
@@ -38,23 +35,21 @@ function mkUser(id: string, role: UserRole, full_name: string): AppUser {
   };
 }
 
-// class names/sections match ClassInfo entries in api.ts
 const CLASSES: Record<string, ClassRecord> = {
   'c1': { id: 'c1', class_name: 'Standard - 8', section: 'C', created_at: '2025-06-01T00:00:00Z' },
   'c2': { id: 'c2', class_name: 'Standard - 10', section: 'B', created_at: '2025-06-01T00:00:00Z' },
 };
 
-// ASSUMPTION: teacher-class pairing not documented anywhere else, best guess only
 const CLASS_TEACHERS = [
   { id: 'ct1', teacher_id: 't1', class_id: 'c1', created_at: '2025-06-01T00:00:00Z' },
   { id: 'ct2', teacher_id: 't3', class_id: 'c1', created_at: '2025-06-01T00:00:00Z' },
   { id: 'ct3', teacher_id: 't2', class_id: 'c2', created_at: '2025-06-01T00:00:00Z' },
 ];
 
-// ASSUMPTION: parent-child pairing not documented anywhere else, best guess only
 const PARENT_STUDENTS = [
   { id: 'ps1', parent_id: 'p1', student_id: '102', created_at: '2025-06-01T00:00:00Z' },
   { id: 'ps2', parent_id: 'p2', student_id: '105', created_at: '2025-06-01T00:00:00Z' },
+  { id: 'ps3', parent_id: 'p1', student_id: '103', created_at: '2025-06-01T00:00:00Z' },
 ];
 
 const DASHBOARD_CARDS: DashboardCard[] = [
