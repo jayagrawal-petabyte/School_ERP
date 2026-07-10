@@ -16,6 +16,12 @@ export type RootStackParamList = {
   AssignmentDetails: { assignmentId: string };
   SubmitAssignment: { assignmentId: string; title: string; subject: string };
   LeaveRequest: undefined;
+  
+  // Drawer Navigation Routes
+  Attendance: undefined;
+  Assignments: { classId?: string; className?: string } | undefined;
+  Results: undefined;
+  Leave: undefined;
 
   // Exams & Results Module
   ReportCard: undefined;

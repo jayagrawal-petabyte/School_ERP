@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  View,
+  Text,
+  StyleSheet,
+} from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
 import { COLORS } from '../../constants/theme';

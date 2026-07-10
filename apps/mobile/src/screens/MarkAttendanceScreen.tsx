@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -6,7 +7,6 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
   Alert,
   TextInput,
   StatusBar,
@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService, Student, AttendanceRecord, AttendanceStatus } from '../services/api';
 import { API_CONFIG } from '../config/apiConfig';
 import attendanceApi from '../services/attendanceApi';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type MarkAttendanceScreenRouteProp = RouteProp<RootStackParamList, 'MarkAttendance'>;
@@ -47,7 +48,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         const studentList = await attendanceApi.getStudents(classId);
         setStudents(studentList);
 
-        const existingRecords = await AttendanceService.getAttendanceByDate(classId, selectedDate);
+        const existingRecords = await attendanceApi.viewAttendance(classId, selectedDate);
         
         const initialRecords: Record<string, AttendanceStatus> = {};
         if (existingRecords) {
@@ -256,105 +257,101 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Fetching Roster...</Text>
-      </View>
-    );
-  }
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
       
       {/* Custom Header */}
       <View style={styles.customHeader}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{className}</Text>
         <TouchableOpacity style={styles.bellButton}>
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
+          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Top dashboard values */}
-      <View style={styles.statsBoard}>
-        <View style={styles.dateRow}>
-          <Text style={styles.dateLabel}>Session Date: {selectedDate}</Text>
-          <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllPresent}>
-            <Text style={styles.markAllBtnText}>Mark All Present</Text>
-          </TouchableOpacity>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Fetching Roster...</Text>
         </View>
+      ) : (
+        <View style={styles.container}>
+          {/* Top dashboard values */}
+          <View style={styles.statsBoard}>
+            <View style={styles.dateRow}>
+              <Text style={styles.dateLabel}>Session Date: {selectedDate}</Text>
+              <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAllPresent}>
+                <Text style={styles.markAllBtnText}>Mark All Present</Text>
+              </TouchableOpacity>
+            </View>
 
-        <View style={styles.statsRow}>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.present }]}>
-            <Text style={styles.statVal}>{stats.present}</Text>
-            <Text style={styles.statLabel}>Present</Text>
+            <View style={styles.statsRow}>
+              <View style={[styles.statBox, { borderLeftColor: COLORS.present }]}>
+                <Text style={styles.statVal}>{stats.present}</Text>
+                <Text style={styles.statLabel}>Present</Text>
+              </View>
+              <View style={[styles.statBox, { borderLeftColor: COLORS.late }]}>
+                <Text style={styles.statVal}>{stats.late}</Text>
+                <Text style={styles.statLabel}>Late</Text>
+              </View>
+              <View style={[styles.statBox, { borderLeftColor: COLORS.absent }]}>
+                <Text style={styles.statVal}>{stats.absent}</Text>
+                <Text style={styles.statLabel}>Absent</Text>
+              </View>
+              <View style={[styles.statBox, { borderLeftColor: COLORS.textMuted }]}>
+                <Text style={styles.statVal}>{stats.unmarked}</Text>
+                <Text style={styles.statLabel}>Unmarked</Text>
+              </View>
+            </View>
           </View>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.late }]}>
-            <Text style={styles.statVal}>{stats.late}</Text>
-            <Text style={styles.statLabel}>Late</Text>
-          </View>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.absent }]}>
-            <Text style={styles.statVal}>{stats.absent}</Text>
-            <Text style={styles.statLabel}>Absent</Text>
-          </View>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.textMuted }]}>
-            <Text style={styles.statVal}>{stats.unmarked}</Text>
-            <Text style={styles.statLabel}>Unmarked</Text>
-          </View>
-        </View>
-      </View>
 
-      {/* Search Input */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search students..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={COLORS.textMuted}
+          {/* Search Input */}
+          <View style={styles.searchContainer}>
+            <View style={styles.searchBox}>
+              <Text style={styles.searchIcon}>🔍</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search students..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={COLORS.textMuted}
+              />
+            </View>
+          </View>
+
+          {/* Student List */}
+          <FlatList
+            data={filteredStudents}
+            keyExtractor={(item) => item.id}
+            renderItem={renderStudentItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Roster is empty.</Text>
+              </View>
+            }
           />
-        </View>
-      </View>
 
-      {/* Student List */}
-      <FlatList
-        data={filteredStudents}
-        keyExtractor={(item) => item.id}
-        renderItem={renderStudentItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Roster is empty.</Text>
+          {/* Fixed bottom footer */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color={COLORS.textLight} />
+              ) : (
+                <Text style={styles.submitBtnText}>Submit Attendance</Text>
+              )}
+            </TouchableOpacity>
           </View>
-        }
-      />
-
-      {/* Fixed bottom footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator size="small" color={COLORS.textLight} />
-          ) : (
-            <Text style={styles.submitBtnText}>Submit Attendance</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -363,7 +360,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#2D2C72',
   },
   loadingContainer: {
     flex: 1,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   customHeader: {
     height: 56,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#2D2C72',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -397,12 +397,12 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   bellButton: {
     width: 38,

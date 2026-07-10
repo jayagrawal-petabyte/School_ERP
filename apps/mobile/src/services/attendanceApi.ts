@@ -10,7 +10,7 @@ export const attendanceApi = {
 
     try {
       const headers = await getAuthHeaders();
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/students`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/students?classId=${classId}`, {
         method: 'GET',
         headers,
       });
@@ -23,9 +23,9 @@ export const attendanceApi = {
       const rawStudents = result.data || [];
       return rawStudents.map((s: any) => ({
         id: s.id,
-        name: s.fullName || 'Unnamed Student',
-        rollNumber: 'N/A',
-        gender: 'M',
+        name: s.fullName || s.full_name || 'Unnamed Student',
+        rollNumber: s.rollNumber || s.roll_number || (s.id ? s.id.split('-').pop().toUpperCase().replace(/^0+/, '') || s.id.substring(0, 6) : 'N/A'),
+        gender: s.gender || 'M',
       }));
     } catch (error) {
       console.error('Error fetching students from API:', error);
@@ -125,7 +125,37 @@ export const attendanceApi = {
         throw new Error(result.error || 'Failed to fetch attendance');
       }
 
-      return result.data || [];
+      const rawRecords = result.data || [];
+      
+      if (!date) {
+        // Group by date to match DailyAttendance[] format
+        const grouped: Record<string, any[]> = {};
+        rawRecords.forEach((rec: any) => {
+          if (!grouped[rec.date]) grouped[rec.date] = [];
+          grouped[rec.date].push({
+            studentId: rec.student_id,
+            status: rec.status,
+          });
+        });
+        
+        const history: DailyAttendance[] = Object.keys(grouped).map(d => ({
+          classId: classId || 'unknown',
+          date: d,
+          records: grouped[d]
+        })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        return history;
+      }
+
+      // If fetching for a specific date, just return the mapped records
+      if (date) {
+        return rawRecords.map((rec: any) => ({
+          studentId: rec.student_id,
+          status: rec.status,
+        }));
+      }
+
+      return rawRecords;
     } catch (error) {
       console.error('Error in viewAttendance:', error);
       return [];
