@@ -16,7 +16,7 @@ import SecureInput from '../../components/Auth/SecureInput';
 import PrimaryButton from '../../components/Auth/PrimaryButton';
 import { COLORS } from '../../constants/theme';
 import { ROLES, SECURITY } from '../../constants/auth';
-import { AuthService } from '../../services/profileApi';
+import authApi from '../../services/authApi';
 import {
   isValidIdentifier,
   isAccountLocked,
@@ -89,7 +89,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         // No admin sample data yet — keep the old placeholder check for now
         mockSuccess = password.length >= 8;
       } else {
-        const authResult = await AuthService.login(identifier, password);
+        const authResult = await authApi.login(
+  identifier,
+  password,
+  selectedRole.key
+);
         if (authResult.success && authResult.role !== selectedRole.key) {
           setPasswordError(`This account is registered as ${authResult.role}, not ${selectedRole.key}.`);
         } else if (authResult.success) {
