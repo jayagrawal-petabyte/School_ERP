@@ -15,6 +15,8 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService } from '../services/api';
+import { API_CONFIG } from '../config/apiConfig';
+import attendanceApi from '../services/attendanceApi';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type AttendanceReportsScreenRouteProp = RouteProp<RootStackParamList, 'AttendanceReports'>;
@@ -28,18 +30,18 @@ interface Props {
   navigation: AttendanceReportsScreenNavigationProp;
 }
 
-type ReportData = Awaited<ReturnType<typeof AttendanceService.getAttendanceReport>>;
+type ReportData = Awaited<ReturnType<typeof attendanceApi.getAttendanceReport>>;
 
 export default function AttendanceReportsScreen({ route, navigation }: Props) {
-  const { classId } = route.params;
+  const { classId, className } = route.params;
 
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadReport() {
       try {
-        const data = await AttendanceService.getAttendanceReport(classId);
+        const data = await attendanceApi.getAttendanceReport(classId);
         setReport(data);
       } catch (error) {
         console.error('Error generating report:', error);
@@ -47,7 +49,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
         setLoading(false);
       }
     }
-    loadData();
+    loadReport();
   }, [classId]);
 
   const criticalStudents = useMemo(() => {
@@ -70,7 +72,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
           <Text style={styles.studentNameText}>{item.studentName}</Text>
           <Text style={styles.rollText}>Roll No: {item.rollNumber}</Text>
           <Text style={styles.statsText}>
-            P: {item.presentCount} | L: {item.lateCount} | A: {item.absentCount} | E: {item.earlyOffCount} | F: {item.festivalCount}
+            P: {item.presentCount} | L: {item.lateCount} | A: {item.absentCount}
           </Text>
         </View>
         <View style={styles.percentageContainer}>
@@ -169,31 +171,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        {/* Early Off Bar */}
-        <View style={styles.chartBarWrapper}>
-          <View style={styles.chartLabelRow}>
-            <Text style={styles.chartBarLabel}>Early Off</Text>
-            <Text style={styles.chartBarValue}>{report.earlyOffRate}%</Text>
-          </View>
-          <View style={styles.chartBarBackground}>
-            <View
-              style={[styles.chartBarFill, { width: `${report.earlyOffRate}%`, backgroundColor: COLORS.earlyOff }]}
-            />
-          </View>
-        </View>
 
-        {/* Festival Bar */}
-        <View style={styles.chartBarWrapper}>
-          <View style={styles.chartLabelRow}>
-            <Text style={styles.chartBarLabel}>Festival / Holidays</Text>
-            <Text style={styles.chartBarValue}>{report.festivalRate}%</Text>
-          </View>
-          <View style={styles.chartBarBackground}>
-            <View
-              style={[styles.chartBarFill, { width: `${report.festivalRate}%`, backgroundColor: COLORS.festival }]}
-            />
-          </View>
-        </View>
       </View>
 
       {/* Critical Attendance */}
@@ -214,7 +192,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
       )}
 
       <View style={styles.rosterHeader}>
-        <Text style={styles.sectionTitle}>Roster Breakdown</Text>
+        <Text style={styles.sectionTitle}>Report Breakdown</Text>
       </View>
     </View>
   );
@@ -228,7 +206,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Analytics Roster</Text>
+        <Text style={styles.headerTitle}>Analytics Report</Text>
         <TouchableOpacity style={styles.bellButton}>
           <View style={styles.bellOutline}>
             <View style={styles.bellCap} />
