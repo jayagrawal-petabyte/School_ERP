@@ -106,7 +106,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         resetLoginAttempts(identifier);
 
         await storeToken('auth_token', 'mock_jwt_token_here');
-        await storeToken('user_role', JSON.stringify(selectedRole));
+       await storeToken('user_role', selectedRole.key);
 
         if (selectedRole.requiresMFA) {
           navigation.navigate('MFA', {

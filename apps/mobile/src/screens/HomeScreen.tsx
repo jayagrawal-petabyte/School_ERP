@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getToken } from '../utils/security';
 import {
   View,
   Text,
@@ -46,12 +47,31 @@ const ROLE_LABEL: Record<'teacher' | 'student' | 'parent', string> = {
 };
 
 export default function HomeScreen({ route, navigation }: Props) {
-  const { initialRole, userId } = route.params || {};
-  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(initialRole || 'teacher');
-  const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
-  const [displayName, setDisplayName] = useState('');
-  const [profileLoading, setProfileLoading] = useState(!!userId);
+ const { initialRole, userId } = route.params || {};
 
+const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
+  initialRole || 'teacher'
+);
+
+const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
+const [displayName, setDisplayName] = useState('');
+const [profileLoading, setProfileLoading] = useState(!!userId);
+
+useEffect(() => {
+  const loadRole = async () => {
+    const savedRole = await getToken('user_role');
+
+    if (
+      savedRole === 'teacher' ||
+      savedRole === 'student' ||
+      savedRole === 'parent'
+    ) {
+      setRole(savedRole);
+    }
+  };
+
+  loadRole();
+}, []);
   React.useEffect(() => {
     if (initialRole) {
       setRole(initialRole);
@@ -266,7 +286,7 @@ export default function HomeScreen({ route, navigation }: Props) {
 </View>
          
 
-      {!initialRole && (
+      {false && (
         <View style={styles.roleSwitcherContainer}>
           <TouchableOpacity
             style={[styles.roleTab, role === 'teacher' && styles.roleTabActive]}
