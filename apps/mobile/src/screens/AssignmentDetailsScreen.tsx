@@ -13,7 +13,8 @@ import {
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { AssignmentService, Assignment } from '../services/api';
+import assignmentApi from "../services/assignmentApi";
+import { Assignment } from "../services/api";
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type AssignmentDetailsScreenRouteProp = RouteProp<RootStackParamList, 'AssignmentDetails'>;
@@ -21,6 +22,21 @@ type AssignmentDetailsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   'AssignmentDetails'
 >;
+
+const mapAssignment = (assignment: any): Assignment => ({
+  id: assignment.id,
+  classId: assignment.classId || "",
+  title: assignment.title,
+  subject: assignment.subject,
+  description: assignment.description,
+  dueDate: assignment.dueDate,
+  maxMarks: assignment.maxMarks || 0,
+  assignedBy: assignment.createdBy || "Teacher",
+  status: "pending",
+  obtainedMarks: undefined,
+  feedback: undefined,
+  submission: undefined,
+});
 
 interface Props {
   route: AssignmentDetailsScreenRouteProp;
@@ -34,23 +50,36 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState<boolean>(true);
 
   const loadDetails = async () => {
+  try {
     setLoading(true);
+    const response = await assignmentApi.getAssignment(assignmentId);
+    const assignmentData = mapAssignment(response);
     try {
-      const data = await AssignmentService.getAssignmentDetails(assignmentId);
-      setAssignment(data);
+      const submission =
+        await assignmentApi.getSubmissionStatus(assignmentId);
+      if (submission) {
+        assignmentData.status = submission.status;
+        assignmentData.submission = submission;
+      }
     } catch (error) {
-      console.error('Error fetching assignment details:', error);
-    } finally {
-      setLoading(false);
+      console.log("Submission status not available");
     }
+    setAssignment(assignmentData);
+  } catch (error) {
+    console.log("Unable to load assignment details");
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
   };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadDetails();
-    });
-    return unsubscribe;
-  }, [navigation, assignmentId]);
+  useEffect(() => {loadDetails();
+  const unsubscribe = navigation.addListener(
+    "focus",
+    loadDetails
+  );
+  return unsubscribe;
+  }, [assignmentId]);
 
   const getStatusStyle = (status: Assignment['status']) => {
     switch (status) {

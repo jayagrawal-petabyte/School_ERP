@@ -1,3 +1,5 @@
+import axios from "axios";
+
 import {
   Student,
   ClassInfo,
@@ -5,7 +7,43 @@ import {
   AttendanceRecord,
   DailyAttendance,
   StudentHistoryRecord,
-} from '../types';
+} from "../types";
+
+import { getToken } from "../utils/security";
+
+export const api = axios.create({
+  baseURL: "https://school-erp-p1g6.onrender.com/api",
+  timeout: 30000,
+  headers: {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  },
+});
+
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getToken("auth_token");
+    if (token) {
+      config.headers.Authorization =
+        `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.log(
+      "API Error:",
+      error.response?.data || error.message
+    );
+    return Promise.reject(error);
+  }
+);
 
 export {
   Student,

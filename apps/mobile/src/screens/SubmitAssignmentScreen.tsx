@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as DocumentPicker from "expo-document-picker";
 import {
   View,
   Text,
@@ -14,7 +15,7 @@ import {
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { AssignmentService } from '../services/api';
+import assignmentApi from "../services/assignmentApi";
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type SubmitAssignmentScreenRouteProp = RouteProp<RootStackParamList, 'SubmitAssignment'>;
@@ -35,74 +36,85 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   // File upload simulation states
-  const [attachedFile, setAttachedFile] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [attachedFile, setAttachedFile] = useState<{uri: string; name: string; type: string; size?: number; } | null>(null);
+  
+  const handleAddAttachment = async () => {
+  Alert.alert("Debug", "New handleAddAttachment is running");
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "image/*",
+      ],
+      copyToCacheDirectory: true,
+    });
 
-  // Simulated upload progress timer
-  useEffect(() => {
-    let interval: any;
-    if (isUploading) {
-      interval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setIsUploading(false);
-            setAttachedFile(`${subject.replace(/\s+/g, '_')}_Submission.pdf`);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 150);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isUploading]);
-
-  const handleAddAttachment = () => {
-    setUploadProgress(0);
-    setIsUploading(true);
-  };
-
-  const handleRemoveAttachment = () => {
-    setAttachedFile(null);
-    setUploadProgress(0);
-  };
-
-  const handleSubmit = async () => {
-    if (!attachedFile) {
-      Alert.alert('Attachment Required', 'Please attach your assignment file before submitting.', [
-        { text: 'OK' },
-      ]);
+    if (result.canceled) {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const response = await AssignmentService.submitAssignment(
-        assignmentId,
-        notes,
-        attachedFile
-      );
+    const file = result.assets[0];
 
-      if (response.success) {
-        Alert.alert('Success', 'Assignment submitted successfully!', [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error('Error submitting assignment:', error);
-      Alert.alert('Error', 'Failed to submit assignment. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    setAttachedFile({
+      uri: file.uri,
+      name: file.name,
+      type: file.mimeType || "application/octet-stream",
+      size: file.size,
+    });
+  } catch (error) {
+    console.log(error);
+
+    Alert.alert(
+      "Unable to select file",
+      "Please try again."
+    );
+  }
   };
+
+  const handleRemoveAttachment = () => {
+  setAttachedFile(null);
+  };
+
+  const handleSubmit = async () => {
+  if (!attachedFile) {
+    Alert.alert(
+      "Attachment Required",
+      "Please attach your assignment file before submitting."
+    );
+    return;
+  }
+  setIsSubmitting(true);
+  try {
+    await assignmentApi.submitAssignment(
+      assignmentId,
+      notes,
+      attachedFile
+    );
+    Alert.alert(
+      "Success",
+      "Assignment submitted successfully!",
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.goBack();
+          },
+        },
+      ]
+    );
+  } catch (error) {
+    console.error("Error submitting assignment:", error);
+
+    Alert.alert(
+      "Submission Failed",
+      "Please try again."
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,28 +160,22 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
         <View style={styles.formGroup}>
           <Text style={styles.fieldLabel}>Attachment</Text>
           
-          {!attachedFile && !isUploading && (
-            <TouchableOpacity style={styles.uploadTrigger} onPress={handleAddAttachment} activeOpacity={0.7}>
-              <Text style={styles.uploadIcon}>📎</Text>
-              <Text style={styles.uploadText}>Attach Document (PDF, Word, or JPG)</Text>
+          {!attachedFile && (
+            <TouchableOpacity
+                style={styles.uploadTrigger}
+                onPress={handleAddAttachment}
+                activeOpacity={0.7}>
+            <Text style={styles.uploadIcon}>📎</Text>
+            <Text style={styles.uploadText}>Attach Document (PDF, Word, or JPG)</Text>
             </TouchableOpacity>
-          )}
+            )}
 
-          {isUploading && (
-            <View style={styles.progressContainer}>
-              <Text style={styles.progressLabel}>Uploading file... {uploadProgress}%</Text>
-              <View style={styles.progressBarBackground}>
-                <View style={[styles.progressBarFill, { width: `${uploadProgress}%` }]} />
-              </View>
-            </View>
-          )}
-
-          {attachedFile && !isUploading && (
+          {attachedFile && (
             <View style={styles.attachedCard}>
               <Text style={styles.fileIcon}>📄</Text>
               <View style={styles.fileTextCol}>
-                <Text style={styles.fileName}>{attachedFile}</Text>
-                <Text style={styles.fileSize}>1.8 MB • PDF Document</Text>
+                <Text style={styles.fileName}>{attachedFile?.name}</Text>
+                <Text style={styles.fileSize}>{attachedFile?.size? `${(attachedFile.size / 1024 / 1024).toFixed(2)} MB`: ""}</Text>
               </View>
               <TouchableOpacity style={styles.removeBtn} onPress={handleRemoveAttachment}>
                 <Text style={styles.removeIcon}>🗑️</Text>
@@ -184,8 +190,7 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
         <TouchableOpacity
           style={[styles.submitButton, (!attachedFile || isSubmitting) && styles.submitButtonDisabled]}
           onPress={handleSubmit}
-          disabled={!attachedFile || isSubmitting}
-        >
+          disabled={!attachedFile || isSubmitting}>
           {isSubmitting ? (
             <ActivityIndicator size="small" color={COLORS.textLight} />
           ) : (

@@ -10,18 +10,18 @@ import {
   TextInput,
   StatusBar,
   Platform,
+  Alert,
+  RefreshControl,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { AssignmentService, Assignment } from '../services/api';
+import assignmentApi from "../services/assignmentApi";
+import { Assignment } from "../services/api";
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type AssignmentListScreenRouteProp = RouteProp<RootStackParamList, 'AssignmentList'>;
-type AssignmentListScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'AssignmentList'
->;
+type AssignmentListScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AssignmentList'>;
 
 interface Props {
   route: AssignmentListScreenRouteProp;
@@ -29,6 +29,18 @@ interface Props {
 }
 
 type FilterStatus = 'all' | 'pending' | 'submitted' | 'graded';
+const mapAssignment = (assignment: any): Assignment => {
+  return {
+    id: assignment.id,
+    classId: assignment.classId || "",
+    title: assignment.title,
+    subject: assignment.subject,
+    description: assignment.description,
+    dueDate: assignment.dueDate,
+    maxMarks: assignment.maxMarks || 0,
+    assignedBy: assignment.createdBy || "Teacher", status: "pending", obtainedMarks: undefined, feedback: undefined, submission: undefined,
+  };
+};
 
 export default function AssignmentListScreen({ route, navigation }: Props) {
   const { classId, className } = route.params;
@@ -37,37 +49,56 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<FilterStatus>('all');
   const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Reload assignments when screen gains focus or mounts
-  const loadData = async () => {
+  const loadData = async (showLoader = true) => {
+  if (showLoader) {
     setLoading(true);
-    try {
-      const data = await AssignmentService.getAssignments(classId);
-      setAssignments(data);
-    } catch (error) {
-      console.error('Error fetching assignments:', error);
-    } finally {
-      setLoading(false);
-    }
+  }
+  try {
+    const response = await assignmentApi.getAssignments();
+    console.log("Assignments:", response);
+    const formattedAssignments = response
+      .filter(
+        (item: any) =>
+          String(item.classId) === String(classId)
+      )
+      .map(mapAssignment);
+    setAssignments(formattedAssignments || []);
+  } catch (error) {
+    console.log(error);
+    Alert.alert(
+      "Unable to load assignments",
+    );
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
   };
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadData();
-    });
-    return unsubscribe;
+  loadData();
+  const unsubscribe = navigation.addListener("focus", () => {
+    loadData();
+  });
+  return unsubscribe;
   }, [navigation, classId]);
 
-  // Handle filter/search logic
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData(false);
+  };
+
   const filteredAssignments = useMemo(() => {
     return assignments.filter((item) => {
+      const query = searchQuery.trim().toLowerCase();
       const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.subject.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesStatus =
-        activeFilter === 'all' || item.status === activeFilter;
+        item.title.toLowerCase().includes(query) ||
+        item.subject.toLowerCase().includes(query);
 
+      const matchesStatus =
+        activeFilter === "all" || item.status === activeFilter;
       return matchesSearch && matchesStatus;
     });
   }, [assignments, searchQuery, activeFilter]);
@@ -214,6 +245,14 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No assignments found in this section.</Text>
             </View>
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
           }
         />
       )}

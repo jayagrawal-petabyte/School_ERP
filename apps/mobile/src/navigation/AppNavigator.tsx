@@ -6,8 +6,13 @@ import MarkAttendanceScreen from '../screens/MarkAttendanceScreen';
 import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
 import AttendanceReportsScreen from '../screens/AttendanceReportsScreen';
 import AssignmentListScreen from '../screens/AssignmentListScreen';
+import TeacherAssignmentListScreen from "../screens/TeacherAssignmentListScreen";
+import TeacherAssignmentDetailsScreen from "../screens/TeacherAssignmentDetailsScreen";
 import AssignmentDetailsScreen from '../screens/AssignmentDetailsScreen';
+import CreateAssignmentScreen from "../screens/CreateAssignmentScreen";
 import SubmitAssignmentScreen from '../screens/SubmitAssignmentScreen';
+import StudentSubmissionListScreen from "../screens/StudentSubmissionListScreen";
+import GradeSubmissionScreen from "../screens/GradeSubmissionScreen";
 import LeaveRequestScreen from '../screens/LeaveRequestScreen';
 import SplashScreen from '../screens/Auth/SplashScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
@@ -20,6 +25,10 @@ import DashboardScreen from '../screens/Auth/DashboardScreen';
 import ReportCardScreen from '../screens/ReportCard';
 import StudentResultsScreen from '../screens/StudentResults';
 import TeacherMarksEntryScreen from '../screens/TeacherMarksEntry';
+import NotificationListScreen from "../screens/NotificationListScreen";
+import NotificationDetailsScreen from "../screens/NotificationDetailsScreen";
+import CreateNotificationScreen from "../screens/CreateNotificationScreen";
+import NotificationHistoryScreen from "../screens/NotificationHistoryScreen";
 import { RootStackParamList } from './types';
 export { RootStackParamList };
 import { theme } from '../theme';
@@ -97,14 +106,39 @@ export default function AppNavigator() {
         options={{ title: 'Assignments' }}
       />
       <Stack.Screen
+        name="TeacherAssignmentList"
+        component={TeacherAssignmentListScreen}
+        options={{ title: "Teacher Assignments" }}
+      />
+      <Stack.Screen
+        name="CreateAssignment"
+        component={CreateAssignmentScreen}
+        options={{ title: "Create Assignment" }}
+      />
+      <Stack.Screen
         name="AssignmentDetails"
         component={AssignmentDetailsScreen}
         options={{ title: 'Assignment Details' }}
       />
       <Stack.Screen
+        name="TeacherAssignmentDetails"
+        component={TeacherAssignmentDetailsScreen}
+        options={{ title: "Assignment Details" }}
+      />
+      <Stack.Screen
         name="SubmitAssignment"
         component={SubmitAssignmentScreen}
         options={{ title: 'Submit Assignment' }}
+      />
+      <Stack.Screen
+        name="StudentSubmissionList"
+        component={StudentSubmissionListScreen}
+        options={{ title: "Student Submissions" }}
+      />
+      <Stack.Screen
+        name="GradeSubmission"
+        component={GradeSubmissionScreen}
+        options={{ title: "Grade Submission" }}
       />
       <Stack.Screen
         name="LeaveRequest"
@@ -125,6 +159,26 @@ export default function AppNavigator() {
         name="TeacherMarksEntry"
         component={TeacherMarksEntryScreen}
         options={{ title: 'Marks Entry' }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationListScreen}
+        options={{ title: "Notifications" }}
+      />
+      <Stack.Screen
+        name="NotificationDetails"
+        component={NotificationDetailsScreen}
+        options={{ title: "Notification Details" }}
+      />
+      <Stack.Screen
+        name="CreateNotification"
+        component={CreateNotificationScreen}
+        options={{ title: "Create Notification" }}
+      />
+      <Stack.Screen
+        name="NotificationHistory"
+        component={NotificationHistoryScreen}
+        options={{title: "Notification History",}}
       />
     </Stack.Navigator>
   );
