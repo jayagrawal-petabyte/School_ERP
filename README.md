@@ -72,27 +72,29 @@ The Assignments Module provides student task-tracking and submission features.
 
 ---
 
-### In Progress: Profile & Dashboard Module (Assigned to: Krishna Karanwal)
+### Completed Module: Profile & Dashboard Module (Assigned to: Krishna Karanwal)
 
-The Profile & Dashboard module provides the data layer for Student, Teacher, and Parent profiles, role-based dashboard cards, and now connects real login to the Home Dashboard. Dedicated Profile/Settings/Edit Profile screens are pending.
+The Profile & Dashboard module provides Student, Teacher, and Parent profile screens, Edit Profile, Settings, role-based dashboard cards, and connects real login to the Home Dashboard.
 
-#### Implemented so far:
+#### Features Implemented:
 1. **User & Profile Types (`types/index.ts`)**:
    - `AppUser` type matching the `users` table schema (id, role, full_name, account_status, timestamps).
    - `TeacherProfileView` and `ParentProfileView`, joining teacher-to-classes and parent-to-children relations.
    - `StudentProfileView` scaffolded with a placeholder class join, pending confirmation of the student-class relation in the schema.
    - `DashboardCard` type for role-based dashboard grid items.
-2. **Mock Service Layer (`profileApi.ts`)**:
-   - `ProfileService.getStudentProfile`, `getTeacherProfile`, `getParentProfile` — return role-specific profile data with related classes/children.
-   - `ProfileService.updateFullName` — validates and updates a user's name (mock write, follows Supabase self-edit assumption pending RLS confirmation).
-   - `DashboardService.getDashboardCards` — returns dashboard cards filtered by user role.
-   - `AuthService.login` — looks up a real sample user by identifier + password instead of a length-only mock check. Sample credentials provided below for Student, Teacher, and Parent roles.
-   - Settings intentionally excluded from this layer — handled as local device preferences, not backend-persisted.
-3. **Login & Dashboard Integration**:
-   - Fixed routing so Parent logins land on the real Home Dashboard instead of the old placeholder screen (previously only Student/Teacher did).
-   - Removed the manual role-switcher toggle when arriving via real login — dashboard now locks to the actual logged-in role. Toggle still available for dev/testing when Home is opened directly.
-   - Added a **My Account** section (My Profile, Settings cards) sourced live from `DashboardService`.
-   - Dashboard greeting name now pulled from `ProfileService` using the logged-in user's real profile.
+2. **Service Layer (`profileApi.ts`)**:
+   - `ProfileService.getStudentProfile`, `getTeacherProfile`, `getParentProfile`, `updateFullName` — profile read/write per role.
+   - `DashboardService.getDashboardCards` — dashboard cards filtered by user role.
+   - `AuthService.login` — looks up a real sample user by identifier + password. Sample credentials below.
+3. **Profile Screens (`StudentProfileScreen.tsx`, `TeacherProfileScreen.tsx`, `ParentProfileScreen.tsx`)**:
+   - Unified header design across all three roles, account details, status, class/children info.
+   - Parent Profile links to each child's own Student Profile.
+4. **Edit Profile (`EditProfileScreen.tsx`)**: Shared across all three roles, saves through `ProfileService`.
+5. **Settings (`SettingsScreen.tsx`)**: Notification and email alert toggles with save confirmation. Local device preferences only — no backend table for this.
+6. **Login & Dashboard Integration**:
+   - All three roles route to the real Home Dashboard on login; role-switcher toggle only shows in dev mode (no login).
+   - Dashboard search bar filters Academics and My Account cards live.
+   - Dashboard greeting name loads from `ProfileService`, with a loading skeleton instead of a flicker.
 
 #### Test credentials:
 | Role | Email | Password |
@@ -104,9 +106,11 @@ The Profile & Dashboard module provides the data layer for Student, Teacher, and
 | Parent | carlos.morales@gmail.com | carlos1234 |
 | Parent | ravi.sharma@gmail.com | ravi1234 |
 
-#### Pending:
-- Student, Teacher, Parent Profile screens, Settings screen, Edit Profile screen.
-- Confirm student-class relation in schema.
+#### Known gaps:
+- Student-class relation not yet confirmed in schema — `StudentProfileView.classes` is currently empty.
+- Settings preferences reset on app restart (no persistent storage wired up).
+
+---
 
 ### Service API Layer (`api.ts`)
 - Configured a simulated network client database with simulated delay.

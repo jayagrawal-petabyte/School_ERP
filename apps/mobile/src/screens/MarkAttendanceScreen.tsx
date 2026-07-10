@@ -16,6 +16,8 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService, Student, AttendanceRecord, AttendanceStatus } from '../services/api';
+import { API_CONFIG } from '../config/apiConfig';
+import attendanceApi from '../services/attendanceApi';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type MarkAttendanceScreenRouteProp = RouteProp<RootStackParamList, 'MarkAttendance'>;
@@ -42,7 +44,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
   useEffect(() => {
     async function loadData() {
       try {
-        const studentList = await AttendanceService.getStudents(classId);
+        const studentList = await attendanceApi.getStudents(classId);
         setStudents(studentList);
 
         const existingRecords = await AttendanceService.getAttendanceByDate(classId, selectedDate);
@@ -124,18 +126,39 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
         status: records[std.id],
       }));
 
-      const response = await AttendanceService.submitAttendance(
-        classId,
-        selectedDate,
-        submissionRecords
-      );
-
-      if (response.success) {
+      if (API_CONFIG.BASE_URL) {
+        const promises = students.map((std) => 
+          attendanceApi.markAttendance(
+            selectedDate,
+            std.id,
+            records[std.id] as 'present' | 'absent' | 'late',
+            classId
+          )
+        );
+        const results = await Promise.all(promises);
+        const failed = results.filter((res) => !res.success);
+        
+        if (failed.length > 0) {
+          throw new Error(`${failed.length} record(s) failed to save.`);
+        }
+        
         Alert.alert('Success', 'Attendance saved successfully.', [
           { text: 'OK', onPress: () => navigation.goBack() },
         ]);
+      } else {
+        const response = await AttendanceService.submitAttendance(
+          classId,
+          selectedDate,
+          submissionRecords
+        );
+
+        if (response.success) {
+          Alert.alert('Success', 'Attendance saved successfully.', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving attendance:', error);
       Alert.alert('Error', 'Failed to save. Please try again.');
     } finally {
@@ -228,24 +251,6 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
               A
             </Text>
           </TouchableOpacity>
-
-          {/* Early Off (E) */}
-          <TouchableOpacity
-            style={[
-              styles.statusButton,
-              currentStatus === 'earlyOff' ? styles.btnEarlyActive : styles.btnInactive,
-            ]}
-            onPress={() => handleMarkStatus(item.id, 'earlyOff')}
-          >
-            <Text
-              style={[
-                styles.statusBtnText,
-                currentStatus === 'earlyOff' ? styles.textActive : styles.textInactiveEarly,
-              ]}
-            >
-              E
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
@@ -300,10 +305,6 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
           <View style={[styles.statBox, { borderLeftColor: COLORS.absent }]}>
             <Text style={styles.statVal}>{stats.absent}</Text>
             <Text style={styles.statLabel}>Absent</Text>
-          </View>
-          <View style={[styles.statBox, { borderLeftColor: COLORS.earlyOff }]}>
-            <Text style={styles.statVal}>{stats.earlyOff}</Text>
-            <Text style={styles.statLabel}>Early Off</Text>
           </View>
           <View style={[styles.statBox, { borderLeftColor: COLORS.textMuted }]}>
             <Text style={styles.statVal}>{stats.unmarked}</Text>
