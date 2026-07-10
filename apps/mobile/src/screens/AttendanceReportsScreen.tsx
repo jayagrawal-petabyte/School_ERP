@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
   StyleSheet,
   ActivityIndicator,
-  SafeAreaView,
   ScrollView,
   FlatList,
   TouchableOpacity,
@@ -17,6 +17,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService } from '../services/api';
 import { API_CONFIG } from '../config/apiConfig';
 import attendanceApi from '../services/attendanceApi';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type AttendanceReportsScreenRouteProp = RouteProp<RootStackParamList, 'AttendanceReports'>;
@@ -199,7 +200,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
       
       {/* Custom Header */}
       <View style={styles.customHeader}>
@@ -208,11 +209,7 @@ export default function AttendanceReportsScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Analytics Report</Text>
         <TouchableOpacity style={styles.bellButton}>
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
+          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -248,7 +245,7 @@ const styles = StyleSheet.create({
   },
   customHeader: {
     height: 56,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#2D2C72',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -266,12 +263,12 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   bellButton: {
     width: 38,

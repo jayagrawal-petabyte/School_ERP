@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useRoute } from '@react-navigation/native';
+import { getToken } from '../utils/security';
 
 import HomeScreen from '../screens/HomeScreen';
 import AttendanceListScreen from '../screens/AttendanceListScreen';
+import AttendanceHistoryScreen from '../screens/AttendanceHistoryScreen';
 import AssignmentListScreen from '../screens/AssignmentListScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
+import TeacherProfileScreen from '../screens/TeacherProfileScreen';
+import ParentProfileScreen from '../screens/ParentProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import StudentResultsScreen from '../screens/StudentResults';
 import LeaveRequestScreen from '../screens/LeaveRequestScreen';
@@ -17,13 +21,24 @@ const Drawer = createDrawerNavigator();
 
 export default function DrawerNavigator() {
   const route: any = useRoute();
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>('student');
+
+  useEffect(() => {
+    async function loadRole() {
+      const savedRole = await getToken('user_role');
+      if (savedRole === 'teacher' || savedRole === 'student' || savedRole === 'parent') {
+        setRole(savedRole as any);
+      }
+    }
+    loadRole();
+  }, []);
 
   return (
     <Drawer.Navigator
       initialRouteName="Dashboard"
       drawerContent={(props: any) => <DrawerContent {...props} />}
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         drawerStyle: {
           width: 290,
           backgroundColor: '#2D2C72',
@@ -42,13 +57,22 @@ export default function DrawerNavigator() {
         initialParams={route.params}
         options={{
           title: 'Dashboard',
+          headerShown: false,
         }}
       />
 
-      <Drawer.Screen
-        name="Attendance"
-        component={AttendanceListScreen}
-      />
+      {role === 'teacher' ? (
+        <Drawer.Screen
+          name="Attendance"
+          component={AttendanceListScreen}
+        />
+      ) : (
+        <Drawer.Screen
+          name="Attendance"
+          component={AttendanceHistoryScreen as any}
+          initialParams={route.params}
+        />
+      )}
 
       <Drawer.Screen
         name="Assignments"
@@ -57,22 +81,29 @@ export default function DrawerNavigator() {
 
       <Drawer.Screen
         name="Results"
-        component={StudentResultsScreen}
+        component={StudentResultsScreen as any}
       />
 
       <Drawer.Screen
         name="Report Card"
-        component={ReportCardScreen}
+        component={ReportCardScreen as any}
       />
 
       <Drawer.Screen
         name="Leave"
-        component={LeaveRequestScreen}
+        component={LeaveRequestScreen as any}
       />
 
       <Drawer.Screen
         name="Profile"
-        component={StudentProfileScreen as any}
+        component={
+          role === 'teacher'
+            ? TeacherProfileScreen
+            : role === 'parent'
+            ? ParentProfileScreen
+            : StudentProfileScreen as any
+        }
+        initialParams={route.params}
       />
 
       <Drawer.Screen

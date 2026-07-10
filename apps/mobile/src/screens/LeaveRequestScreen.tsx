@@ -6,13 +6,14 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  SafeAreaView,
   FlatList,
   Alert,
   StatusBar,
   Platform,
   ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { LeaveRequestService, LeaveRequest } from '../services/api';
@@ -145,23 +146,22 @@ export default function LeaveRequestScreen({ navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
 
       {/* Header */}
       <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => (navigation as any).openDrawer()}>
+          <Ionicons name="menu" size={26} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Apply Leave</Text>
-        <TouchableOpacity style={styles.bellButton}>
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
+        <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
+          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+          <View style={styles.bellBadge} />
         </TouchableOpacity>
       </View>
+
+      <View style={styles.container}>
 
       {/* Tabs segment */}
       <View style={styles.tabContainer}>
@@ -286,15 +286,19 @@ export default function LeaveRequestScreen({ navigation }: Props) {
           )}
         </View>
       )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#2D2C72',
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   loadingContainer: {
     flex: 1,
@@ -309,14 +313,13 @@ const styles = StyleSheet.create({
   },
   customHeader: {
     height: 56,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#2D2C72',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingHorizontal: SPACING.lg,
   },
+  bellBadge: { position: 'absolute', top: 2, right: 2, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
   backButton: {
     width: 38,
     height: 38,
@@ -332,42 +335,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bellOutline: {
-    width: 16,
-    height: 18,
-    alignItems: 'center',
-  },
-  bellCap: {
-    width: 4,
-    height: 2,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  bellBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    marginTop: 1,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
-    marginTop: 1,
+    padding: SPACING.xs,
+    position: 'relative',
   },
   tabContainer: {
     flexDirection: 'row',

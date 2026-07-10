@@ -78,68 +78,67 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
 
     try {
-      
-
-     let loginSuccess = false;
-let resolvedUserId: string | undefined;
+      let loginSuccess = false;
+      let resolvedUserId: string | undefined;
 
       const authResult = await authApi.login(
-  identifier,
-  password,
-  selectedRole.key
-);
+        identifier,
+        password,
+        selectedRole.key
+      );
 
-if (!authResult.success) {
-  recordFailedAttempt(identifier);
+      if (!authResult.success) {
+        recordFailedAttempt(identifier);
 
-  const remaining = getRemainingAttempts(identifier);
+        const remaining = getRemainingAttempts(identifier);
 
-  setPasswordError(
-    remaining > 0
-      ? `${authResult.message}. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
-      : 'Account locked. Too many failed attempts.'
-  );
+        setPasswordError(
+          remaining > 0
+            ? `${authResult.message}. ${remaining} attempt${remaining > 1 ? 's' : ''} remaining.`
+            : 'Account locked. Too many failed attempts.'
+        );
 
-  return;
-}
+        return;
+      }
 
-await storeToken('auth_token', authResult.accessToken);
-await storeToken('refresh_token', authResult.refreshToken);
+      await storeToken('auth_token', (authResult as any).accessToken);
+      await storeToken('refresh_token', (authResult as any).refreshToken);
 
-resolvedUserId =
-  authResult.user?.id ||
-  authResult.user?.user_metadata?.id;
-loginSuccess = true;
-
-
+      resolvedUserId =
+        (authResult as any).user?.id ||
+        (authResult as any).user?.user_metadata?.id;
+      loginSuccess = true;
 
       if (loginSuccess) {
-  resetLoginAttempts(identifier);
+        resetLoginAttempts(identifier);
 
-  await storeToken('user_role', selectedRole.key);
+        await storeToken('user_role', selectedRole.key);
+        if (resolvedUserId) {
+          await storeToken('user_id', resolvedUserId);
+        }
 
-  if (selectedRole.requiresMFA) {
-    navigation.navigate('MFA', {
-      role: selectedRole,
-    });
-  } else if (
-    selectedRole.key === 'student' ||
-    selectedRole.key === 'teacher' ||
-    selectedRole.key === 'parent'
-  ) {
-    navigation.replace('Home', {
-      initialRole: selectedRole.key as
-        | 'student'
-        | 'teacher'
-        | 'parent',
-      userId: resolvedUserId,
-    });
-  } else {
-    navigation.replace('Dashboard', {
-      role: selectedRole,
-    });
-  }
-}
+        if (selectedRole.requiresMFA) {
+          navigation.navigate('MFA', {
+            role: selectedRole,
+          });
+        } else if (
+          selectedRole.key === 'student' ||
+          selectedRole.key === 'teacher' ||
+          selectedRole.key === 'parent'
+        ) {
+          navigation.replace('Home', {
+            initialRole: selectedRole.key as
+              | 'student'
+              | 'teacher'
+              | 'parent',
+            userId: resolvedUserId,
+          });
+        } else {
+          navigation.replace('Dashboard', {
+            role: selectedRole,
+          });
+        }
+      }
     } catch (error) {
       Alert.alert('Error', 'Unable to connect. Please try again.');
     } finally {
@@ -171,8 +170,6 @@ loginSuccess = true;
           {/* Heading */}
           <Text style={styles.heading}>Sign in</Text>
           <Text style={styles.subheading}>{selectedRole.sub}</Text>
-
-
 
           {/* Email or Mobile */}
           <SecureInput

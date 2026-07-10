@@ -6,13 +6,14 @@ import {
     FlatList,
     TouchableOpacity,
     ActivityIndicator,
-    SafeAreaView,
     TextInput,
     StatusBar,
     Platform,
     Alert,
     RefreshControl,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -44,7 +45,8 @@ const mapAssignment = (assignment: any): Assignment => {
 };
 
 export default function AssignmentListScreen({ route, navigation }: Props) {
-    const { classId, className } = route.params;
+  const classId = route?.params?.classId;
+  const className = route?.params?.className || 'All Classes';
 
     const [assignments, setAssignments] = useState<Assignment[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -63,7 +65,7 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
             const formattedAssignments = await Promise.all(
                 response
                     .filter(
-                        (item: any) => String(item.classId) === String(classId),
+                        (item: any) => !classId || String(item.classId) === String(classId),
                     )
                     .map(async (item: any) => {
                         const assignment = mapAssignment(item);
@@ -548,4 +550,36 @@ const styles = StyleSheet.create({
         fontSize: FONT_SIZE.xs,
         color: COLORS.textSecondary,
     },
+  },
+  statusCol: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 4,
+    borderWidth: 1,
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  statusText: {
+    fontSize: 9,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+  scoreText: {
+    fontSize: 10,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+  },
+  emptyContainer: {
+    paddingVertical: SPACING.xl * 2,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+  },
+>>>>>>> 62f2be6 (Fix attendance and login flow bugs)
 });

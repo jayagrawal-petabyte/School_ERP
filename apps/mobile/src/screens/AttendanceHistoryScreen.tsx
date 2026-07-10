@@ -5,13 +5,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  SafeAreaView,
   TextInput,
   ScrollView,
   FlatList,
   StatusBar,
   Platform,
+  Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -39,10 +41,11 @@ const MONTH_NAMES = [
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 export default function AttendanceHistoryScreen({ route, navigation }: Props) {
-  const { classId, defaultStudentName } = route.params;
+  const classId = route?.params?.classId;
+  const defaultStudentName = route?.params?.defaultStudentName;
 
   // Search Filter States
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
   const [searchQuery, setSearchQuery] = useState<string>(defaultStudentName || ''); // Default empty or student name
   const [activeSearch, setActiveSearch] = useState<string>(defaultStudentName || ''); // Confirmed search query
   const [standard] = useState<string>('Standard - 8');
@@ -54,8 +57,8 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
   // Student Calendar mode states
-  const [currentYear, setCurrentYear] = useState<number>(2023);
-  const [currentMonth, setCurrentMonth] = useState<number>(5); // Default May 2023
+  const [currentYear, setCurrentYear] = useState<number>(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth() + 1);
   const [studentRecords, setStudentRecords] = useState<StudentHistoryRecord[]>([]);
   const [targetStudent, setTargetStudent] = useState<Student | null>(null);
 
@@ -67,8 +70,8 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
     setLoading(true);
     try {
       const [historyLogs, studentList] = await Promise.all([
-        AttendanceService.getClassAttendanceHistory(classId),
-        AttendanceService.getStudents(classId),
+        attendanceApi.viewAttendance(classId),
+        attendanceApi.getStudents(classId),
       ]);
       setClassHistory(historyLogs);
       setStudents(studentList);
@@ -80,12 +83,46 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
     }
   };
 
+  // Initial user setup
   useEffect(() => {
-    if (!activeSearch) {
-      loadClassLogs();
-    } else {
-      loadStudentCalendar();
-    }
+    const initUser = async () => {
+      const { getToken } = await import('../utils/security');
+      const savedRole = await getToken('user_role');
+      if (savedRole === 'student' || savedRole === 'teacher' || savedRole === 'parent') {
+        setRole(savedRole as any);
+      }
+      
+      if (!activeSearch) {
+        if (savedRole === 'student') {
+          const userId = (await getToken('user_id')) || route?.params?.userId;
+          if (userId) {
+            const { ProfileService } = await import('../services/profileApi');
+            const profile = await ProfileService.getStudentProfile(userId);
+            if (profile) {
+              setSearchQuery(profile.full_name);
+              setActiveSearch(profile.full_name);
+              return;
+            }
+          }
+        } else if (savedRole === 'parent') {
+          const userId = (await getToken('user_id')) || route?.params?.userId;
+          if (userId) {
+            const { ProfileService } = await import('../services/profileApi');
+            const profile = await ProfileService.getParentProfile(userId);
+            if (profile && profile.children && profile.children.length > 0) {
+              // Default to first child for calendar view
+              setSearchQuery(profile.children[0].full_name);
+              setActiveSearch(profile.children[0].full_name);
+              return;
+            }
+          }
+        }
+        loadClassLogs();
+      } else {
+        loadStudentCalendar();
+      }
+    };
+    initUser();
   }, [classId, activeSearch, currentYear, currentMonth]);
 
   // Load calendar records for a specific student search
@@ -106,18 +143,20 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
         if (API_CONFIG.BASE_URL) {
           const responseData = await attendanceApi.viewAttendance(classId);
           records = responseData
-            .filter((item: any) => {
-              const itemDate = new Date(item.date);
-              return (
-                item.student_id === foundStudent.id &&
+            .map((daily: any) => {
+              const itemDate = new Date(daily.date);
+              if (
                 itemDate.getFullYear() === currentYear &&
                 (itemDate.getMonth() + 1) === currentMonth
-              );
+              ) {
+                const stdRecord = daily.records?.find((r: any) => r.studentId === foundStudent.id);
+                if (stdRecord) {
+                  return { date: daily.date, status: stdRecord.status as AttendanceStatus };
+                }
+              }
+              return null;
             })
-            .map((item: any) => ({
-              date: item.date,
-              status: item.status as AttendanceStatus,
-            }));
+            .filter(Boolean) as StudentHistoryRecord[];
         } else {
           records = await AttendanceService.getStudentMonthlyAttendance(
             foundStudent.name,
@@ -319,26 +358,24 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
       
       {/* Visual Header */}
       <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => (navigation as any).openDrawer()}>
+          <Ionicons name="menu" size={26} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Attendance History</Text>
-        <TouchableOpacity style={styles.bellButton}>
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
+        <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
+          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+          <View style={styles.bellBadge} />
         </TouchableOpacity>
       </View>
 
+      <View style={styles.container}>
       {/* Top Search Controls (Visible only for Teachers/Admin) */}
-      {!defaultStudentName && (
+      {role === 'teacher' && (
         <View style={styles.filterSection}>
 
           <View style={styles.formContainer}>
@@ -388,7 +425,9 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
           {targetStudent ? (
             <View style={styles.studentProfileSummary}>
               <Text style={styles.studentProfileName}>{targetStudent.name}</Text>
-              <Text style={styles.studentProfileRoll}>Roll Number: {targetStudent.rollNumber} | {standard} - {division}</Text>
+              {targetStudent.rollNumber && targetStudent.rollNumber !== 'N/A' ? (
+                <Text style={styles.studentProfileRoll}>Roll Number: {targetStudent.rollNumber}</Text>
+              ) : null}
             </View>
           ) : (
             <View style={styles.studentProfileSummary}>
@@ -495,6 +534,7 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
           }
         />
       )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -517,16 +557,19 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
   },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#2D2C72',
+  },
   customHeader: {
     height: 56,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#2D2C72',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingHorizontal: SPACING.lg,
   },
+  bellBadge: { position: 'absolute', top: 2, right: 2, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
   backButton: {
     width: 38,
     height: 38,
@@ -542,14 +585,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
+    color: '#FFFFFF',
   },
   bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
+    padding: SPACING.xs,
+    position: 'relative',
   },
   bellOutline: {
     width: 16,

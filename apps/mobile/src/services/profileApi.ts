@@ -1,56 +1,18 @@
-import { AppUser, ClassRecord, StudentProfileView, TeacherProfileView, ParentProfileView, DashboardCard, UserRole } from '../types';
+import { AppUser, StudentProfileView, TeacherProfileView, ParentProfileView, DashboardCard, UserRole } from '../types';
+import { API_CONFIG, getAuthHeaders } from '../config/apiConfig';
 
-const delay = (ms: number = 300) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const USERS: Record<string, AppUser> = {
-  '101': mkUser('101', 'student', 'Lucas Henry'),
-  '102': mkUser('102', 'student', 'Sofia Morales'),
-  '103': mkUser('103', 'student', 'Henry Conaway'),
-  '104': mkUser('104', 'student', 'Daniel Rowell'),
-  '105': mkUser('105', 'student', 'Aarav Sharma'),
-  '106': mkUser('106', 'student', 'Ananya Iyer'),
-
-  '201': mkUser('201', 'student', 'Aditya Das'),
-  '202': mkUser('202', 'student', 'Bhavna Roy'),
-
-  't1': mkUser('t1', 'teacher', 'Mrs. Shradha Sen'),
-  't2': mkUser('t2', 'teacher', 'Mr. Rajesh Rawat'),
-  't3': mkUser('t3', 'teacher', 'Mrs. Priya Sharma'),
-
-  'p1': mkUser('p1', 'parent', 'Mr. Carlos Morales'),
-  'p2': mkUser('p2', 'parent', 'Mr. Ravi Sharma'),
-};
-
-function mkUser(id: string, role: UserRole, full_name: string): AppUser {
-  return {
-    id,
-    role,
-    full_name,
-    account_status: 'active',
-    failed_login_attempts: 0,
-    account_locked_until: null,
-    last_login_at: '2026-07-02T08:00:00Z',
-    created_at: '2025-06-01T00:00:00Z',
-    updated_at: '2025-06-01T00:00:00Z',
-  };
-}
-
-const CLASSES: Record<string, ClassRecord> = {
-  'c1': { id: 'c1', class_name: 'Standard - 8', section: 'C', created_at: '2025-06-01T00:00:00Z' },
-  'c2': { id: 'c2', class_name: 'Standard - 10', section: 'B', created_at: '2025-06-01T00:00:00Z' },
-};
-
-const CLASS_TEACHERS = [
-  { id: 'ct1', teacher_id: 't1', class_id: 'c1', created_at: '2025-06-01T00:00:00Z' },
-  { id: 'ct2', teacher_id: 't3', class_id: 'c1', created_at: '2025-06-01T00:00:00Z' },
-  { id: 'ct3', teacher_id: 't2', class_id: 'c2', created_at: '2025-06-01T00:00:00Z' },
-];
-
-const PARENT_STUDENTS = [
-  { id: 'ps1', parent_id: 'p1', student_id: '102', created_at: '2025-06-01T00:00:00Z' },
-  { id: 'ps2', parent_id: 'p2', student_id: '105', created_at: '2025-06-01T00:00:00Z' },
-  { id: 'ps3', parent_id: 'p1', student_id: '103', created_at: '2025-06-01T00:00:00Z' },
-];
+// Normalize backend camelCase fields → snake_case fields expected by the UI
+const mapUser = (raw: any): AppUser => ({
+  id: raw.id,
+  role: raw.role,
+  full_name: raw.fullName || raw.full_name || '',
+  account_status: raw.accountStatus || raw.account_status || 'active',
+  failed_login_attempts: raw.failedLoginAttempts ?? raw.failed_login_attempts ?? 0,
+  account_locked_until: raw.accountLockedUntil ?? raw.account_locked_until ?? null,
+  last_login_at: raw.lastLoginAt || raw.last_login_at || null,
+  created_at: raw.createdAt || raw.created_at || '',
+  updated_at: raw.updatedAt || raw.updated_at || '',
+});
 
 const DASHBOARD_CARDS: DashboardCard[] = [
   { id: 'd1', title: 'My Profile', emoji: '👤', color: '#EFF6FF', route: 'StudentProfile', forRole: ['student'] },
@@ -61,63 +23,72 @@ const DASHBOARD_CARDS: DashboardCard[] = [
 
 export const ProfileService = {
   getStudentProfile: async (studentId: string): Promise<StudentProfileView | null> => {
-    await delay(200);
-    const user = USERS[studentId];
-    if (!user || user.role !== 'student') return null;
-
-    // TODO: no student→class table in schema doc — confirm the real join,
-    // returning empty for now so the UI can still render a placeholder
-    return { ...user, classes: [] };
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/students/${studentId}`, { method: 'GET', headers });
+      const raw = response.ok
+        ? (await response.json()).data
+        : (await (await fetch(`${API_CONFIG.BASE_URL}/api/users/${studentId}`, { method: 'GET', headers })).json()).data;
+      if (!raw) return null;
+      return { ...mapUser(raw), classes: raw.classes || [] } as StudentProfileView;
+    } catch (error) {
+      console.error('Error fetching student profile:', error);
+      return null;
+    }
   },
 
   getTeacherProfile: async (teacherId: string): Promise<TeacherProfileView | null> => {
-    await delay(200);
-    const user = USERS[teacherId];
-    if (!user || user.role !== 'teacher') return null;
-
-    const classIds = CLASS_TEACHERS.filter((row) => row.teacher_id === teacherId).map((row) => row.class_id);
-    const classes = classIds.map((id) => CLASSES[id]).filter(Boolean);
-
-    return { ...user, classes };
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/teachers/${teacherId}`, { method: 'GET', headers });
+      const raw = response.ok
+        ? (await response.json()).data
+        : (await (await fetch(`${API_CONFIG.BASE_URL}/api/users/${teacherId}`, { method: 'GET', headers })).json()).data;
+      if (!raw) return null;
+      return { ...mapUser(raw), classes: raw.classes || [] } as TeacherProfileView;
+    } catch (error) {
+      console.error('Error fetching teacher profile:', error);
+      return null;
+    }
   },
 
   getParentProfile: async (parentId: string): Promise<ParentProfileView | null> => {
-    await delay(200);
-    const user = USERS[parentId];
-    if (!user || user.role !== 'parent') return null;
-
-    const childIds = PARENT_STUDENTS.filter((row) => row.parent_id === parentId).map((row) => row.student_id);
-    const children = childIds.map((id) => USERS[id]).filter(Boolean);
-
-    return { ...user, children };
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/parents/${parentId}`, { method: 'GET', headers });
+      const raw = response.ok
+        ? (await response.json()).data
+        : (await (await fetch(`${API_CONFIG.BASE_URL}/api/users/${parentId}`, { method: 'GET', headers })).json()).data;
+      if (!raw) return null;
+      return { ...mapUser(raw), children: raw.children || [] } as ParentProfileView;
+    } catch (error) {
+      console.error('Error fetching parent profile:', error);
+      return null;
+    }
   },
 
   updateFullName: async (
     userId: string,
     fullName: string
   ): Promise<{ success: boolean; message: string }> => {
-    await delay(300);
-    const user = USERS[userId];
-    if (!user) {
-      return { success: false, message: 'User not found' };
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/${userId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ fullName }),
+      });
+      if (!response.ok) return { success: false, message: 'Failed to update profile' };
+      return { success: true, message: 'Profile updated successfully' };
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      return { success: false, message: error.message || 'Error occurred.' };
     }
-    if (user.account_status !== 'active') {
-      return { success: false, message: 'Account is inactive' };
-    }
-    const trimmed = fullName.trim();
-    if (trimmed.length === 0 || trimmed.length > 100) {
-      return { success: false, message: 'Name must be between 1 and 100 characters' };
-    }
-
-    user.full_name = trimmed;
-    user.updated_at = new Date().toISOString();
-    return { success: true, message: 'Profile updated successfully' };
   },
 };
 
 export const DashboardService = {
   getDashboardCards: async (role: UserRole): Promise<DashboardCard[]> => {
-    await delay(150);
     return DASHBOARD_CARDS.filter((card) => card.forRole.includes(role));
   },
 };

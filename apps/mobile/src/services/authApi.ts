@@ -1,8 +1,7 @@
 import { API_CONFIG } from '../config/apiConfig';
 import { getToken, removeToken } from '../utils/security';
 
-const delay = (ms: number = 300) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+
 
 const authApi = {
   // ================= LOGIN =================
@@ -119,44 +118,50 @@ const authApi = {
     }
   },
 
-  // ================= TEMPORARY MOCKS =================
-  // Replace these when backend APIs become available.
-
-  forgotPassword: async (_identifier: string) => {
-    await delay();
-
-    return {
-      success: true,
-      message: 'OTP sent successfully',
-    };
-  },
-
-  verifyOTP: async (_identifier: string, otp: string) => {
-    await delay();
-
-    if (otp === '123456') {
-      return {
-        success: true,
-        message: 'OTP verified',
-      };
+  // ================= PASSWORD RESET =================
+  forgotPassword: async (identifier: string) => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier }),
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Forgot Password Error:', error);
+      return { success: false, message: 'Unable to connect to server' };
     }
-
-    return {
-      success: false,
-      message: 'Invalid OTP',
-    };
   },
 
-  resetPassword: async (
-    _identifier: string,
-    _newPassword: string
-  ) => {
-    await delay();
+  verifyOTP: async (identifier: string, otp: string) => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier, otp }),
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Verify OTP Error:', error);
+      return { success: false, message: 'Unable to connect to server' };
+    }
+  },
 
-    return {
-      success: true,
-      message: 'Password reset successfully',
-    };
+  resetPassword: async (identifier: string, newPassword: string) => {
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier, newPassword }),
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Reset Password Error:', error);
+      return { success: false, message: 'Unable to connect to server' };
+    }
   },
 };
 

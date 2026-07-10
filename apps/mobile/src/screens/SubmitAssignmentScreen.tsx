@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as DocumentPicker from "expo-document-picker";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  SafeAreaView,
   Alert,
   StatusBar,
   Platform,

@@ -27,6 +27,12 @@ export type RootStackParamList = {
   NotificationDetails: {notification: any;};
   CreateNotification: undefined;
   NotificationHistory: undefined;
+  
+  // Drawer Navigation Routes
+  Attendance: undefined;
+  Assignments: { classId?: string; className?: string } | undefined;
+  Results: undefined;
+  Leave: undefined;
 
   // Exams & Results Module
   ReportCard: undefined;

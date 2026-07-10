@@ -82,7 +82,7 @@ export default function DrawerContent(props: any) {
             />
           )}
           labelStyle={styles.label}
-          onPress={() => props.navigation.navigate('DrawerHome')}
+          onPress={() => props.navigation.navigate('Dashboard')}
         />
 
         <DrawerItem
