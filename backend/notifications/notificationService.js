@@ -10,7 +10,8 @@ function cleanText(value) {
 }
 
 function hasHtmlTag(value) {
-  return /<[^>]+>/i.test(String(value || ''));
+  const s = String(value || '');
+  return s.includes('<') || s.includes('>');
 }
 
 function readUser(req) {
@@ -107,9 +108,15 @@ function validatePayload(payload) {
 }
 
 async function createNotification(payload, user, token) {
-  await requireStaff(user, token);
+  const role = await requireStaff(user, token);
 
   const notification = validatePayload(payload);
+
+  if (role === 'teacher' && notification.targetAudience === 'all') {
+    const error = new Error('Teachers cannot send notifications to all users. Use class audience instead.');
+    error.statusCode = 403;
+    throw error;
+  }
 
   return store.addNotification({
     ...notification,
