@@ -263,7 +263,7 @@ export default function HomeScreen({ route, navigation }: Props) {
     <Text style={styles.avatarLetter}>{avatarLetter}</Text>
   </View>
 </View>
-
+</View>
          
 
       {!initialRole && (

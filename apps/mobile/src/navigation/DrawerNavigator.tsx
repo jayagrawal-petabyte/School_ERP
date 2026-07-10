@@ -6,6 +6,9 @@ import AttendanceListScreen from '../screens/AttendanceListScreen';
 import AssignmentListScreen from '../screens/AssignmentListScreen';
 import StudentProfileScreen from '../screens/StudentProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import StudentResultsScreen from '../screens/StudentResults';
+import LeaveRequestScreen from '../screens/LeaveRequestScreen';
+import ReportCardScreen from '../screens/ReportCard';
 
 import DrawerContent from './DrawerContent';
 
@@ -30,9 +33,10 @@ export default function DrawerNavigator() {
       }}
     >
       <Drawer.Screen
-        name="Dashboard"
-        component={HomeScreen}
-      />
+  name="Home"
+  component={HomeScreen}
+  options={{ title: 'Dashboard' }}
+/>
 
       <Drawer.Screen
         name="Attendance"
@@ -52,7 +56,22 @@ export default function DrawerNavigator() {
       <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
+        
       />
+      <Drawer.Screen
+    name="Results"
+    component={StudentResultsScreen}
+/>
+
+<Drawer.Screen
+    name="Report Card"
+    component={ReportCardScreen}
+/>
+
+<Drawer.Screen
+    name="Leave"
+    component={LeaveRequestScreen}
+/>
     </Drawer.Navigator>
   );
 }
