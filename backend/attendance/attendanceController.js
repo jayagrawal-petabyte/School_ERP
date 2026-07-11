@@ -186,9 +186,9 @@ const getStudentsByClass = async (req, res) => {
         }
 
         const { data, error } = await supabase
-            .from('class_students') 
+            .from('students') 
             .select(`
-                student_id,
+                class_id,
                 users (
                     id,
                     name,
