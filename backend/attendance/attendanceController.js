@@ -121,10 +121,20 @@ const viewAttendance = async (req, res) => {
         let query = supabase.from('attendance_records').select('*');
 
         if (normalizedRole === 'student') {
-            console.log(`Enforcing structural query isolation. Filtering target student_id: ${userId}`);
             query = query.eq('student_id', userId);
+        } else if (normalizedRole === 'parent') {
+            const { data: linkedStudents, error: linkError } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', userId);
+            if (linkError) throw linkError;
+            const studentIds = (linkedStudents || []).map(r => r.student_id);
+            if (studentIds.length === 0) {
+                return res.status(200).json({ message: "No linked students found.", scope: "Parent", data: [] });
+            }
+            query = query.in('student_id', studentIds);
+            if (date) query = query.eq('date', date);
         } else {
-            console.log(`Role '${role}' authorized to request cross-sectional attendance logs.`);
             if (classId) query = query.eq('class_id', classId);
             if (date) query = query.eq('date', date);
         }
@@ -134,8 +144,8 @@ const viewAttendance = async (req, res) => {
         if (error) throw error;
 
         return res.status(200).json({ 
-            message: normalizedRole === 'student' ? "Displaying your personal attendance records securely." : "Displaying requested multi-user attendance records.",
-            scope: normalizedRole === 'student' ? "Individual" : "Administrative",
+            message: normalizedRole === 'student' ? "Displaying your personal attendance records securely." : normalizedRole === 'parent' ? "Displaying linked student attendance records." : "Displaying requested multi-user attendance records.",
+            scope: normalizedRole === 'student' ? "Individual" : normalizedRole === 'parent' ? "Parent" : "Administrative",
             data: data
         });
     } catch (error) {
@@ -185,11 +195,24 @@ const getStudentsByClass = async (req, res) => {
             return res.status(400).json({ error: "classId parameter is required." });
         }
 
+        const { data: attendanceRows, error: attendanceError } = await supabase
+            .from('attendance_records')
+            .select('student_id')
+            .eq('class_id', classId);
+
+        if (attendanceError) throw attendanceError;
+
+        const studentIds = [...new Set((attendanceRows || []).map(r => r.student_id))];
+
+        if (studentIds.length === 0) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
         const { data, error } = await supabase
-            .from('users') 
-            .select('id, name, email, role, class_id')
-            .eq('class_id', classId)
-            .ilike('role', 'student');
+            .from('users')
+            .select('id, full_name, email, role')
+            .in('id', studentIds)
+            .eq('role', 'student');
 
         if (error) throw error;
 
