@@ -21,7 +21,7 @@ export const AttendanceService = {
   getClasses: async (): Promise<ClassInfo[]> => {
     try {
       const headers = await getAuthHeaders();
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/classes`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/attendance/classes`, {
         method: 'GET',
         headers,
       });
@@ -37,7 +37,7 @@ export const AttendanceService = {
   getStudents: async (classId: string): Promise<Student[]> => {
     try {
       const headers = await getAuthHeaders();
-      const response = await fetch(`${API_CONFIG.BASE_URL}/api/users/students?classId=${classId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/api/attendance/students?classId=${classId}`, {
         method: 'GET',
         headers,
       });
