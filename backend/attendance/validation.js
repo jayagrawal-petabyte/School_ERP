@@ -6,9 +6,9 @@ const validateAttendanceDate = (dateString) => {
 
     const currentDate = new Date();
     
-    const inputYear = inputDate.getUTCFullYear();
-    const inputMonth = inputDate.getUTCMonth();
-    const inputDay = inputDate.getUTCDate();
+    const inputYear = inputDate.getFullYear();
+    const inputMonth = inputDate.getMonth();
+    const inputDay = inputDate.getDate();
 
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();

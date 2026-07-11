@@ -186,21 +186,14 @@ const getStudentsByClass = async (req, res) => {
         }
 
         const { data, error } = await supabase
-            .from('students') 
-            .select(`
-                class_id,
-                users (
-                    id,
-                    name,
-                    email
-                )
-            `)
-            .eq('class_id', classId);
+            .from('users') 
+            .select('id, name, email, role, class_id')
+            .eq('class_id', classId)
+            .ilike('role', 'student');
 
         if (error) throw error;
 
-        const roster = data.map(item => item.users).filter(Boolean);
-        return res.status(200).json({ success: true, data: roster });
+        return res.status(200).json({ success: true, data: data });
     } catch (error) {
         console.error("Error in getStudentsByClass:", error);
         return res.status(500).json({ success: false, error: "Internal server error." });
