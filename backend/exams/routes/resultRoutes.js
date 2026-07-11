@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-const resultOwnershipContext = async (req) => resultService.getOwnershipContext(req.params.id);
+const resultOwnershipContext = async (req) => resultService.getOwnershipContext(req.params.id, req.user);
 
 router.post(
   '/',

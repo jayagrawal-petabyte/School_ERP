@@ -14,14 +14,15 @@ const normalizeSubjectPayload = (payload) => {
   };
 };
 
-const hasDuplicateSubCode = async ({ class_id, sub_code }, excludeId = null) => {
+const hasDuplicateSubCode = async ({ class_id, sub_code }, excludeId = null, user) => {
   if (!sub_code || !class_id) {
     return false;
   }
 
   const response = await subjectRepository.getAllSubjects(
     { classId: class_id, subCode: sub_code },
-    { page: 1, limit: 10 }
+    { page: 1, limit: 10 },
+    user
   );
 
   if (!response || !Array.isArray(response.data)) {
@@ -36,24 +37,24 @@ const hasDuplicateSubCode = async ({ class_id, sub_code }, excludeId = null) => 
   });
 };
 
-const createSubject = async (payload) => {
+const createSubject = async (payload, user) => {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw new AppError('Invalid payload', 400);
   }
 
   const normalized = normalizeSubjectPayload(payload);
 
-  if (normalized.sub_code && await hasDuplicateSubCode(normalized)) {
+  if (normalized.sub_code && await hasDuplicateSubCode(normalized, null, user)) {
     throw new AppError('sub_code must be unique within the same class', 409);
   }
 
-  const subject = await subjectRepository.createSubject(normalized);
+  const subject = await subjectRepository.createSubject(normalized, user);
   relationshipService.invalidateSubjectCache(subject.id);
   return subject;
 };
 
-const updateSubject = async (id, payload) => {
-  const existing = await subjectRepository.getSubjectById(id);
+const updateSubject = async (id, payload, user) => {
+  const existing = await subjectRepository.getSubjectById(id, user);
   if (!existing) {
     throw new AppError('Subject not found', 404);
   }
@@ -72,17 +73,17 @@ const updateSubject = async (id, payload) => {
     ...updates,
   };
 
-  if (merged.sub_code && await hasDuplicateSubCode(merged, id)) {
+  if (merged.sub_code && await hasDuplicateSubCode(merged, id, user)) {
     throw new AppError('sub_code must be unique within the same class', 409);
   }
 
-  const subject = await subjectRepository.updateSubject(id, updates);
+  const subject = await subjectRepository.updateSubject(id, updates, user);
   relationshipService.invalidateSubjectCache(subject.id);
   return subject;
 };
 
-const getSubjectById = async (id) => {
-  const subject = await subjectRepository.getSubjectById(id);
+const getSubjectById = async (id, user) => {
+  const subject = await subjectRepository.getSubjectById(id, user);
   if (!subject) {
     throw new AppError('Subject not found', 404);
   }
@@ -90,7 +91,7 @@ const getSubjectById = async (id) => {
   return subject;
 };
 
-const getAllSubjects = async (query = {}) => {
+const getAllSubjects = async (user, query = {}) => {
   const filters = {
     name: query.name,
     classId: query.classId,
@@ -102,16 +103,16 @@ const getAllSubjects = async (query = {}) => {
     limit: query.limit,
     sortBy: query.sortBy,
     order: query.order,
-  });
+  }, user);
 };
 
-const deleteSubject = async (id) => {
-  const subject = await subjectRepository.getSubjectById(id);
+const deleteSubject = async (id, user) => {
+  const subject = await subjectRepository.getSubjectById(id, user);
   if (!subject) {
     throw new AppError('Subject not found', 404);
   }
 
-  const deleted = await subjectRepository.deleteSubject(id);
+  const deleted = await subjectRepository.deleteSubject(id, user);
   relationshipService.invalidateSubjectCache(id);
   return deleted;
 };
