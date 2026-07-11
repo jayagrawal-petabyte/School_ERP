@@ -19,9 +19,35 @@ import DrawerContent from './DrawerContent';
 
 const Drawer = createDrawerNavigator();
 
+function AttendanceScreenWrapper({ route, navigation }: any) {
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent' | null>(null);
+
+  useEffect(() => {
+    async function loadRole() {
+      const savedRole = await getToken('user_role');
+      if (savedRole === 'teacher' || savedRole === 'student' || savedRole === 'parent') {
+        setRole(savedRole);
+      }
+    }
+    loadRole();
+  }, []);
+
+  if (role === null) {
+    return null;
+  }
+
+  if (role === 'teacher') {
+    return <AttendanceListScreen route={route} navigation={navigation} />;
+  } else {
+    return <AttendanceHistoryScreen route={route} navigation={navigation} />;
+  }
+}
+
 export default function DrawerNavigator() {
   const route: any = useRoute();
-  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>('student');
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
+    route?.params?.initialRole || 'student'
+  );
 
   useEffect(() => {
     async function loadRole() {
@@ -61,18 +87,11 @@ export default function DrawerNavigator() {
         }}
       />
 
-      {role === 'teacher' ? (
-        <Drawer.Screen
-          name="Attendance"
-          component={AttendanceListScreen}
-        />
-      ) : (
-        <Drawer.Screen
-          name="Attendance"
-          component={AttendanceHistoryScreen as any}
-          initialParams={route.params}
-        />
-      )}
+      <Drawer.Screen
+        name="Attendance"
+        component={AttendanceScreenWrapper}
+        initialParams={route.params}
+      />
 
       <Drawer.Screen
         name="Assignments"
