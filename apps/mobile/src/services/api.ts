@@ -65,7 +65,13 @@ export const AttendanceService = {
       });
       if (!response.ok) return [];
       const result = await response.json();
-      return result.data || [];
+      const rawClasses = result.data || [];
+      return rawClasses.map((c: any) => ({
+        id: c.id,
+        name: c.className || c.class_name || c.name || 'Unnamed Class',
+        section: c.section || '',
+        studentCount: c.studentCount || c.student_count || 0,
+      }));
     } catch (error) {
       console.error('Error fetching classes:', error);
       return [];

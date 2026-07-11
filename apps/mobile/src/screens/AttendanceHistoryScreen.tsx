@@ -129,12 +129,38 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
   const loadStudentCalendar = async () => {
     setLoading(true);
     try {
-      const studentList = await attendanceApi.getStudents(classId);
-      setStudents(studentList);
+      const { getToken } = await import('../utils/security');
+      const savedRole = await getToken('user_role');
+      const userId = await getToken('user_id');
       
-      const foundStudent = studentList.find((s) =>
-        s.name.toLowerCase().includes(activeSearch.toLowerCase())
-      );
+      let foundStudent: Student | undefined;
+
+      if (savedRole === 'student' && userId) {
+        foundStudent = {
+          id: userId,
+          name: activeSearch,
+          rollNumber: userId.split('-').pop().toUpperCase().replace(/^0+/, '') || userId.substring(0, 6),
+          gender: 'M'
+        };
+      } else if (savedRole === 'parent' && userId) {
+        const { ProfileService } = await import('../services/profileApi');
+        const profile = await ProfileService.getParentProfile(userId);
+        const child = profile?.children?.find((c: any) => c.full_name.toLowerCase().includes(activeSearch.toLowerCase()));
+        if (child) {
+          foundStudent = {
+            id: child.id,
+            name: child.full_name,
+            rollNumber: child.id.split('-').pop().toUpperCase().replace(/^0+/, '') || child.id.substring(0, 6),
+            gender: 'M'
+          };
+        }
+      } else {
+        const studentList = await attendanceApi.getStudents(classId);
+        setStudents(studentList);
+        foundStudent = studentList.find((s) =>
+          s.name.toLowerCase().includes(activeSearch.toLowerCase())
+        );
+      }
 
       if (foundStudent) {
         setTargetStudent(foundStudent);
