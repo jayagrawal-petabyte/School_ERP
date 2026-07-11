@@ -67,7 +67,13 @@ async function deleteAssignment(token, id, user) {
     throw createError(404, 'Assignment not found.');
   }
 
-  return await store.removeAssignment(token, id);
+  const removed = await store.removeAssignment(token, id);
+
+  if (!removed) {
+    throw createError(404, 'Assignment not found.');
+  }
+
+  return removed;
 }
 
 async function listAssignments(token, user) {
