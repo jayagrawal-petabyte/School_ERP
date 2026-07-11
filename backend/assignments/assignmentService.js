@@ -49,7 +49,13 @@ async function updateAssignment(token, id, payload, user) {
     ...payload,
   });
 
-  return await store.updateAssignment(token, id, updated);
+  const saved = await store.updateAssignment(token, id, updated);
+
+  if (!saved) {
+    throw createError(404, 'Assignment not found.');
+  }
+
+  return saved;
 }
 
 async function deleteAssignment(token, id, user) {
