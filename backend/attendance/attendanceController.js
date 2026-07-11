@@ -210,7 +210,7 @@ const getStudentsByClass = async (req, res) => {
 
         const { data, error } = await supabase
             .from('users')
-            .select('id, full_name, email, role')
+            .select('id, full_name, role')
             .in('id', studentIds)
             .eq('role', 'student');
 
