@@ -144,13 +144,12 @@ async function insertRecipients(notificationId, recipientIds, token) {
     recipient_id: recipientId,
   }));
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('notification_recipients')
-    .insert(rows)
-    .select();
+    .insert(rows);
 
   if (error) throw error;
-  return data;
+  return rows;
 }
 
 async function listForUser(userId, token) {
