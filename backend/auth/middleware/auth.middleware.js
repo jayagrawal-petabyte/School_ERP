@@ -44,6 +44,7 @@ async function authenticateToken(req, res, next) {
         }
 
         req.user = data.user;
+        req.token = token;
 
         return next();
     } catch (error) {
