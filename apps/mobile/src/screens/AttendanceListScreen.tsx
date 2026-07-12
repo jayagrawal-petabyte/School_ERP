@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../components/Header/AppHeader';
 import {
   View,
   Text,
@@ -118,28 +119,16 @@ export default function AttendanceListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      {/* Visual Header from Dribbble (Michael Smith Profile Mock) */}
-      <View style={styles.profileHeader}>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.welcomeText}>Hello</Text>
-          <Text style={styles.profileName}>Teacher Account</Text>
-        </View>
-        <TouchableOpacity style={styles.bellButton} activeOpacity={0.7}>
-          {/* Custom vector outline bell representation */}
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
-        </TouchableOpacity>
-      </View>
+     <StatusBar barStyle="light-content" backgroundColor="#2F2D84" />
 
-      <View style={styles.dashboardSummary}>
-        <Text style={styles.academicsTitle}>Academics</Text>
-        <Text style={styles.academicsSub}>Select standard division to manage attendance module</Text>
-      </View>
+<AppHeader title="Attendance" />
+
+<View style={styles.dashboardSummary}>
+  <Text style={styles.academicsTitle}>Academics</Text>
+  <Text style={styles.academicsSub}>
+    Select standard division to manage attendance module
+  </Text>
+</View>
 
       <FlatList
         data={classes}
@@ -156,7 +145,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    
   },
   loadingContainer: {
     flex: 1,
@@ -170,68 +159,8 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
   },
-  profileHeader: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitleContainer: {
-    flex: 1,
-  },
-  welcomeText: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    fontWeight: FONT_WEIGHT.medium,
-  },
-  profileName: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
-    marginTop: 2,
-  },
-  bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  bellOutline: {
-    width: 16,
-    height: 18,
-    alignItems: 'center',
-  },
-  bellCap: {
-    width: 4,
-    height: 2,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  bellBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    marginTop: 1,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
-    marginTop: 1,
-  },
+
+ 
   dashboardSummary: {
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,

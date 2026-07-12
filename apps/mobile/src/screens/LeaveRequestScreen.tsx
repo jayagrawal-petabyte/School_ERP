@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import {
   View,
   Text,
@@ -8,12 +9,11 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
-  StatusBar,
-  Platform,
+  
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { LeaveRequestService, LeaveRequest } from '../services/api';
@@ -147,19 +147,12 @@ export default function LeaveRequestScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
+  
 
-      {/* Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => (navigation as any).openDrawer()}>
-          <Ionicons name="menu" size={26} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Apply Leave</Text>
-        <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
-          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-          <View style={styles.bellBadge} />
-        </TouchableOpacity>
-      </View>
+<AppHeader
+  title="Leave Request"
+  showBackButton
+/>
 
       <View style={styles.container}>
 
@@ -292,10 +285,10 @@ export default function LeaveRequestScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: '#2D2C72',
-  },
+ safeContainer: {
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -311,36 +304,8 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
   },
-  customHeader: {
-    height: 56,
-    backgroundColor: '#2D2C72',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-  },
-  bellBadge: { position: 'absolute', top: 2, right: 2, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: '#FFFFFF',
-  },
-  bellButton: {
-    padding: SPACING.xs,
-    position: 'relative',
-  },
+  
+
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',

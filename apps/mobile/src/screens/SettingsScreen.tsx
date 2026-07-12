@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
@@ -6,8 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Switch,
-  StatusBar,
-  Platform,
+  
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -33,15 +33,10 @@ export default function SettingsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <AppHeader
+  title="Settings"
+  showBackButton
+/>
 
       <View style={styles.content}>
         {savedMessage && (
@@ -87,12 +82,11 @@ export default function SettingsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
-  customHeader: { height: 56, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  backButton: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
-  backButtonText: { fontSize: 20, fontWeight: 'bold', color: COLORS.primary },
-  headerTitle: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: COLORS.primary },
-  headerSpacer: { width: 38 },
+  container: {
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
+  
   content: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
   savedBanner: { backgroundColor: COLORS.presentLight ?? '#ECFDF3', borderRadius: 8, paddingVertical: SPACING.sm, alignItems: 'center', marginBottom: SPACING.md },
   savedBannerText: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.success },

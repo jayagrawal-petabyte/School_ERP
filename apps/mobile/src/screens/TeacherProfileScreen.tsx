@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import {
   View,
   Text,
@@ -6,8 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  StatusBar,
-  Platform,
+  
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -52,15 +52,10 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
-
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonTextDark}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitleDark}>My Profile</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+     <AppHeader
+  title="My Profile"
+  showBackButton
+/>
 
       {loading ? (
         <Loader />
@@ -136,12 +131,11 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 },
-  customHeader: { height: 56, backgroundColor: COLORS.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: SPACING.md },
-  backButton: { width: 38, height: 38, borderRadius: 19, justifyContent: 'center', alignItems: 'center' },
-  backButtonTextDark: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' },
-  headerTitleDark: { fontSize: FONT_SIZE.md, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF' },
-  headerSpacer: { width: 38 },
+ container: {
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
+  
   scrollContent: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.xl },
   avatarSection: { alignItems: 'center', backgroundColor: COLORS.primary, paddingBottom: SPACING.lg, marginHorizontal: -SPACING.lg, paddingTop: SPACING.md, borderBottomLeftRadius: 24, borderBottomRightRadius: 24, marginBottom: SPACING.lg },
   avatarRing: { borderWidth: 3, borderColor: '#FFFFFF', borderRadius: 40, ...SHADOWS.md },

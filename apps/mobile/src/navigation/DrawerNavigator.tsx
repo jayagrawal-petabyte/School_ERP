@@ -37,7 +37,10 @@ function AttendanceScreenWrapper({ route, navigation }: any) {
   }
 
   if (role === 'teacher') {
-    return <AttendanceListScreen route={route} navigation={navigation} />;
+    return <Drawer.Screen
+  name="Attendance"
+  component={AttendanceListScreen}
+/>
   } else {
     return <AttendanceHistoryScreen route={route} navigation={navigation} />;
   }
