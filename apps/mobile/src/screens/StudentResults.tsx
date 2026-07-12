@@ -53,29 +53,42 @@ export default function StudentResults({
   const [student, setStudent] =
     useState<Student | null>(null);
 
-  const [results, setResults] =
-    useState<StudentResult | null>(null);
+  const [resultsList, setResultsList] =
+    useState<StudentResult[]>([]);
+  const [selectedExamIndex, setSelectedExamIndex] =
+    useState<number>(0);
+
+  const results = resultsList[selectedExamIndex] || null;
 
   async function loadResults() {
     try {
       setLoading(true);
 
-      /*
-       TODO:
-       Replace hardcoded student id
-       after authentication module
-       is integrated.
-      */
+      const { getToken } = await import('../utils/security');
+      const savedRole = await getToken('user_role');
+      const userId = await getToken('user_id');
+
+      let targetStudentId = userId || '';
+
+      if (savedRole === 'parent' && userId) {
+        const { ProfileService } = await import('../services/profileApi');
+        const parentProfile = await ProfileService.getParentProfile(userId);
+        if (parentProfile && parentProfile.children && parentProfile.children.length > 0) {
+          targetStudentId = parentProfile.children[0].id;
+        }
+      }
 
       const response =
         await ExamService.getStudentResults(
-          '101'
+          targetStudentId
         );
 
-      setResults(response);
-
-      if (response && response.student) {
-        setStudent(response.student);
+      if (response && response.length > 0) {
+        setResultsList(response);
+        setStudent(response[0].student);
+      } else {
+        setResultsList([]);
+        setStudent(null);
       }
     } catch (error) {
       console.log(error);
@@ -190,6 +203,30 @@ export default function StudentResults({
         }
                 ListHeaderComponent={
           <>
+            {resultsList.length > 1 && (
+              <View style={styles.tabContainer}>
+                {resultsList.map((res, index) => (
+                  <TouchableOpacity
+                    key={res.exam.id}
+                    style={[
+                      styles.tabButton,
+                      selectedExamIndex === index && styles.activeTabButton
+                    ]}
+                    onPress={() => setSelectedExamIndex(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        selectedExamIndex === index && styles.activeTabText
+                      ]}
+                    >
+                      {res.exam.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
             <StudentInfo
               student={student}
               exam={results.exam}
@@ -474,5 +511,33 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
+  },
+
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 4,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  activeTabButton: {
+    backgroundColor: '#FFFFFF',
+    ...SHADOWS.sm,
+  },
+  tabText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.textSecondary,
+  },
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.bold,
   },
 });

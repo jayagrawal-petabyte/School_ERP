@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  ScrollView,
+  Alert,
 } from 'react-native';
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -61,9 +63,13 @@ const PASSING_MARKS = 33;
 export default function TeacherMarksEntry({
   navigation,
 }: Props) {
-  const [classId, setClassId] = useState('c1');
-  const [subject, setSubject] = useState('s1');
-  const [examType, setExamType] = useState('e1');
+  const [classes, setClasses] = useState<{ id: string; name: string; section: string }[]>([]);
+  const [classId, setClassId] = useState<string>('');
+
+  const [allSubjects, setAllSubjects] = useState<{ id: string; name: string; classId: string }[]>([]);
+  const [subjectId, setSubjectId] = useState<string>('');
+
+  const [examId, setExamId] = useState<string>('');
 
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] =
@@ -74,30 +80,111 @@ export default function TeacherMarksEntry({
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    loadStudents();
+  // Filter subjects for selected class
+  const subjects = useMemo(() => {
+    return allSubjects.filter(sub => sub.classId === classId);
+  }, [allSubjects, classId]);
+
+  // Exams matching selected class
+  const exams = useMemo(() => {
+    if (classId === '00000000-0000-0000-0004-000000000001') {
+      return [
+        { id: '00000000-0000-0000-0007-000000000001', name: 'Midterm' },
+        { id: '00000000-0000-0000-0007-000000000002', name: 'Final' }
+      ];
+    } else if (classId === '00000000-0000-0000-0004-000000000002') {
+      return [
+        { id: '00000000-0000-0000-0007-000000000003', name: 'Midterm' },
+        { id: '00000000-0000-0000-0007-000000000004', name: 'Final' }
+      ];
+    } else {
+      return [
+        { id: '00000000-0000-0000-0007-000000000005', name: 'Midterm' },
+        { id: '00000000-0000-0000-0007-000000000006', name: 'Final' }
+      ];
+    }
   }, [classId]);
 
-  async function loadStudents() {
+  // Load classes and subjects on mount
+  useEffect(() => {
+    async function initMetadata() {
+      try {
+        const { AttendanceService } = await import('../services/api');
+        const classesList = await AttendanceService.getClasses();
+        setClasses(classesList);
+        if (classesList.length > 0) {
+          setClassId(classesList[0].id);
+        }
+
+        const { API_CONFIG, getAuthHeaders } = await import('../config/apiConfig');
+        const headers = await getAuthHeaders();
+        const subRes = await fetch(`${API_CONFIG.BASE_URL}/api/subjects`, { headers });
+        const subResult = await subRes.json();
+        setAllSubjects(subResult.data || []);
+      } catch (e) {
+        console.log(e);
+      }
+    }
+    initMetadata();
+  }, []);
+
+  // Update subjectId when subjects list changes
+  useEffect(() => {
+    if (subjects.length > 0) {
+      setSubjectId(subjects[0].id);
+    } else {
+      setSubjectId('');
+    }
+  }, [subjects]);
+
+  // Update examId when exams list changes
+  useEffect(() => {
+    if (exams.length > 0) {
+      setExamId(exams[0].id);
+    } else {
+      setExamId('');
+    }
+  }, [exams]);
+
+  // Load students and marks when class, subject, or exam selection changes
+  useEffect(() => {
+    if (classId && subjectId && examId) {
+      loadStudentsAndMarks();
+    } else {
+      setStudents([]);
+      setRows({});
+      setLoading(false);
+    }
+  }, [classId, subjectId, examId]);
+
+  async function loadStudentsAndMarks() {
     try {
       setLoading(true);
 
-      const list =
-        await ExamService.getStudentsByClass(classId);
-
+      const list = await ExamService.getStudentsByClass(classId);
       setStudents(list);
 
-      const initialRows: Record<
-        string,
-        MarksRowState
-      > = {};
+      const classMarks = await ExamService.getResultsByClass(classId);
+
+      const activeSubjectName = allSubjects.find(s => s.id === subjectId)?.name || '';
+      const activeExamName = exams.find(e => e.id === examId)?.name || '';
+
+      const initialRows: Record<string, MarksRowState> = {};
 
       list.forEach((student) => {
+        const existing = classMarks.find(
+          (m) =>
+            m.studentId === student.id &&
+            m.subject && activeSubjectName && m.subject.toLowerCase() === activeSubjectName.toLowerCase() &&
+            m.examType && activeExamName && m.examType.toLowerCase() === activeExamName.toLowerCase()
+        );
+
         initialRows[student.id] = {
           studentId: student.id,
-          marks: '',
+          marks: existing ? String(existing.marks) : '',
           error: null,
-          isExisting: false,
+          isExisting: !!existing,
+          resultId: existing?.id
         };
       });
 
@@ -212,33 +299,64 @@ export default function TeacherMarksEntry({
         </View>
       </View>
 
-      {/* TODO:
-          Replace these temporary text inputs
-          with the project's dropdown component
-          once Class/Subject/Exam selectors exist.
-      */}
+      {/* Dynamic Selector Pills */}
+      <View style={styles.selectorsCard}>
+        {classes.length > 0 && (
+          <View style={styles.selectorRow}>
+            <Text style={styles.selectorLabel}>Class</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+              {classes.map((c) => (
+                <TouchableOpacity
+                  key={c.id}
+                  style={[styles.pill, classId === c.id && styles.activePill]}
+                  onPress={() => setClassId(c.id)}
+                >
+                  <Text style={[styles.pillText, classId === c.id && styles.activePillText]}>
+                    {c.name} - {c.section}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-      <View style={styles.filterContainer}>
-        <TextInput
-          style={styles.filterInput}
-          value={classId}
-          onChangeText={setClassId}
-          placeholder="Class"
-        />
+        {subjects.length > 0 && (
+          <View style={styles.selectorRow}>
+            <Text style={styles.selectorLabel}>Subject</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+              {subjects.map((s) => (
+                <TouchableOpacity
+                  key={s.id}
+                  style={[styles.pill, subjectId === s.id && styles.activePill]}
+                  onPress={() => setSubjectId(s.id)}
+                >
+                  <Text style={[styles.pillText, subjectId === s.id && styles.activePillText]}>
+                    {s.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-        <TextInput
-          style={styles.filterInput}
-          value={subject}
-          onChangeText={setSubject}
-          placeholder="Subject"
-        />
-
-        <TextInput
-          style={styles.filterInput}
-          value={examType}
-          onChangeText={setExamType}
-          placeholder="Exam"
-        />
+        {exams.length > 0 && (
+          <View style={styles.selectorRow}>
+            <Text style={styles.selectorLabel}>Exam</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.selectorScroll}>
+              {exams.map((e) => (
+                <TouchableOpacity
+                  key={e.id}
+                  style={[styles.pill, examId === e.id && styles.activePill]}
+                  onPress={() => setExamId(e.id)}
+                >
+                  <Text style={[styles.pillText, examId === e.id && styles.activePillText]}>
+                    {e.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -331,25 +449,36 @@ export default function TeacherMarksEntry({
                 }
                 onPress={async () => {
                   try {
-                    await ExamService.uploadMarks({
+                    const payload = {
                       studentId: item.id,
                       classId,
-                      subject,
-                      examType,
+                      subject: subjectId,
+                      examType: examId,
                       marks: Number(row.marks),
                       maxMarks: MAX_MARKS,
                       passingMarks: PASSING_MARKS,
-                    });
+                    };
+
+                    let res;
+                    if (row.isExisting && row.resultId) {
+                      res = await ExamService.updateMarks(row.resultId, payload);
+                    } else {
+                      res = await ExamService.uploadMarks(payload);
+                    }
 
                     setRows((prev) => ({
                       ...prev,
                       [item.id]: {
                         ...prev[item.id],
                         isExisting: true,
+                        resultId: res?.id || prev[item.id].resultId
                       },
                     }));
+
+                    Alert.alert('Success', 'Marks saved successfully!');
                   } catch (error) {
                     console.log(error);
+                    Alert.alert('Error', 'Failed to save marks.');
                   }
                 }}
               >
@@ -376,6 +505,7 @@ export default function TeacherMarksEntry({
             setSavingAll(true);
 
             try {
+              let savedCount = 0;
               for (const student of students) {
                 const row = rows[student.id];
 
@@ -387,18 +517,39 @@ export default function TeacherMarksEntry({
                   continue;
                 }
 
-                await ExamService.uploadMarks({
+                const payload = {
                   studentId: student.id,
                   classId,
-                  subject,
-                  examType,
+                  subject: subjectId,
+                  examType: examId,
                   marks: Number(row.marks),
                   maxMarks: MAX_MARKS,
                   passingMarks: PASSING_MARKS,
-                });
+                };
+
+                let res;
+                if (row.isExisting && row.resultId) {
+                  res = await ExamService.updateMarks(row.resultId, payload);
+                } else {
+                  res = await ExamService.uploadMarks(payload);
+                }
+
+                setRows((prev) => ({
+                  ...prev,
+                  [student.id]: {
+                    ...prev[student.id],
+                    isExisting: true,
+                    resultId: res?.id || prev[student.id].resultId
+                  },
+                }));
+                savedCount++;
+              }
+              if (savedCount > 0) {
+                Alert.alert('Success', `Successfully saved marks for ${savedCount} student(s)!`);
               }
             } catch (error) {
               console.log(error);
+              Alert.alert('Error', 'Failed to save marks.');
             } finally {
               setSavingAll(false);
             }
@@ -643,6 +794,51 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+
+  selectorsCard: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    borderRadius: 12,
+    padding: SPACING.md,
+    ...SHADOWS.sm,
+    gap: SPACING.sm,
+  },
+  selectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectorLabel: {
+    width: 60,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textSecondary,
+  },
+  selectorScroll: {
+    gap: SPACING.xs,
+    paddingRight: 20,
+  },
+  pill: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  activePill: {
+    backgroundColor: '#EEF2FF',
+    borderColor: COLORS.primary,
+  },
+  pillText: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  activePillText: {
+    color: COLORS.primary,
     fontWeight: FONT_WEIGHT.bold,
   },
 });

@@ -50,28 +50,42 @@ export default function ReportCard({
   const [student, setStudent] =
     useState<Student | null>(null);
 
-  const [result, setResult] =
-    useState<StudentResult | null>(null);
+  const [resultsList, setResultsList] =
+    useState<StudentResult[]>([]);
+  const [selectedExamIndex, setSelectedExamIndex] =
+    useState<number>(0);
+
+  const result = resultsList[selectedExamIndex] || null;
 
   async function loadReportCard() {
     try {
       setLoading(true);
 
-      /*
-       TODO:
-       Replace hardcoded student id
-       with logged-in student.
-      */
+      const { getToken } = await import('../utils/security');
+      const savedRole = await getToken('user_role');
+      const userId = await getToken('user_id');
+
+      let targetStudentId = userId || '';
+
+      if (savedRole === 'parent' && userId) {
+        const { ProfileService } = await import('../services/profileApi');
+        const parentProfile = await ProfileService.getParentProfile(userId);
+        if (parentProfile && parentProfile.children && parentProfile.children.length > 0) {
+          targetStudentId = parentProfile.children[0].id;
+        }
+      }
 
       const response =
         await ExamService.getStudentResults(
-          '101'
+          targetStudentId
         );
 
-      setResult(response);
-
-      if (response && response.student) {
-        setStudent(response.student);
+      if (response && response.length > 0) {
+        setResultsList(response);
+        setStudent(response[0].student);
+      } else {
+        setResultsList([]);
+        setStudent(null);
       }
     } finally {
       setLoading(false);
@@ -106,8 +120,7 @@ export default function ReportCard({
 
     return Number(
       (
-        (obtainedMarks /
-          totalMarks) *
+        (obtainedMarks / totalMarks) *
         100
       ).toFixed(2)
     );
@@ -122,22 +135,23 @@ export default function ReportCard({
         />
 
         <Text style={styles.loadingText}>
-          Preparing Report Card...
+          Loading Report Card...
         </Text>
       </View>
     );
   }
 
-  if (!student || !result) {
+  if (!result || !student) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>
-            Report Card Unavailable
+            No Results Found
           </Text>
 
-          <Text style={styles.emptySubtitle}>
-            Please check again later.
+          <Text style={styles.emptySub}>
+            Your examination report card
+            is not available yet.
           </Text>
         </View>
       </SafeAreaView>
@@ -172,6 +186,30 @@ export default function ReportCard({
       <ScrollView
         showsVerticalScrollIndicator={false}
       >
+        {resultsList.length > 1 && (
+          <View style={styles.tabContainer}>
+            {resultsList.map((res, index) => (
+              <TouchableOpacity
+                key={res.exam.id}
+                style={[
+                  styles.tabButton,
+                  selectedExamIndex === index && styles.activeTabButton
+                ]}
+                onPress={() => setSelectedExamIndex(index)}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    selectedExamIndex === index && styles.activeTabText
+                  ]}
+                >
+                  {res.exam.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         <View style={styles.schoolCard}>
           <Text style={styles.schoolName}>
             SCHOOL ERP
@@ -512,5 +550,33 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
+  },
+
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    padding: 4,
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  activeTabButton: {
+    backgroundColor: '#FFFFFF',
+    ...SHADOWS.sm,
+  },
+  tabText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.textSecondary,
+  },
+  activeTabText: {
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.bold,
   },
 });

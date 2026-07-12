@@ -32,7 +32,16 @@ export default function AttendanceListScreen({ navigation }: Props) {
     async function loadData() {
       try {
         const data = await AttendanceService.getClasses();
-        setClasses(data);
+        const classesWithCounts = await Promise.all(
+          data.map(async (cls) => {
+            const students = await AttendanceService.getStudents(cls.id);
+            return {
+              ...cls,
+              studentCount: students.length,
+            };
+          })
+        );
+        setClasses(classesWithCounts);
       } catch (error) {
         console.error('Error fetching classes:', error);
       } finally {
