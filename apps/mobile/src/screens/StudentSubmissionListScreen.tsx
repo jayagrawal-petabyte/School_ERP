@@ -62,13 +62,9 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
         setRefreshing(false);
     };
     useEffect(() => {loadSubmissions();}, [assignmentId]);
-    const handleDownload = async (submissionId: string) => {
-        try {
-            await assignmentApi.downloadSubmission(submissionId);
-            Alert.alert("Success", "Download started.");
-        } catch (error) {
-            Alert.alert("Error", "Unable to download submission.");
-        }
+    const handleDownload = () => {
+    Alert.alert("Downloading submitted files will be available once the backend download endpoint is implemented."
+    );
     };
     const handleViewSubmission = (item: StudentSubmission) => {
         Alert.alert("Submission", `Student: ${item.studentName} Remarks: ${item.remarks || "No remarks provided."}`);
@@ -139,7 +135,7 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
                             <Text style={styles.fileName}>{item.attachment.name}</Text>
                             <Text style={styles.fileSubtitle}>Submitted File</Text>
                         </View>
-                        <TouchableOpacity onPress={() => handleDownload(item.id)}>
+                        <TouchableOpacity disabled style={{ opacity: 0.5 }} onPress={handleDownload}>
                             <Text style={styles.downloadText}>Download</Text>
                         </TouchableOpacity>
                     </View>
@@ -149,9 +145,8 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
                     <TouchableOpacity style={styles.secondaryButton} onPress={() => handleViewSubmission(item)}>
                         <Text style={styles.secondaryButtonText}>View</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.primaryButton, item.marks != null && styles.primaryButtonDisabled,]} disabled={item.marks != null} onPress={() => handleGrade(item)}>
-                        <Text style={styles.primaryButtonText}>{item.marks != null ? "Graded" : "Grade"}</Text>
-                    <TouchableOpacity style={[styles.primaryButton,item.marks != null && styles.primaryButtonDisabled,]} disabled={item.marks != null} onPress={() => handleGrade(item)}></TouchableOpacity>
+                    <TouchableOpacity style={styles.primaryButton} onPress={() => handleGrade(item)}>
+                        <Text style={styles.primaryButtonText}>Grade</Text>
                     </TouchableOpacity>
 
                 </View>
@@ -367,10 +362,6 @@ const styles = StyleSheet.create({
         color: COLORS.textLight,
         fontSize: FONT_SIZE.sm,
         fontWeight: FONT_WEIGHT.bold,
-    },
-
-    primaryButtonDisabled: {
-        opacity: 0.6,
     },
 
     secondaryButton: {
