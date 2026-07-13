@@ -19,11 +19,7 @@ import assignmentApi from "../services/assignmentApi";
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type SubmitAssignmentScreenRouteProp = RouteProp<RootStackParamList, 'SubmitAssignment'>;
-type SubmitAssignmentScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'SubmitAssignment'
->;
-
+type SubmitAssignmentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList,'SubmitAssignment'>;
 interface Props {
   route: SubmitAssignmentScreenRouteProp;
   navigation: SubmitAssignmentScreenNavigationProp;
@@ -31,13 +27,9 @@ interface Props {
 
 export default function SubmitAssignmentScreen({ route, navigation }: Props) {
   const { assignmentId, title, subject } = route.params;
-
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
-  // File upload simulation states
   const [attachedFile, setAttachedFile] = useState<{uri: string; name: string; type: string; size?: number; } | null>(null);
-  
   const handleAddAttachment = async () => {
   Alert.alert("Debug", "New handleAddAttachment is running");
   try {
@@ -64,12 +56,10 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
       size: file.size,
     });
   } catch (error) {
-    console.log(error);
-
-    Alert.alert(
-      "Unable to select file",
-      "Please try again."
-    );
+    if (__DEV__){
+      console.log(error);
+      Alert.alert("Unable to select file","Please try again.");
+    }
   }
   };
 
@@ -105,12 +95,10 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
       ]
     );
   } catch (error) {
-    console.error("Error submitting assignment:", error);
-
-    Alert.alert(
-      "Submission Failed",
-      "Please try again."
-    );
+    if (__DEV__) {
+      console.error("Error submitting assignment:", error);
+      Alert.alert("Submission Failed","Please try again.");
+    }
   } finally {
     setIsSubmitting(false);
   }
