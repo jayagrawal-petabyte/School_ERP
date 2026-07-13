@@ -15,7 +15,7 @@ import {
 
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { RootStackParamList } from "../navigation/types";
 import notificationApi from "../services/notificationApi";
 import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme";
 
@@ -34,17 +34,12 @@ interface NotificationHistoryItem {
     status: "draft" | "sent";
     createdAt: string;
     sentAt?: string;
-    audience: {
-        roles: string[];
-        userIds: string[];
-    };
+    targetAudience: string;
     createdBy: string;
 }
 
 export default function NotificationHistoryScreen({ navigation }: Props) {
-    const [notifications, setNotifications] = useState<
-        NotificationHistoryItem[]
-    >([]);
+    const [notifications, setNotifications] = useState<NotificationHistoryItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -188,7 +183,7 @@ export default function NotificationHistoryScreen({ navigation }: Props) {
                         </View>
                         <Text style={styles.title}>{item.title}</Text>
                         <Text style={styles.message} numberOfLines={2}>{item.message}</Text>
-                        <Text style={styles.audience}>Audience: {item.audience.roles.join(", ")}</Text>
+                        <Text style={styles.audience}>Audience: {item.targetAudience}</Text>
                         <View style={styles.footer}>
                             <Text style={styles.date}>Created: {item.createdAt}</Text>
                             {item.sentAt && (
