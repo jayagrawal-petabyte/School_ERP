@@ -42,7 +42,7 @@ const notificationApi = {
     },
 
     getMyNotifications: async () => {
-        const response = await api.get("/notifications/my");
+        const response = await api.get("/notifications/me");
         return response.data.data;
     },
 
