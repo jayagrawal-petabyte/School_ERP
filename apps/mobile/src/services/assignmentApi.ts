@@ -81,11 +81,11 @@ const assignmentApi = {
         return response.data.data;
     },
 
-    deleteAssignment: async (assignmentId: string) => {
+    /*deleteAssignment: async (assignmentId: string) => {
         const response = await api.delete(`/assignments/${assignmentId}`);
 
         return response.data.data;
-    },
+    },*/
 
     getAssignmentSubmissions: async (assignmentId: string) => {
         const response = await api.get(
