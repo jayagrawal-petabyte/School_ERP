@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import {
-    View,
-    Text,
-    StyleSheet,
-    SafeAreaView,
-    StatusBar,
-    TouchableOpacity,
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    TextInput,
-    Platform,
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  TextInput,
+  Platform,
 } from "react-native";
 
 import { RouteProp } from "@react-navigation/native";
@@ -21,261 +21,189 @@ import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme"
 
 type GradeSubmissionRouteProp = RouteProp<RootStackParamList,"GradeSubmission">;
 type GradeSubmissionNavigationProp = NativeStackNavigationProp<RootStackParamList,"GradeSubmission">;
-interface Props {route: GradeSubmissionRouteProp;navigation: GradeSubmissionNavigationProp;}
+interface Props {
+  route: GradeSubmissionRouteProp;
+  navigation: GradeSubmissionNavigationProp;
+}
 interface SubmissionDetails {
-    id: string;
-    studentName: string;
-    rollNumber: string;
-    assignmentTitle: string;
-    submittedAt: string;
-    status: string;
-    remarks?: string;
-    attachment?: {
-        name: string;
-        url?: string;
-    };
-    maxMarks: number;
-    obtainedMarks?: number;
-    teacherFeedback?: string;
+  id: string;
+  studentName: string;
+  rollNumber: string;
+  assignmentTitle: string;
+  submittedAt: string;
+  status: string;
+  remarks?: string;
+  attachment?: {
+    name: string;
+    url?: string;
+  };
+  maxMarks: number;
+  obtainedMarks?: number;
+  teacherFeedback?: string;
 }
 
-export default function GradeSubmissionScreen({ route, navigation }: Props) {
+export default function GradeSubmissionScreen({route, navigation,}: Props) {
     const { submissionId } = route.params;
-    const [submission, setSubmission] = useState<SubmissionDetails | null>(null,);
+    const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
     const [marks, setMarks] = useState("");
     const [feedback, setFeedback] = useState("");
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [gradingAvailable, setGradingAvailable] = useState(true);
 
-    /*const loadSubmission = async () => {
-        try {
-            setLoading(true);
-
-            const response = await assignmentApi.getSubmission(submissionId);
-
-            setSubmission(response);
-        } catch (error: any) {
-            console.log(error);
-            setGradingAvailable(false);
-        } finally {
-            setLoading(false);
-        }
-    };*/
     const loadSubmission = async () => {
-    setLoading(true);
+  setLoading(true);
+
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  const loadSubmission = async () => {
     try {
-        Alert.alert("Coming Soon","Submission details API is not available yet.");
+        setLoading(true);
+        // Backend endpoint for fetching submission details is not available yet.
+        setSubmission(null);
+    } catch (error) {
+        Alert.alert("Error", "Unable to load submission details.");
     } finally {
         setLoading(false);
     }
+};
+
+    useEffect(() => {loadSubmission();}, [submissionId]);
+
+    const handleDownload = () => {
+        Alert.alert("File download not available.");
     };
 
-    useEffect(() => {
-        loadSubmission();
-    }, [submissionId]);
-
-    const handleDownload = async () => {
+    const handleSubmit = async () => {
         if (!submission) return;
-        try {
-            await assignmentApi.downloadSubmission(submission.id);
-            Alert.alert("Success", "Download started.");
-        } catch (error) {
-            Alert.alert("Error", "Unable to download file.");
-        }
-    };
-
-    /*const handleSubmit = async () => {
-        if (!submission) return;
-        if (!gradingAvailable) {
-            Alert.alert("Unavailable", "Grading is currently unavailable.");
-            return;
-        }
         if (!marks.trim()) {
             Alert.alert("Validation", "Please enter marks.");
             return;
         }
         const numericMarks = Number(marks);
-        if (
-            isNaN(numericMarks) ||
-            numericMarks < 0 ||
-            numericMarks > submission.maxMarks
-        ) {
-            Alert.alert(
-                "Validation",
-                `Marks should be between 0 and ${submission.maxMarks}.`,
-            );
+        if (isNaN(numericMarks) || numericMarks < 0 || numericMarks > submission.maxMarks) {
+            Alert.alert("Validation", `Marks should be between 0 and ${submission.maxMarks}.`);
             return;
         }
         try {
-            setSubmitting(true);
-            await assignmentApi.gradeSubmission(
-                submission.id,
-                numericMarks,
-                feedback,
-            ); //Backend API not supported for Grading yet
-            Alert.alert("Success", "Submission graded successfully.");
-            navigation.goBack();
-        } catch (error) {
-            console.log(error);
-            Alert.alert("Error", "Unable to submit grade.");
+            Alert.alert("Pending", "Submission grading will be enabled once the backend grading API is available.");
         } finally {
             setSubmitting(false);
         }
-    };*/
-    const handleSubmit = async () => {
-        Alert.alert("Coming Soon","Grading API is under development.");
     };
 
     if (loading) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
+                <ActivityIndicator size="large" color={COLORS.primary}/>
                 <Text style={styles.loadingText}>Loading submission...</Text>
             </SafeAreaView>
         );
     }
     if (!submission) {
-        return (
-            <SafeAreaView style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Submission not found.</Text>
-            </SafeAreaView>
-        );
+    return (
+        <SafeAreaView style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>
+                Submission details are not available.
+            </Text>
+            <Text style={{
+                    marginTop: 8,
+                    color: COLORS.textSecondary,
+                    textAlign: "center",
+                    paddingHorizontal: 24,
+                }}>
+                This screen will be enabled once the backend
+                provides a submission details endpoint.
+            </Text>
+        </SafeAreaView>
+    );
     }
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF"/>
             <View style={styles.customHeader}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()}
-                >
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
                     <Text style={styles.backButtonText}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Grade Submission</Text>
-                <View style={{ width: 40 }} />
-            </View>
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Student Details</Text>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Name</Text>
-                        <Text style={styles.infoValue}>
-                            {submission.studentName}
-                        </Text>
+                <View style={{ width: 40 }} /></View>
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Student Details</Text>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Name</Text>
+                            <Text style={styles.infoValue}>{submission.studentName}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Roll Number</Text>
+                            <Text style={styles.infoValue}>{submission.rollNumber}</Text>
+                        </View>
                     </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Roll Number</Text>
-                        <Text style={styles.infoValue}>
-                            {submission.rollNumber}
-                        </Text>
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Assignment</Text>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Title</Text>
+                            <Text style={styles.infoValue}>{submission.assignmentTitle}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Submitted On</Text>
+                            <Text style={styles.infoValue}>{submission.submittedAt}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Status</Text>
+                            <Text style={styles.infoValue}>{submission.status}</Text>
+                        </View>
+
                     </View>
-                </View>
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Assignment</Text>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Title</Text>
-                        <Text style={styles.infoValue}>
-                            {submission.assignmentTitle}
-                        </Text>
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Student Remarks</Text>
+                        <Text style={styles.description}>{submission.remarks ? submission.remarks : "No remarks provided."}</Text>
+
                     </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Submitted On</Text>
-                        <Text style={styles.infoValue}>
-                            {submission.submittedAt}
-                        </Text>
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Submitted File</Text>
+                        {submission.attachment ? (
+                            <TouchableOpacity style={[styles.fileCard, { opacity: 0.5 }, ]} disabled={true} onPress={handleDownload}>
+                                <View>
+                                    <Text style={styles.fileName}>{submission.attachment.name}</Text>
+                                    <Text style={styles.fileSubtitle}>Download Unavailable</Text>
+                                </View>
+                                <Text style={styles.downloadText}>Download not available</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <Text style={styles.noFileText}>No file submitted.</Text>
+                        )}
+
                     </View>
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Status</Text>
-                        <Text style={styles.infoValue}>
-                            {submission.status}
-                        </Text>
-                    </View>
-                </View>
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Student Remarks</Text>
-                    <Text style={styles.description}>
-                        {submission.remarks
-                            ? submission.remarks
-                            : "No remarks provided."}
-                    </Text>
-                </View>
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Submitted File</Text>
-                    {submission.attachment ? (
-                        <TouchableOpacity
-                            style={styles.fileCard}
-                            onPress={handleDownload}
-                        >
-                            <View>
-                                <Text style={styles.fileName}>
-                                    {submission.attachment.name}
-                                </Text>
-                                <Text style={styles.fileSubtitle}>
-                                    Tap to download
-                                </Text>
-                            </View>
-                            <Text style={styles.downloadText}>Download</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Text style={styles.noFileText}>
-                            No file submitted.
-                        </Text>
-                    )}
-                </View>
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Marks</Text>
-                    <TextInput
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Marks</Text>
+                        <TextInput 
                         style={styles.input}
                         keyboardType="numeric"
                         value={marks}
                         onChangeText={setMarks}
-                        editable={false}
-                        placeholder={
-                            gradingAvailable
-                                ? `Out of ${submission.maxMarks}`
-                                : "Grading unavailable"
-                        }
-                        placeholderTextColor={COLORS.textSecondary}
-                    />
-                </View>
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Teacher Feedback</Text>
-                    <TextInput
-                        style={styles.feedbackInput}
-                        multiline
-                        value={feedback}
-                        onChangeText={setFeedback}
-                        placeholder="Enter your feedback..."
-                        placeholderTextColor={COLORS.textSecondary}
-                        editable={false}
-                        textAlignVertical="top"
-                    />
-                </View>
-                <TouchableOpacity
-                    style={[
-                        styles.submitButton,
-                        (submitting || !gradingAvailable) &&
-                            styles.submitButtonDisabled,
-                    ]}
-                    disabled={submitting || !gradingAvailable}
-                    onPress={handleSubmit}
-                >
-                    {submitting ? (
-                        <ActivityIndicator color="#FFFFFF" />
-                    ) : (
-                        <Text style={styles.submitButtonText}>
-                            {gradingAvailable
-                                ? "Submit Grade"
-                                : "Grading Not Available"}
-                        </Text>
-                    )}
-                </TouchableOpacity>
-            </ScrollView>
+                        placeholder={`Out of ${submission.maxMarks}`}
+                        placeholderTextColor={COLORS.textSecondary}/>
+                    </View>
+                    <View style={styles.card}>
+                        <Text style={styles.sectionTitle}>Teacher Feedback</Text>
+                        <TextInput
+                            style={styles.feedbackInput}
+                            multiline
+                            value={feedback}
+                            onChangeText={setFeedback}
+                            placeholder="Enter your feedback..."
+                            placeholderTextColor={COLORS.textSecondary}
+                            textAlignVertical="top"/>
+                    </View>
+                    <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled,]} disabled={submitting} onPress={() => Alert.alert("Backend Pending","Submission grading will be enabled once the backend grading API is available.")}>
+                        {submitting ? (
+                            <ActivityIndicator color="#FFFFFF"/>
+                        ) : (
+                            <Text style={styles.submitButtonText}>Submit Grade</Text>
+                        )}
+                    </TouchableOpacity>
+                </ScrollView>
         </SafeAreaView>
     );
 }
@@ -343,8 +271,7 @@ const styles = StyleSheet.create({
         padding: SPACING.lg,
         marginBottom: SPACING.lg,
         borderWidth: 1,
-        borderColor: COLORS.border,
-        ...SHADOWS.sm,
+        borderColor: COLORS.border, ...SHADOWS.sm,
     },
 
     sectionTitle: {
@@ -450,8 +377,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: SPACING.md,
         marginTop: SPACING.md,
-        marginBottom: SPACING.xl,
-        ...SHADOWS.sm,
+        marginBottom: SPACING.xl, ...SHADOWS.sm,
     },
 
     submitButtonDisabled: {
