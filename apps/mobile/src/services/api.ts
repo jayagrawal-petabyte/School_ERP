@@ -41,7 +41,7 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,(error) => {
-    if (__DEV__) {console.log("API Error:",error.response?.data || error.message);}
+    if (__DEV__) {console.log("Something went wrong. Please try again.");}
     return Promise.reject(error);
   }
 );
