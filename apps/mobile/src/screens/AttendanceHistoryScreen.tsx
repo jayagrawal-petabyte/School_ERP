@@ -10,10 +10,10 @@ import {
   FlatList,
   StatusBar,
   Platform,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+
+import AppHeader from '../components/Header/AppHeader';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -94,7 +94,7 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
       
       if (!activeSearch) {
         if (savedRole === 'student') {
-          const userId = (await getToken('user_id')) || route?.params?.userId;
+          const userId = await getToken('user_id');
           if (userId) {
             const { ProfileService } = await import('../services/profileApi');
             const profile = await ProfileService.getStudentProfile(userId);
@@ -105,7 +105,7 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
             }
           }
         } else if (savedRole === 'parent') {
-          const userId = (await getToken('user_id')) || route?.params?.userId;
+      const userId = await getToken('user_id');
           if (userId) {
             const { ProfileService } = await import('../services/profileApi');
             const profile = await ProfileService.getParentProfile(userId);
@@ -134,26 +134,35 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
       const userId = await getToken('user_id');
       
       let foundStudent: Student | undefined;
-
+const id = String(userId);
       if (savedRole === 'student' && userId) {
         foundStudent = {
-          id: userId,
+          id,
           name: activeSearch,
-          rollNumber: userId.split('-').pop().toUpperCase().replace(/^0+/, '') || userId.substring(0, 6),
+          rollNumber: id.split('-').pop()?.toUpperCase().replace(/^0+/, '') ??
+    id.substring(0, 6),
           gender: 'M'
         };
       } else if (savedRole === 'parent' && userId) {
         const { ProfileService } = await import('../services/profileApi');
         const profile = await ProfileService.getParentProfile(userId);
-        const child = profile?.children?.find((c: any) => c.full_name.toLowerCase().includes(activeSearch.toLowerCase()));
-        if (child) {
-          foundStudent = {
-            id: child.id,
-            name: child.full_name,
-            rollNumber: child.id.split('-').pop().toUpperCase().replace(/^0+/, '') || child.id.substring(0, 6),
-            gender: 'M'
-          };
-        }
+       const child = profile?.children?.find(
+  (c: any) =>
+    c.full_name.toLowerCase().includes(activeSearch.toLowerCase())
+);
+
+if (child) {
+  const childId = String(child.id);
+
+  foundStudent = {
+    id: childId,
+    name: child.full_name,
+    rollNumber:
+      childId.split('-').pop()?.toUpperCase().replace(/^0+/, '') ??
+      childId.substring(0, 6),
+    gender: 'M',
+  };
+}
       } else {
         const studentList = await attendanceApi.getStudents(classId);
         setStudents(studentList);
@@ -385,19 +394,12 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
-      
-      {/* Visual Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => (navigation as any).openDrawer()}>
-          <Ionicons name="menu" size={26} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Attendance History</Text>
-        <TouchableOpacity style={styles.bellButton} onPress={() => Alert.alert('Notifications', 'No new notifications.')}>
-          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-          <View style={styles.bellBadge} />
-        </TouchableOpacity>
-      </View>
+     <StatusBar barStyle="light-content" />
+
+<AppHeader
+  title="Attendance History"
+  showBackButton
+/>
 
       <View style={styles.container}>
       {/* Top Search Controls (Visible only for Teachers/Admin) */}
@@ -587,64 +589,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2D2C72',
   },
-  customHeader: {
-    height: 56,
-    backgroundColor: '#2D2C72',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.lg,
-  },
-  bellBadge: { position: 'absolute', top: 2, right: 2, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: '#FFFFFF',
-  },
-  bellButton: {
-    padding: SPACING.xs,
-    position: 'relative',
-  },
-  bellOutline: {
-    width: 16,
-    height: 18,
-    alignItems: 'center',
-  },
-  bellCap: {
-    width: 4,
-    height: 2,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  bellBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    marginTop: 1,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
-    marginTop: 1,
-  },
+  
   filterSection: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,

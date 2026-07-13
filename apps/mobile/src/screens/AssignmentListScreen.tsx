@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import AppHeader from '../components/Header/AppHeader';
 import {
     View,
     Text,
@@ -328,228 +329,223 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
             )}
         </SafeAreaView>
     );
+  };
+
+  return (
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+    
+
+<AppHeader
+  title="Assignments"
+  showBackButton
+/>
+
+
+
+      <View style={styles.container}>
+      {/* Search Input Bar */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchBox}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search assignments..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor={COLORS.textMuted}
+          />
+        </View>
+      </View>
+
+      {/* Status Filter Tabs (Pills) */}
+      <View style={styles.filterTabsRow}>
+        {(['all', 'pending', 'submitted', 'graded'] as FilterStatus[]).map((filter) => (
+          <TouchableOpacity
+            key={filter}
+            style={[
+              styles.filterTabButton,
+              activeFilter === filter && styles.filterTabButtonActive
+            ]}
+            onPress={() => setActiveFilter(filter)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.filterTabLabel,
+                activeFilter === filter && styles.filterTabLabelActive
+              ]}
+            >
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>Fetching assignments...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredAssignments}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAssignmentCard}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No assignments found in this section.</Text>
+            </View>
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[COLORS.primary]}
+              tintColor={COLORS.primary}
+            />
+          }
+        />
+      )}
+      </View>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: COLORS.background,
-    },
-    loadingText: {
-        marginTop: SPACING.md,
-        fontSize: FONT_SIZE.md,
-        color: COLORS.textSecondary,
-        fontWeight: FONT_WEIGHT.medium,
-    },
-    customHeader: {
-        height: 56,
-        backgroundColor: "#FFFFFF",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: SPACING.md,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
-    },
-    backButton: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    backButtonText: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: COLORS.primary,
-    },
-    headerTitle: {
-        fontSize: FONT_SIZE.md,
-        fontWeight: FONT_WEIGHT.bold,
-        color: COLORS.primary,
-    },
-    bellButton: {
-        width: 38,
-        height: 38,
-        borderRadius: 19,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    bellOutline: {
-        width: 16,
-        height: 18,
-        alignItems: "center",
-    },
-    bellCap: {
-        width: 4,
-        height: 2,
-        backgroundColor: COLORS.primary,
-        borderTopLeftRadius: 2,
-        borderTopRightRadius: 2,
-    },
-    bellBody: {
-        width: 14,
-        height: 10,
-        backgroundColor: COLORS.primary,
-        borderTopLeftRadius: 5,
-        borderTopRightRadius: 5,
-        marginTop: 1,
-    },
-    bellClapper: {
-        width: 6,
-        height: 3,
-        backgroundColor: COLORS.primary,
-        borderBottomLeftRadius: 3,
-        borderBottomRightRadius: 3,
-        marginTop: 1,
-    },
-    searchSection: {
-        paddingHorizontal: SPACING.lg,
-        paddingTop: SPACING.md,
-        paddingBottom: SPACING.sm,
-        backgroundColor: "#FFFFFF",
-    },
-    searchBox: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.background,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        borderRadius: 8,
-        paddingHorizontal: SPACING.md,
-        height: 42,
-    },
-    searchIcon: {
-        fontSize: 12,
-        marginRight: SPACING.xs,
-    },
-    searchInput: {
-        flex: 1,
-        fontSize: FONT_SIZE.xs,
-        color: COLORS.textPrimary,
-        fontWeight: FONT_WEIGHT.medium,
-    },
-    filterTabsRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        backgroundColor: "#FFFFFF",
-        paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.md,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
-        gap: 6,
-    },
-    filterTabButton: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 8,
-        borderRadius: 6,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        backgroundColor: "#FFFFFF",
-    },
-    filterTabButtonActive: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    filterTabLabel: {
-        fontSize: 11,
-        fontWeight: FONT_WEIGHT.medium,
-        color: COLORS.textSecondary,
-    },
-    filterTabLabelActive: {
-        color: COLORS.textLight,
-        fontWeight: FONT_WEIGHT.bold,
-    },
-    listContent: {
-        padding: SPACING.lg,
-        paddingBottom: SPACING.xl,
-    },
-    card: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 8,
-        padding: SPACING.md,
-        marginBottom: SPACING.sm,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        ...SHADOWS.sm,
-    },
-    cardRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    subjectAvatar: {
-        width: 44,
-        height: 44,
-        borderRadius: 8,
-        backgroundColor: COLORS.background,
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: COLORS.borderLight,
-        marginRight: SPACING.md,
-    },
-    subjectEmoji: {
-        fontSize: 20,
-    },
-    infoCol: {
-        flex: 1,
-    },
-    subjectName: {
-        fontSize: 10,
-        fontWeight: FONT_WEIGHT.bold,
-        color: COLORS.textMuted,
-        textTransform: "uppercase",
-    },
-    assignmentTitle: {
-        fontSize: 13,
-        fontWeight: FONT_WEIGHT.bold,
-        color: COLORS.textPrimary,
-        marginTop: 2,
-    },
-    dueDate: {
-        fontSize: 11,
-        color: COLORS.textSecondary,
-        marginTop: 4,
-    },
-    statusCol: {
-        alignItems: "flex-end",
-        justifyContent: "center",
-    },
-    statusBadge: {
-        paddingHorizontal: 6,
-        paddingVertical: 3,
-        borderRadius: 4,
-        borderWidth: 1,
-        alignItems: "center",
-        minWidth: 70,
-    },
-    statusText: {
-        fontSize: 9,
-        fontWeight: FONT_WEIGHT.bold,
-    },
-    scoreText: {
-        fontSize: 10,
-        fontWeight: FONT_WEIGHT.semibold,
-        color: COLORS.textSecondary,
-        marginTop: 4,
-    },
-    emptyContainer: {
-        paddingVertical: SPACING.xl * 2,
-        alignItems: "center",
-    },
-    emptyText: {
-        fontSize: FONT_SIZE.xs,
-        color: COLORS.textSecondary,
-    },
+ safeContainer: {
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    // Removed paddingTop for Android StatusBar to avoid gap
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+  },
+  loadingText: {
+    marginTop: SPACING.md,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSecondary,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  
+  searchSection: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.sm,
+    backgroundColor: '#FFFFFF',
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    paddingHorizontal: SPACING.md,
+    height: 42,
+  },
+  searchIcon: {
+    fontSize: 12,
+    marginRight: SPACING.xs,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textPrimary,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  filterTabsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+    gap: 6,
+  },
+  filterTabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#FFFFFF',
+  },
+  filterTabButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterTabLabel: {
+    fontSize: 11,
+    fontWeight: FONT_WEIGHT.medium,
+    color: COLORS.textSecondary,
+  },
+  filterTabLabelActive: {
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold,
+  },
+  listContent: {
+    padding: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subjectAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: COLORS.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    marginRight: SPACING.md,
+  },
+  subjectEmoji: {
+    fontSize: 20,
+  },
+  infoCol: {
+    flex: 1,
+  },
+  subjectName: {
+    fontSize: 10,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+  },
+  assignmentTitle: {
+    fontSize: 13,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textPrimary,
+    marginTop: 2,
+  },
+  dueDate: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 4,
+>>>>>>> 0c08a02 (feat: unify app navigation header across all screens)
   },
   statusCol: {
     alignItems: 'flex-end',

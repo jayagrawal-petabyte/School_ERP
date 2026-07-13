@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import {
   SafeAreaView,
   View,
   Text,
   StyleSheet,
-  StatusBar,
-  Platform,
+  
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
@@ -167,27 +167,10 @@ export default function StudentResults({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#FFFFFF"
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButton}>
-            ←
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>
-          Student Results
-        </Text>
-
-        <View style={{ width: 30 }} />
-      </View>
-
+      <AppHeader
+  title="Student Results"
+  showBackButton
+/>
       <FlatList
         data={results.subjects}
         keyExtractor={(item) => item.subjectId}
@@ -344,13 +327,9 @@ export default function StudentResults({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingTop:
-      Platform.OS === 'android'
-        ? StatusBar.currentHeight
-        : 0,
-  },
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
 
   loadingContainer: {
     flex: 1,
@@ -367,33 +346,7 @@ const styles = StyleSheet.create({
       FONT_WEIGHT.medium,
   },
 
-  header: {
-    height: 56,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent:
-      'space-between',
-    paddingHorizontal:
-      SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor:
-      COLORS.border,
-  },
-
-  backButton: {
-    fontSize: 22,
-    color: COLORS.primary,
-    fontWeight:
-      FONT_WEIGHT.bold,
-  },
-
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight:
-      FONT_WEIGHT.bold,
-    color: COLORS.primary,
-  },
+  
 
   sectionHeader: {
     marginHorizontal:

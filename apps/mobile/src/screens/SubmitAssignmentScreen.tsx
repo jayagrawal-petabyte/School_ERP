@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import * as DocumentPicker from "expo-document-picker";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -9,8 +10,6 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  StatusBar,
-  Platform,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -106,22 +105,12 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    
 
-      {/* Custom Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Submit Work</Text>
-        <TouchableOpacity style={styles.bellButton}>
-          <View style={styles.bellOutline}>
-            <View style={styles.bellCap} />
-            <View style={styles.bellBody} />
-            <View style={styles.bellClapper} />
-          </View>
-        </TouchableOpacity>
-      </View>
+<AppHeader
+  title="Submit Assignment"
+  showBackButton
+/>
 
       <View style={styles.content}>
         {/* Info card */}
@@ -192,72 +181,10 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-  },
-  customHeader: {
-    height: 56,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
-  },
-  bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bellOutline: {
-    width: 16,
-    height: 18,
-    alignItems: 'center',
-  },
-  bellCap: {
-    width: 4,
-    height: 2,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  bellBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    marginTop: 1,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
-    marginTop: 1,
-  },
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
+  
   content: {
     padding: SPACING.lg,
     gap: SPACING.lg,

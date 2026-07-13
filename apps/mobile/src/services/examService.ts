@@ -131,7 +131,9 @@ export const ExamService = {
         const studentInfo: Student = {
           id: studentId,
           name: first.studentName || 'Student',
-          rollNo: studentId.split('-').pop().toUpperCase().replace(/^0+/, '') || studentId.substring(0, 6),
+          rollNo:
+studentId.split('-').pop()?.toUpperCase().replace(/^0+/, '') ??
+studentId.substring(0,6),
           classId: first.classId || ''
         };
 

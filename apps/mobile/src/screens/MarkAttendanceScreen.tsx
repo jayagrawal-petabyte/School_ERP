@@ -18,7 +18,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { AttendanceService, Student, AttendanceRecord, AttendanceStatus } from '../services/api';
 import { API_CONFIG } from '../config/apiConfig';
 import attendanceApi from '../services/attendanceApi';
-import { Ionicons } from '@expo/vector-icons';
+import AppHeader from '../components/Header/AppHeader';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 
 type MarkAttendanceScreenRouteProp = RouteProp<RootStackParamList, 'MarkAttendance'>;
@@ -259,18 +259,10 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>
-      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
-      
-      {/* Custom Header */}
-      <View style={styles.customHeader}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{className}</Text>
-        <TouchableOpacity style={styles.bellButton}>
-          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      <AppHeader
+  title={className} 
+  showBackButton
+/>
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -362,9 +354,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   safeContainer: {
-    flex: 1,
-    backgroundColor: '#2D2C72',
-  },
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
+  
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -377,68 +370,9 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontWeight: FONT_WEIGHT.medium,
   },
-  customHeader: {
-    height: 56,
-    backgroundColor: '#2D2C72',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: '#FFFFFF',
-  },
-  bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bellOutline: {
-    width: 16,
-    height: 18,
-    alignItems: 'center',
-  },
-  bellCap: {
-    width: 4,
-    height: 2,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  bellBody: {
-    width: 14,
-    height: 10,
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 5,
-    borderTopRightRadius: 5,
-    marginTop: 1,
-  },
-  bellClapper: {
-    width: 6,
-    height: 3,
-    backgroundColor: COLORS.primary,
-    borderBottomLeftRadius: 3,
-    borderBottomRightRadius: 3,
-    marginTop: 1,
-  },
+  
+  
+  
   statsBoard: {
     backgroundColor: '#FFFFFF',
     padding: SPACING.md,

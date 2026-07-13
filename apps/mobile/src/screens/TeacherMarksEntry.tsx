@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AppHeader from '../components/Header/AppHeader';
 import {
   View,
   Text,
   StyleSheet,
-  StatusBar,
-  Platform,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -236,26 +235,10 @@ export default function TeacherMarksEntry({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#FFFFFF"
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButton}>
-            ←
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>
-          Teacher Marks Entry
-        </Text>
-
-        <View style={{ width: 32 }} />
-      </View>
+      <AppHeader
+  title="Teacher Marks Entry"
+  showBackButton
+/>
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>
@@ -571,14 +554,10 @@ export default function TeacherMarksEntry({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingTop:
-      Platform.OS === 'android'
-        ? StatusBar.currentHeight
-        : 0,
-  },
+ container: {
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
 
   loadingContainer: {
     flex: 1,
@@ -594,28 +573,8 @@ const styles = StyleSheet.create({
     fontWeight: FONT_WEIGHT.medium,
   },
 
-  header: {
-    height: 56,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
 
-  backButton: {
-    fontSize: 22,
-    color: COLORS.primary,
-    fontWeight: FONT_WEIGHT.bold,
-  },
-
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    color: COLORS.primary,
-    fontWeight: FONT_WEIGHT.bold,
-  },
+  
 
   summaryCard: {
     margin: SPACING.lg,

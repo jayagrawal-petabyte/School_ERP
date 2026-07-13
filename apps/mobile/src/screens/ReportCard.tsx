@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import {
   SafeAreaView,
   View,
@@ -7,8 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  StatusBar,
-  Platform,
+  
 } from 'react-native';
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -149,7 +149,7 @@ export default function ReportCard({
             No Results Found
           </Text>
 
-          <Text style={styles.emptySub}>
+        <Text style={styles.emptySubtitle}>
             Your examination report card
             is not available yet.
           </Text>
@@ -160,28 +160,10 @@ export default function ReportCard({
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#FFFFFF"
-      />
-
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.goBack()
-          }
-        >
-          <Text style={styles.backButton}>
-            ←
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>
-          Report Card
-        </Text>
-
-        <View style={{ width: 30 }} />
-      </View>
+      <AppHeader
+  title="Report Card"
+  showBackButton
+/>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -344,14 +326,9 @@ export default function ReportCard({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    paddingTop:
-      Platform.OS === 'android'
-        ? StatusBar.currentHeight
-        : 0,
-  },
-
+  flex: 1,
+  backgroundColor: COLORS.background,
+},
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -385,28 +362,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  header: {
-    height: 56,
-    backgroundColor: '#FFFFFF',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-
-  backButton: {
-    fontSize: 22,
-    color: COLORS.primary,
-    fontWeight: FONT_WEIGHT.bold,
-  },
-
-  headerTitle: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: COLORS.primary,
-  },
+  
 
   schoolCard: {
     margin: SPACING.lg,
