@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getToken } from '../utils/security';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
-  Platform,
   Alert,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
@@ -17,14 +16,14 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 import { DashboardCard } from '../types';
 import { DashboardService, ProfileService } from '../services/profileApi';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
 
 type HomeScreenRouteProp = RouteProp<RootStackParamList, 'Home'>;
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 interface Props {
-  route: HomeScreenRouteProp;
-  navigation: HomeScreenNavigationProp;
+  route?: any;
+  navigation?: any;
 }
 
 type Section = 'academic' | 'services';
@@ -47,31 +46,32 @@ const ROLE_LABEL: Record<'teacher' | 'student' | 'parent', string> = {
 };
 
 export default function HomeScreen({ route, navigation }: Props) {
- const { initialRole, userId } = route.params || {};
+  const { initialRole, userId } = route?.params || {};
 
-const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
-  initialRole || 'teacher'
-);
+  const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
+    initialRole || 'teacher'
+  );
 
-const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
-const [displayName, setDisplayName] = useState('');
-const [profileLoading, setProfileLoading] = useState(!!userId);
+  const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
+  const [displayName, setDisplayName] = useState('');
+  const [profileLoading, setProfileLoading] = useState(!!userId);
 
-useEffect(() => {
-  const loadRole = async () => {
-    const savedRole = await getToken('user_role');
+  useEffect(() => {
+    const loadRole = async () => {
+      const savedRole = await getToken('user_role');
 
-    if (
-      savedRole === 'teacher' ||
-      savedRole === 'student' ||
-      savedRole === 'parent'
-    ) {
-      setRole(savedRole);
-    }
-  };
+      if (
+        savedRole === 'teacher' ||
+        savedRole === 'student' ||
+        savedRole === 'parent'
+      ) {
+        setRole(savedRole);
+      }
+    };
 
-  loadRole();
-}, []);
+    loadRole();
+  }, []);
+
   React.useEffect(() => {
     if (initialRole) {
       setRole(initialRole);
@@ -113,8 +113,7 @@ useEffect(() => {
         color: '#FFF9E6',
         section: 'academic',
         emptyLabel: 'No assignments available.',
-        route: 'AssignmentList',
-        params: { classId: '1', className: 'Standard - 8 - C' }
+        route: 'Assignments'
       },
       {
         id: '5',
@@ -123,7 +122,7 @@ useEffect(() => {
         color: '#FEE4E2',
         section: 'academic',
         emptyLabel: 'No examination records available.',
-        route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
+        route: role === 'teacher' ? 'TeacherMarksEntry' : 'Results'
       },
       {
         id: '6',
@@ -132,17 +131,14 @@ useEffect(() => {
         color: '#E0F2FE',
         section: 'academic',
         emptyLabel: 'No marks available.',
-        route: role === 'teacher' ? 'TeacherMarksEntry' : 'StudentResults'
+        route: role === 'teacher' ? 'TeacherMarksEntry' : 'Results'
       },
     ];
 
     if (role === 'teacher') {
       return [
-        { id: 't_attendance', title: 'Attendance', emoji: '📋', color: '#ECFDF5', section: 'academic', emptyLabel: 'No attendance records available.', route: 'AttendanceList' },
+        { id: 't_attendance', title: 'Attendance', emoji: '📋', color: '#ECFDF5', section: 'academic', emptyLabel: 'No attendance records available.', route: 'Attendance' },
         { id: 't0', title: 'Students', emoji: '🧑‍🎓', color: '#E0F2FE', section: 'services', emptyLabel: 'No student directory available.' },
-        { id: "t_notifications", title: "Notifications", emoji: "🔔", color: "#EEF2FF", section: "academic", emptyLabel: "No notifications available.", route: "Notifications",},
-        { id: "t_create_notification",title: "Create Notification",emoji: "✉️",color: "#FEF3C7",section: "academic",emptyLabel: "Create and send notifications.",route: "CreateNotification",},
-        { id: "t_notification_history",title: "Notification History",emoji: "📜",color: "#FCE7F3",section: "academic",emptyLabel: "View notification history.",route: "NotificationHistory",},
         ...baseItems
       ];
     } else if (role === 'parent') {
@@ -154,8 +150,7 @@ useEffect(() => {
           color: '#ECFDF5',
           section: 'academic',
           emptyLabel: 'No attendance records available.',
-          route: 'AttendanceHistory',
-          params: { classId: '1', className: 'Standard - 8 - C', defaultStudentName: 'Sofia Morales' }
+          route: 'Attendance'
         },
         {
           id: 'p_results',
@@ -164,7 +159,7 @@ useEffect(() => {
           color: '#E0F2FE',
           section: 'academic',
           emptyLabel: 'No marks available.',
-          route: 'StudentResults'
+          route: 'Results'
         },
         { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7', section: 'services', emptyLabel: 'No linked student record found.' },
         ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
@@ -178,8 +173,7 @@ useEffect(() => {
           color: '#ECFDF5',
           section: 'academic',
           emptyLabel: 'No attendance records available.',
-          route: 'AttendanceHistory',
-          params: { classId: '1', className: 'Standard - 8 - C', defaultStudentName: 'Sofia Morales' }
+          route: 'Attendance'
         },
         {
           id: 's_leave',
@@ -188,7 +182,7 @@ useEffect(() => {
           color: '#FFF6ED',
           section: 'services',
           emptyLabel: 'No leave requests submitted.',
-          route: 'LeaveRequest'
+          route: 'Leave'
         },
         ...baseItems
       ];
@@ -224,6 +218,9 @@ useEffect(() => {
   const nameForAvatar = displayName || ROLE_LABEL[role];
   const avatarLetter = nameForAvatar.trim().charAt(0).toUpperCase() || 'U';
 
+  // Effective userId — used for profile navigation
+  const effectiveUserId = userId || undefined;
+
   const renderCard = (item: AcademicItem) => (
     <TouchableOpacity
       key={item.id}
@@ -255,187 +252,229 @@ useEffect(() => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    // SafeAreaView wraps the entire screen so the notch/camera area gets the blue header color
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <StatusBar barStyle="light-content" backgroundColor="#2D2C72" />
 
-      {/* Header */}
+      {/* Header sits directly at the top inside SafeAreaView */}
       <View style={styles.header}>
-        <View style={styles.profileContainer}>
-          <Text style={styles.dashboardTitle}>{ROLE_LABEL[role]} Dashboard</Text>
-          <Text style={styles.dashboardSubtitle}>{ROLE_LABEL[role]} Portal</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => navigation.openDrawer()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
 
-        <View style={styles.headerRight}>
-  <Text style={styles.dateText}>{todayLabel}</Text>
+        <Text style={styles.headerTitleText}>Dashboard</Text>
 
-  <TouchableOpacity
-    style={styles.bellButton}
-    onPress={() => {
-      if (role === "teacher") {
-        navigation.navigate("NotificationHistory");
-      } else {
-        navigation.navigate("Notifications");
-      }
-    }}
-  >
-    <View style={styles.bellOutline}>
-      <View style={styles.bellCap} />
-      <View style={styles.bellBody} />
-      <View style={styles.bellClapper} />
-    </View>
-    <View style={styles.bellBadge} />
-  </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.headerBellButton}
+          onPress={() => Alert.alert('Notifications', 'No new notifications.')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+          <View style={styles.headerBellBadge} />
+        </TouchableOpacity>
+      </View>
 
-  <View style={styles.avatarCircle}>
-    <Text style={styles.avatarLetter}>{avatarLetter}</Text>
-  </View>
-</View>
-</View>
-         
-
-      {false && (
-        <View style={styles.roleSwitcherContainer}>
-          <TouchableOpacity
-            style={[styles.roleTab, role === 'teacher' && styles.roleTabActive]}
-            onPress={() => setRole('teacher')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.roleTabText, role === 'teacher' && styles.roleTabTextActive]}>
-              Teacher Panel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.roleTab, role === 'student' && styles.roleTabActive]}
-            onPress={() => setRole('student')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.roleTabText, role === 'student' && styles.roleTabTextActive]}>
-              Student Panel
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.roleTab, role === 'parent' && styles.roleTabActive]}
-            onPress={() => setRole('parent')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.roleTabText, role === 'parent' && styles.roleTabTextActive]}>
-              Parent Panel
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Linked record banner */}
-        {showLinkBanner && (
-          <View style={styles.linkBanner}>
-            <Text style={styles.linkBannerEmoji}>👨‍👩‍👧</Text>
-            <Text style={styles.linkBannerTitle}>
-              {role === 'parent' ? 'No linked student record found.' : 'No linked profile found.'}
-            </Text>
-            <Text style={styles.linkBannerSubtitle}>
-              {role === 'parent'
-                ? "This parent account isn't linked to any student yet."
-                : "This account isn't linked to a profile yet."}
-            </Text>
-          </View>
-        )}
-
-        {/* Academic Overview */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Academic Overview</Text>
-          <Text style={styles.sectionSubtitle}>Attendance, marks, assignments, and exams at a glance</Text>
-          <View style={styles.cardGrid}>
-            {academicItems.map(renderCard)}
-          </View>
-        </View>
-
-        {/* School Services */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>School Services</Text>
-          <Text style={styles.sectionSubtitle}>Fees, timetable, remarks, and communication from school</Text>
-          <View style={styles.cardGrid}>
-            {serviceItems.map(renderCard)}
-          </View>
-        </View>
-
-        {/* My Account */}
-        {accountCards.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>My Account</Text>
-            <View style={styles.cardGrid}>
-              {accountCards.map((card) => (
-                <TouchableOpacity
-                  key={card.id}
-                  style={styles.card}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    if (card.route === 'StudentProfile' && userId) {
-                      navigation.navigate('StudentProfile', { userId });
-                    } else if (card.route === 'TeacherProfile' && userId) {
-                      navigation.navigate('TeacherProfile', { userId });
-                    } else if (card.route === 'ParentProfile' && userId) {
-                      navigation.navigate('ParentProfile', { userId });
-                    } else if (card.route === 'Settings') {
-                      navigation.navigate('Settings');
-                    } else {
-                      Alert.alert(
-                        'Screen Placeholder',
-                        `The "${card.title}" screen is being built next.`,
-                        [{ text: 'OK' }]
-                      );
-                    }
-                  }}
-                >
-                  <View style={[styles.cardTopBar, { backgroundColor: card.color }]} />
-                  <View style={styles.cardBody}>
-                    <View style={styles.cardHeaderRow}>
-                      <View style={[styles.cardIconCircle, { backgroundColor: card.color }]}>
-                        <Text style={styles.cardEmoji}>{card.emoji}</Text>
-                      </View>
-                      <Text style={styles.cardTitle}>{card.title}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+      {/* Content area with white background */}
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          {/* Welcome Card Banner */}
+          <View style={styles.welcomeBanner}>
+            <View style={styles.welcomeInfo}>
+              <Text style={styles.welcomeLabel}>Welcome back,</Text>
+              <Text style={styles.welcomeName}>{displayName || `${ROLE_LABEL[role]} User`}</Text>
+              <Text style={styles.welcomeDate}>{todayLabel}</Text>
+            </View>
+            <View style={styles.welcomeAvatarCircle}>
+              <Text style={styles.welcomeAvatarText}>{avatarLetter}</Text>
             </View>
           </View>
-        )}
 
-        {/* E-Learning Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>E-Learning</Text>
-          <View style={styles.elearningBanner}>
-            <Text style={styles.bannerTitle}>Virtual Classroom Live</Text>
-            <Text style={styles.bannerDesc}>Connect with your subject teachers in video conferences.</Text>
-            <TouchableOpacity style={styles.bannerBtn} onPress={() => Alert.alert('E-Learning', 'E-learning sessions are not scheduled today.')}>
-              <Text style={styles.bannerBtnText}>Join Class</Text>
-            </TouchableOpacity>
+          {/* Linked record banner */}
+          {showLinkBanner && (
+            <View style={styles.linkBanner}>
+              <Text style={styles.linkBannerEmoji}>👨‍👩‍👧</Text>
+              <Text style={styles.linkBannerTitle}>
+                {role === 'parent' ? 'No linked student record found.' : 'No linked profile found.'}
+              </Text>
+              <Text style={styles.linkBannerSubtitle}>
+                {role === 'parent'
+                  ? "This parent account isn't linked to any student yet."
+                  : "This account isn't linked to a profile yet."}
+              </Text>
+            </View>
+          )}
+
+          {/* Academic Overview */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Academic Overview</Text>
+            <Text style={styles.sectionSubtitle}>Attendance, marks, assignments, and exams at a glance</Text>
+            <View style={styles.cardGrid}>
+              {academicItems.map(renderCard)}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+
+          {/* School Services */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>School Services</Text>
+            <Text style={styles.sectionSubtitle}>Fees, timetable, remarks, and communication from school</Text>
+            <View style={styles.cardGrid}>
+              {serviceItems.map(renderCard)}
+            </View>
+          </View>
+
+          {/* My Account */}
+          {accountCards.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>My Account</Text>
+              <View style={styles.cardGrid}>
+                {accountCards.map((card) => (
+                  <TouchableOpacity
+                    key={card.id}
+                    style={styles.card}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      if (card.route === 'Settings') {
+                        navigation.navigate('Settings');
+                      } else if (
+                        card.route === 'StudentProfile' ||
+                        card.route === 'TeacherProfile' ||
+                        card.route === 'ParentProfile'
+                      ) {
+                        if (effectiveUserId) {
+                          navigation.navigate(card.route, { userId: effectiveUserId });
+                        } else {
+                          Alert.alert('Profile Unavailable', 'Could not find your profile. Please log in again.');
+                        }
+                      } else {
+                        Alert.alert(
+                          'Screen Placeholder',
+                          `The "${card.title}" screen is being built next.`,
+                          [{ text: 'OK' }]
+                        );
+                      }
+                    }}
+                  >
+                    <View style={[styles.cardTopBar, { backgroundColor: card.color }]} />
+                    <View style={styles.cardBody}>
+                      <View style={styles.cardHeaderRow}>
+                        <View style={[styles.cardIconCircle, { backgroundColor: card.color }]}>
+                          <Text style={styles.cardEmoji}>{card.emoji}</Text>
+                        </View>
+                        <Text style={styles.cardTitle}>{card.title}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* E-Learning Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>E-Learning</Text>
+            <View style={styles.elearningBanner}>
+              <Text style={styles.bannerTitle}>Virtual Classroom Live</Text>
+              <Text style={styles.bannerDesc}>Connect with your subject teachers in video conferences.</Text>
+              <TouchableOpacity style={styles.bannerBtn} onPress={() => Alert.alert('E-Learning', 'E-learning sessions are not scheduled today.')}>
+                <Text style={styles.bannerBtnText}>Join Class</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // SafeAreaView takes blue color so notch/camera area matches the header
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#2D2C72',
+  },
+  // Content container below the header — white background
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#2D2C72',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    height: 56,
   },
+  headerTitleText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: '#FFFFFF',
+  },
+  headerBellButton: {
+    padding: SPACING.xs,
+    position: 'relative',
+  },
+  headerBellBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  welcomeBanner: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: SPACING.md,
+    marginTop: SPACING.md,
+    padding: SPACING.lg,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
+  },
+  welcomeInfo: {
+    flex: 1,
+  },
+  welcomeLabel: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    fontWeight: FONT_WEIGHT.medium,
+  },
+  welcomeName: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textPrimary,
+    marginTop: 2,
+  },
+  welcomeDate: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    marginTop: 6,
+  },
+  welcomeAvatarCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EEF2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E7FF',
+  },
+  welcomeAvatarText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: '#4F46E5',
+  },
+
   profileContainer: {
     flex: 1,
   },
@@ -691,7 +730,7 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-},
+  },
   bannerDesc: {
     fontSize: 11,
     color: COLORS.textSecondary,
