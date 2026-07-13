@@ -81,11 +81,11 @@ const assignmentApi = {
         return response.data.data;
     },
 
-    /*deleteAssignment: async (assignmentId: string) => {
+    deleteAssignment: async (assignmentId: string) => {
         const response = await api.delete(`/assignments/${assignmentId}`);
 
         return response.data.data;
-    },*/
+    },
 
     getAssignmentSubmissions: async (assignmentId: string) => {
         const response = await api.get(
@@ -103,13 +103,13 @@ const assignmentApi = {
         return response.data.data;
     },
 
-    downloadSubmission: async (submissionId: string) => {
+    /*downloadSubmission: async (submissionId: string) => {
         const response = await api.get(
             `/assignment-submission/download/${submissionId}`,
         );
 
         return response.data.data;
-    },
+    },*/
 
     gradeSubmission: async (
         submissionId: string,
