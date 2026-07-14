@@ -37,8 +37,8 @@ const mapFilterKey = (key) => {
 };
 
 
-const createSubject = async (subjectData) => {
-  const client = getSupabaseClient();
+const createSubject = async (subjectData, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -66,8 +66,8 @@ const createSubject = async (subjectData) => {
   return normalizeSubject(response.data);
 };
 
-const updateSubject = async (id, updates) => {
-  const client = getSupabaseClient();
+const updateSubject = async (id, updates, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -99,8 +99,8 @@ const updateSubject = async (id, updates) => {
   return response.data ? normalizeSubject(response.data) : null;
 };
 
-const getSubjectById = async (id) => {
-  const client = getSupabaseClient();
+const getSubjectById = async (id, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -122,8 +122,8 @@ const getSubjectById = async (id) => {
   return response.data ? normalizeSubject(response.data) : null;
 };
 
-const getAllSubjects = async (filters = {}, options = {}) => {
-  const client = getSupabaseClient();
+const getAllSubjects = async (filters = {}, options = {}, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -167,8 +167,8 @@ const getAllSubjects = async (filters = {}, options = {}) => {
   };
 };
 
-const deleteSubject = async (id) => {
-  const client = getSupabaseClient();
+const deleteSubject = async (id, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {

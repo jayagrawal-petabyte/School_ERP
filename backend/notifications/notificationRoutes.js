@@ -1,16 +1,17 @@
 const express = require('express');
+const { authenticateToken } = require('../auth/middleware/auth.middleware');
 const controller = require('./notificationController');
 
 const router = express.Router();
 
-router.post('/', controller.createNotification);
-router.post('/send', controller.createAndSendNotification);
-router.post('/:id/send', controller.sendNotification);
+router.post('/', authenticateToken, controller.createNotification);
+router.post('/send', authenticateToken, controller.createAndSendNotification);
+router.post('/:id/send', authenticateToken, controller.sendNotification);
 
-router.get('/history', controller.notificationHistory);
-router.get('/me', controller.myNotifications);
+router.get('/history', authenticateToken, controller.notificationHistory);
+router.get('/me', authenticateToken, controller.myNotifications);
 
-router.patch('/announcements/:id', controller.updateAnnouncement);
-router.delete('/announcements/:id', controller.deleteAnnouncement);
+router.patch('/announcements/:id', authenticateToken, controller.updateAnnouncement);
+router.delete('/announcements/:id', authenticateToken, controller.deleteAnnouncement);
 
 module.exports = router;

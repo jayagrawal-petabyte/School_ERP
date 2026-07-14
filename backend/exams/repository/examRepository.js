@@ -37,8 +37,8 @@ const mapFilterKey = (key) => {
   return map[key] || key;
 };
 
-const createExam = async (examData) => {
-  const client = getSupabaseClient();
+const createExam = async (examData, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -66,8 +66,8 @@ const createExam = async (examData) => {
   return normalizeExam(response.data);
 };
 
-const updateExam = async (id, updates) => {
-  const client = getSupabaseClient();
+const updateExam = async (id, updates, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -99,8 +99,8 @@ const updateExam = async (id, updates) => {
   return response.data ? normalizeExam(response.data) : null;
 };
 
-const getExamById = async (id) => {
-  const client = getSupabaseClient();
+const getExamById = async (id, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {
@@ -122,8 +122,8 @@ const getExamById = async (id) => {
   return response.data ? normalizeExam(response.data) : null;
 };
 
-const getAllExams = async (filters = {}, options = {}) => {
-  const client = getSupabaseClient();
+const getAllExams = async (filters = {}, options = {}, user) => {
+  const client = getSupabaseClient(user);
   const allowedColumns = ['id', 'name', 'term', 'academic_year', 'class_id', 'created_at'];
 
   if (!client) {
@@ -167,8 +167,8 @@ const getAllExams = async (filters = {}, options = {}) => {
   };
 };
 
-const deleteExam = async (id) => {
-  const client = getSupabaseClient();
+const deleteExam = async (id, user) => {
+  const client = getSupabaseClient(user);
 
   if (!client) {
     if (!isDevelopmentMode()) {

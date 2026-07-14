@@ -1,63 +1,68 @@
 const store = require('./notificationStore');
+const { getClientForUser } = require('../services/database.service');
 
 const staffRoles = ['admin', 'teacher'];
-const allowedAudienceRoles = ['student', 'teacher', 'parent'];
-const allowedTypes = ['notification', 'announcement'];
+const allowedTargetAudiences = ['students', 'teachers', 'parents', 'all', 'class'];
+const allowedTypes = ['general', 'announcement', 'reminder', 'alert'];
 
 function cleanText(value) {
   return String(value || '').trim().replace(/\s+/g, ' ');
 }
 
 function hasHtmlTag(value) {
-  return /<[^>]+>/i.test(String(value || ''));
+  const s = String(value || '');
+  return s.includes('<') || s.includes('>');
 }
 
 function readUser(req) {
   return req.user || req.currentUser || {};
 }
 
-function requireStaff(user) {
-  const role = String(user.role || '').toLowerCase();
+function readToken(req) {
+  const header = req.headers.authorization || '';
+  return header.startsWith('Bearer ') ? header.slice(7) : header;
+}
+
+async function resolveRealRole(user, token) {
+  const userId = user.id || user._id;
+  if (!userId || !token) {
+    return String(user.role || '').toLowerCase();
+  }
+
+  const supabase = getClientForUser(token);
+  const { data, error } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return String(user.role || '').toLowerCase();
+  }
+
+  return String(data.role || '').toLowerCase();
+}
+
+async function requireStaff(user, token) {
+  const role = await resolveRealRole(user, token);
 
   if (!staffRoles.includes(role)) {
     const error = new Error('Only admins and teachers can create or send notifications.');
     error.statusCode = 403;
     throw error;
   }
-}
 
-function buildAudience(input = {}) {
-  const roles = Array.isArray(input.roles) ? input.roles : [];
-  const userIds = Array.isArray(input.userIds) ? input.userIds : [];
-
-  const cleanedRoles = roles
-    .map((role) => String(role).toLowerCase().trim())
-    .filter(Boolean);
-
-  const invalidRole = cleanedRoles.find((role) => !allowedAudienceRoles.includes(role));
-
-  if (invalidRole) {
-    const error = new Error('Audience can include only student, teacher, or parent.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (cleanedRoles.length === 0 && userIds.length === 0) {
-    const error = new Error('Select at least one audience role or user id.');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return {
-    roles: [...new Set(cleanedRoles)],
-    userIds: [...new Set(userIds.map((id) => String(id).trim()).filter(Boolean))],
-  };
+  return role;
 }
 
 function validatePayload(payload) {
   const title = cleanText(payload.title);
   const message = cleanText(payload.message);
-  const type = payload.type ? String(payload.type).toLowerCase().trim() : 'notification';
+  const type = payload.type ? String(payload.type).toLowerCase().trim() : 'general';
+  const targetAudience = payload.targetAudience
+    ? String(payload.targetAudience).toLowerCase().trim()
+    : '';
+  const classId = payload.classId || null;
 
   if (!title) {
     const error = new Error('Notification title is required.');
@@ -71,41 +76,58 @@ function validatePayload(payload) {
     throw error;
   }
 
-  if (hasHtmlTag(message)) {
-    const error = new Error('Message body cannot contain HTML or script tags.');
+  if (hasHtmlTag(title) || hasHtmlTag(message)) {
+    const error = new Error('Title and message cannot contain HTML or script tags.');
     error.statusCode = 400;
     throw error;
   }
 
   if (!allowedTypes.includes(type)) {
-    const error = new Error('Notification type must be notification or announcement.');
+    const error = new Error(
+      'Notification type must be one of: ' + allowedTypes.join(', ') + '.'
+    );
     error.statusCode = 400;
     throw error;
   }
 
-  return {
-    title,
-    message,
-    type,
-    audience: buildAudience(payload.audience),
-  };
+  if (!allowedTargetAudiences.includes(targetAudience)) {
+    const error = new Error(
+      'targetAudience must be one of: ' + allowedTargetAudiences.join(', ') + '.'
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (targetAudience === 'class' && !classId) {
+    const error = new Error('classId is required when targetAudience is "class".');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { title, message, type, targetAudience, classId };
 }
 
-function createNotification(payload, user) {
-  requireStaff(user);
+async function createNotification(payload, user, token) {
+  const role = await requireStaff(user, token);
 
   const notification = validatePayload(payload);
 
+  if (role === 'teacher' && notification.targetAudience === 'all') {
+    const error = new Error('Teachers cannot send notifications to all users. Use class audience instead.');
+    error.statusCode = 403;
+    throw error;
+  }
+
   return store.addNotification({
     ...notification,
-    createdBy: String(user.id || user._id || user.email || 'unknown'),
-  });
+    createdBy: user.id || user._id,
+  }, token);
 }
 
-function sendNotification(id, user) {
-  requireStaff(user);
+async function sendNotification(id, user, token) {
+  await requireStaff(user, token);
 
-  const notification = store.findNotification(id);
+  const notification = await store.findNotification(id, token);
 
   if (!notification) {
     const error = new Error('Notification not found.');
@@ -119,21 +141,24 @@ function sendNotification(id, user) {
     throw error;
   }
 
+  const recipientIds = await store.resolveRecipientIds(notification, token);
+  await store.insertRecipients(id, recipientIds, token);
+
   return store.updateNotification(id, {
     status: 'sent',
     sentAt: new Date().toISOString(),
-  });
+  }, token);
 }
 
-function createAndSendNotification(payload, user) {
-  const notification = createNotification(payload, user);
-  return sendNotification(notification.id, user);
+async function createAndSendNotification(payload, user, token) {
+  const notification = await createNotification(payload, user, token);
+  return sendNotification(notification.id, user, token);
 }
 
-function updateAnnouncement(id, payload, user) {
-  requireStaff(user);
+async function updateAnnouncement(id, payload, user, token) {
+  await requireStaff(user, token);
 
-  const existing = store.findNotification(id);
+  const existing = await store.findNotification(id, token);
 
   if (!existing || existing.type !== 'announcement') {
     const error = new Error('Announcement not found.');
@@ -153,13 +178,13 @@ function updateAnnouncement(id, payload, user) {
     type: 'announcement',
   });
 
-  return store.updateNotification(id, updated);
+  return store.updateNotification(id, updated, token);
 }
 
-function deleteAnnouncement(id, user) {
-  requireStaff(user);
+async function deleteAnnouncement(id, user, token) {
+  await requireStaff(user, token);
 
-  const existing = store.findNotification(id);
+  const existing = await store.findNotification(id, token);
 
   if (!existing || existing.type !== 'announcement') {
     const error = new Error('Announcement not found.');
@@ -167,28 +192,19 @@ function deleteAnnouncement(id, user) {
     throw error;
   }
 
-  return store.removeNotification(id);
+  return store.removeNotification(id, token);
 }
 
-function notificationHistory(query = {}) {
+function notificationHistory(query, token) {
   return store.listNotifications({
     status: query.status,
     type: query.type,
-  });
+  }, token);
 }
 
-function notificationsForUser(user) {
-  const role = String(user.role || '').toLowerCase();
-
-  if (!allowedAudienceRoles.includes(role)) {
-    return [];
-  }
-
-  return store.listNotifications({
-    status: 'sent',
-    role,
-    userId: user.id || user._id,
-  });
+async function notificationsForUser(user, token) {
+  const userId = user.id || user._id;
+  return store.listForUser(userId, token);
 }
 
 module.exports = {
@@ -198,6 +214,7 @@ module.exports = {
   notificationHistory,
   notificationsForUser,
   readUser,
+  readToken,
   sendNotification,
   updateAnnouncement,
 };

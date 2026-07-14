@@ -1,18 +1,22 @@
-const supabase = require('./supabaseClient');
+const { getClientForUser } = require('../services/database.service');
 const { validateAttendanceDate, validateAttendanceStatus } = require('./validation');
 
 const markAttendance = async (req, res) => {
     try {
-        const { id, appRole } = req.user; 
-        const { date, studentId, status, classId } = req.body;
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
 
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const role = req.user.role; 
+        const normalizedRole = role ? role.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
                 error: "Access denied. Only authorized staff can mark attendance." 
             });
         }
+
+        const { date, studentId, status, classId } = req.body;
 
         const dateCheck = validateAttendanceDate(date);
         if (!dateCheck.valid) {
@@ -55,17 +59,21 @@ const markAttendance = async (req, res) => {
 
 const updateAttendance = async (req, res) => {
     try {
-        const { appRole } = req.user;
-        const { id } = req.params; 
-        const { date, status } = req.body;
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
 
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
 
         if (normalizedRole !== 'admin' && normalizedRole !== 'teacher' && normalizedRole !== 'principal') {
             return res.status(403).json({ 
                 error: "Access denied. Only authorized staff can update attendance records." 
             });
         }
+
+        const { id } = req.params; 
+        const { date, status } = req.body;
 
         const dateCheck = validateAttendanceDate(date);
         if (!dateCheck.valid) {
@@ -101,17 +109,32 @@ const updateAttendance = async (req, res) => {
 
 const viewAttendance = async (req, res) => {
     try {
-        const { appRole, id } = req.user;
-        const { classId, date } = req.query; 
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+
+        const userId = req.user.id;
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
         
-        const normalizedRole = appRole ? appRole.toLowerCase() : '';
+        const { classId, date } = req.query; 
         let query = supabase.from('attendance_records').select('*');
 
         if (normalizedRole === 'student') {
-            console.log(`Enforcing structural query isolation. Filtering target student_id: ${id}`);
-            query = query.eq('student_id', id);
+            query = query.eq('student_id', userId);
+        } else if (normalizedRole === 'parent') {
+            const { data: linkedStudents, error: linkError } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', userId);
+            if (linkError) throw linkError;
+            const studentIds = (linkedStudents || []).map(r => r.student_id);
+            if (studentIds.length === 0) {
+                return res.status(200).json({ message: "No linked students found.", scope: "Parent", data: [] });
+            }
+            query = query.in('student_id', studentIds);
+            if (date) query = query.eq('date', date);
         } else {
-            console.log(`Role '${appRole}' authorized to request cross-sectional attendance logs.`);
             if (classId) query = query.eq('class_id', classId);
             if (date) query = query.eq('date', date);
         }
@@ -121,8 +144,8 @@ const viewAttendance = async (req, res) => {
         if (error) throw error;
 
         return res.status(200).json({ 
-            message: normalizedRole === 'student' ? "Displaying your personal attendance records securely." : "Displaying requested multi-user attendance records.",
-            scope: normalizedRole === 'student' ? "Individual" : "Administrative",
+            message: normalizedRole === 'student' ? "Displaying your personal attendance records securely." : normalizedRole === 'parent' ? "Displaying linked student attendance records." : "Displaying requested multi-user attendance records.",
+            scope: normalizedRole === 'student' ? "Individual" : normalizedRole === 'parent' ? "Parent" : "Administrative",
             data: data
         });
     } catch (error) {
@@ -131,8 +154,79 @@ const viewAttendance = async (req, res) => {
     }
 };
 
+const getTeacherClasses = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+        
+        const teacherId = req.user.id;
+
+        const { data, error } = await supabase
+            .from('class_teachers')
+            .select(`
+                class_id,
+                classes (
+                    id,
+                    class_name,
+                    section
+                )
+            `)
+            .eq('teacher_id', teacherId);
+
+        if (error) throw error;
+
+        const formattedClasses = data.map(item => item.classes).filter(Boolean);
+        return res.status(200).json({ success: true, data: formattedClasses });
+    } catch (error) {
+        console.error("Error in getTeacherClasses:", error);
+        return res.status(500).json({ success: false, error: "Internal server error." });
+    }
+};
+
+const getStudentsByClass = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+        
+        const { classId } = req.query;
+        if (!classId) {
+            return res.status(400).json({ error: "classId parameter is required." });
+        }
+
+        const { data: attendanceRows, error: attendanceError } = await supabase
+            .from('attendance_records')
+            .select('student_id')
+            .eq('class_id', classId);
+
+        if (attendanceError) throw attendanceError;
+
+        const studentIds = [...new Set((attendanceRows || []).map(r => r.student_id))];
+
+        if (studentIds.length === 0) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, full_name, role')
+            .in('id', studentIds)
+            .eq('role', 'student');
+
+        if (error) throw error;
+
+        return res.status(200).json({ success: true, data: data });
+    } catch (error) {
+        console.error("Error in getStudentsByClass:", error);
+        return res.status(500).json({ success: false, error: "Internal server error." });
+    }
+};
+
 module.exports = {
     markAttendance,
     updateAttendance,
-    viewAttendance
+    viewAttendance,
+    getTeacherClasses,
+    getStudentsByClass
 };

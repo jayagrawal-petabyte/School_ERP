@@ -30,8 +30,8 @@ const setCachedValue = (cacheStore, id, value) => {
   });
 };
 
-const fetchRowsByIds = async (table, ids, selectColumns) => {
-  const client = getSupabaseClient();
+const fetchRowsByIds = async (table, ids, selectColumns, user) => {
+  const client = getSupabaseClient(user);
   if (!client) {
     return null;
   }
@@ -59,14 +59,16 @@ const fetchRowsByIds = async (table, ids, selectColumns) => {
   return response?.data || [];
 };
 
-const fetchExamsByIds = async (ids) => {
+const fetchExamsByIds = async (ids, user) => {
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
     .map((id) => getCachedValue(cache.exams, id))
     .filter((value) => value !== null);
   const missingIds = normalizedIds.filter((id) => getCachedValue(cache.exams, id) === null);
 
-  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id') : [];
+  const fetchedResults = missingIds.length > 0
+    ? await fetchRowsByIds('exams', missingIds, 'id,name,term,academic_year,class_id', user)
+    : [];
   if (fetchedResults === null) {
     return null;
   }
@@ -78,14 +80,16 @@ const fetchExamsByIds = async (ids) => {
   return [...cachedResults, ...fetchedResults];
 };
 
-const fetchSubjectsByIds = async (ids) => {
+const fetchSubjectsByIds = async (ids, user) => {
   const normalizedIds = normalizeIds(ids);
   const cachedResults = normalizedIds
     .map((id) => getCachedValue(cache.subjects, id))
     .filter((value) => value !== null);
   const missingIds = normalizedIds.filter((id) => getCachedValue(cache.subjects, id) === null);
 
-  const fetchedResults = missingIds.length > 0 ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code') : [];
+  const fetchedResults = missingIds.length > 0
+    ? await fetchRowsByIds('subjects', missingIds, 'id,name,class_id,sub_code', user)
+    : [];
   if (fetchedResults === null) {
     return null;
   }
@@ -97,12 +101,12 @@ const fetchSubjectsByIds = async (ids) => {
   return [...cachedResults, ...fetchedResults];
 };
 
-const isParentOfStudent = async (parentId, studentId) => {
+const isParentOfStudent = async (parentId, studentId, user) => {
   if (!parentId || !studentId) {
     throw new AppError('Invalid parent/student identifiers', 400);
   }
 
-  const client = getSupabaseClient();
+  const client = getSupabaseClient(user);
   if (!client) {
     return false;
   }
@@ -122,12 +126,12 @@ const isParentOfStudent = async (parentId, studentId) => {
   return Boolean(response?.data);
 };
 
-const getParentStudentIds = async (parentId) => {
+const getParentStudentIds = async (parentId, user) => {
   if (!parentId) {
     throw new AppError('Invalid parent identifier', 400);
   }
 
-  const client = getSupabaseClient();
+  const client = getSupabaseClient(user);
   if (!client) {
     return [];
   }
@@ -148,12 +152,12 @@ const getParentStudentIds = async (parentId) => {
     .map((value) => String(value));
 };
 
-const getTeacherClassIds = async (teacherId) => {
+const getTeacherClassIds = async (teacherId, user) => {
   if (!teacherId) {
     throw new AppError('Invalid teacher identifier', 400);
   }
 
-  const client = getSupabaseClient();
+  const client = getSupabaseClient(user);
   if (!client) {
     return [];
   }
@@ -179,12 +183,12 @@ const getTeacherClassIds = async (teacherId) => {
     .map((value) => String(value));
 };
 
-const isTeacherAssignedToClass = async (teacherId, classId) => {
+const isTeacherAssignedToClass = async (teacherId, classId, user) => {
   if (!teacherId || !classId) {
     return false;
   }
 
-  const teacherClassIds = await getTeacherClassIds(teacherId);
+  const teacherClassIds = await getTeacherClassIds(teacherId, user);
   return teacherClassIds.includes(String(classId));
 };
 

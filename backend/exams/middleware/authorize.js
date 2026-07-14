@@ -34,7 +34,7 @@ const checkOwnership = async (user, resourceContext) => {
     }
 
     if (classId) {
-      return relationshipService.isTeacherAssignedToClass(user.id, classId);
+      return relationshipService.isTeacherAssignedToClass(user.id, classId, user);
     }
 
     return false;
@@ -45,7 +45,7 @@ const checkOwnership = async (user, resourceContext) => {
       return false;
     }
 
-    return relationshipService.isParentOfStudent(user.id, studentId);
+    return relationshipService.isParentOfStudent(user.id, studentId, user);
   }
 
   return false;
