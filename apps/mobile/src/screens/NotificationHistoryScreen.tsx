@@ -25,12 +25,12 @@ interface Props {
     route: NotificationHistoryRouteProp;
     navigation: NotificationHistoryNavigationProp;
 }
-type FilterType = "all" | "notification" | "announcement" | "draft" | "sent";
+type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert" | "draft" | "sent";
 interface NotificationHistoryItem {
     id: string;
     title: string;
     message: string;
-    type: "notification" | "announcement";
+    type: | "general" | "announcement" | "reminder" | "alert";
     status: "draft" | "sent";
     createdAt: string;
     sentAt?: string;
@@ -75,8 +75,10 @@ export default function NotificationHistoryScreen({ navigation }: Props) {
                 item.message.toLowerCase().includes(searchQuery.toLowerCase());
             let matchesFilter = true;
             switch (activeFilter) {
-                case "notification":
+                case "general":
                 case "announcement":
+                case "reminder":
+                case "alert":
                     matchesFilter = item.type === activeFilter;
                     break;
                 case "draft":
@@ -155,7 +157,7 @@ export default function NotificationHistoryScreen({ navigation }: Props) {
             </View>
             <FlatList
                 horizontal
-                data={["all", "notification", "announcement", "draft", "sent"]}
+                data={["all", "general", "announcement", "reminder", "alert", "draft", "sent",]}
                 keyExtractor={(item) => item}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.filterContainer}
