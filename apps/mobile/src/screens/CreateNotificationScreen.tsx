@@ -57,7 +57,6 @@ export default function CreateNotificationScreen({ navigation }: Props) {
         if (!validateForm()) return;
         try {
             setLoading(true);
-            let audience: "students" | "teachers" | "all" | "class";
             if (studentsSelected && teachersSelected) {
                 Alert.alert("Invalid Audience", "Please select either Students or Teachers.");
                 return;     
@@ -88,7 +87,6 @@ export default function CreateNotificationScreen({ navigation }: Props) {
         if (!validateForm()) return;
         try {
             setLoading(true);
-            let audience: "students" | "teachers" | "all" | "class";
             if (studentsSelected && teachersSelected) {
                 Alert.alert("Invalid Audience", "Please select either Students or Teachers.");
                 return;     
