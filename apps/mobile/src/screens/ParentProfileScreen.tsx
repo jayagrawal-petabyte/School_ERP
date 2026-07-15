@@ -106,7 +106,7 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
                   key={child.id}
                   style={styles.childRow}
                   activeOpacity={0.7}
-                  onPress={() => navigation.navigate('StudentProfile', { userId: child.id })}
+                  onPress={() => navigation.navigate('StudentProfile', { userId: child.id, title: `${child.full_name}'s Profile` })}
                 >
                   <Avatar initials={getInitials(child.full_name)} size="small" />
                   <Text style={styles.childName}>{child.full_name}</Text>

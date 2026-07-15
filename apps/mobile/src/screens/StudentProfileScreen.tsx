@@ -37,7 +37,7 @@ const formatDate = (iso: string | null) => {
 };
 
 export default function StudentProfileScreen({ route, navigation }: Props) {
-  const { userId } = route.params;
+  const { userId, title } = route.params;
   const [profile, setProfile] = useState<StudentProfileView | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +52,7 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader
-  title="My Profile"
+  title={title || "My Profile"}
   showBackButton
 />
 
