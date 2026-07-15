@@ -30,7 +30,6 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [attachedFile, setAttachedFile] = useState<{uri: string; name: string; type: string; size?: number; } | null>(null);
   const handleAddAttachment = async () => {
-  Alert.alert("Debug", "New handleAddAttachment is running");
   try {
     const result = await DocumentPicker.getDocumentAsync({
       type: [
