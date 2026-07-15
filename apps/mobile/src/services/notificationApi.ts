@@ -50,7 +50,7 @@ const notificationApi = {
     notificationId: string
   ) => {
     const response = await api.delete(
-      `/notifications/${notificationId}`
+      `/notifications/announcements/${notificationId}`
     );
     return response.data.data;
   },
