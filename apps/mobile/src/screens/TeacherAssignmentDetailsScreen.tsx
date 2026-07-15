@@ -78,11 +78,16 @@ setAssignment(details);
         ]);
     };
 
-    const handleDownload = () => {
-    if (!assignment?.referenceFile) {
-        Alert.alert("No File","No reference material available.");
+    const handleDownload = async () => {
+      if (!assignment?.referenceFile) {
+        Alert.alert("No File", "No reference material available.");
         return;
-    } Alert.alert("Coming Soon","Reference material download is not available yet.");
+      }
+      try {
+        await assignmentApi.downloadReferenceMaterial(assignment.id);
+      } catch (error) {
+        Alert.alert("Error", "Unable to download reference material.");
+      }
     };
 
     const submissionPercentage = assignment && assignment.totalStudents > 0 ? Math.round((assignment.submittedStudents / assignment.totalStudents) * 100) : 0;
