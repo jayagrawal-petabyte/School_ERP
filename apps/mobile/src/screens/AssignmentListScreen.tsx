@@ -27,8 +27,8 @@ type AssignmentListScreenNavigationProp = NativeStackNavigationProp<RootStackPar
 
 interface Props {route: AssignmentListScreenRouteProp;navigation: AssignmentListScreenNavigationProp;}
 
-type FilterStatus = "all" | "pending" | "submitted" | "graded";
-const mapAssignment = (assignment: any): Assignment => {
+type FilterStatus = "all" | "pending" | "submitted" | "late" | "graded";
+const mapAssignment = (assignment: any, status: "pending" | "submitted" | "late" | "graded" = "pending"): Assignment => {
     return {
         id: assignment.id,
         classId: assignment.classId || "",
@@ -62,43 +62,26 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
         }
         try {
             const response = await assignmentApi.getAssignments();
-            console.log("Assignments:", response);
-            const formattedAssignments = await Promise.all(
-                response
-                    .filter(
-                        (item: any) => !classId || String(item.classId) === String(classId),
-                    )
-                    .map(async (item: any) => {
-                        const assignment = mapAssignment(item);
-
-                        try {
-                            const submissionStatus =
-                                await assignmentApi.getSubmissionStatus(
-                                    item.id,
-                                );
-
-                            return {
-                                ...assignment,
-                                status:
-                                    submissionStatus?.status ??
-                                    assignment.status,
-                            };
-                        } catch {
-                            return assignment;
-                        }
-                    }),
-            );
-
+            const classAssignments = response.filter((item: any) => String(item.classId) === String(classId));
+            const formattedAssignments = await Promise.all(classAssignments.map(async (item: any) => {
+                try {
+                    const submission = await assignmentApi.getSubmissionStatus(item.id);
+                    const status = submission?.status === "submitted" ? "submitted" : submission?.status === "late" ? "late" : submission?.status === "graded" ? "graded" : "pending";
+                    return mapAssignment(item, status);
+                } catch (error) {
+                  console.log(`Unable to fetch submission status for assignment ${item.id}`, error);
+                    return mapAssignment(item, "pending");
+                }}));
             setAssignments(formattedAssignments);
-        } catch (error) {
+          } catch (error) {
             console.log(error);
-            Alert.alert("Unable to load assignments");
-        } finally {
+            Alert.alert("Unable to load assignments", "Please try again.");
+          } finally {
             setLoading(false);
             setRefreshing(false);
-        }
+          }
     };
-
+    
     useEffect(() => {
         loadData();
         const unsubscribe = navigation.addListener("focus", () => {
@@ -153,6 +136,12 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
                     bg: COLORS.presentLight,
                     text: COLORS.present,
                     border: "rgba(18, 183, 106, 0.15)",
+                };
+            case "late":
+                return {
+                    bg: COLORS.festivalLight,
+                    text: COLORS.festival,
+                    border: "rgba(245, 158, 11, 0.15)",
                 };
             case "graded":
                 return {
@@ -271,7 +260,7 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
             {/* Status Filter Tabs (Pills) */}
             <View style={styles.filterTabsRow}>
                 {(
-                    ["all", "pending", "submitted", "graded"] as FilterStatus[]
+                    ["all", "pending", "submitted", "late", "graded"] as FilterStatus[]
                 ).map((filter) => (
                     <TouchableOpacity
                         key={filter}
