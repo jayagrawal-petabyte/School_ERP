@@ -20,49 +20,36 @@ const assignmentApi = {
     },
 
     getTeacherAssignments: async () => {
-        const response = await api.get("/assignments");
+        const response = await api.get("/assignments/teacher");
         return response.data.data;
     },
-
+    
     createAssignment: async (data: {
         title: string;
         subject: string;
         className: string;
         description: string;
-        classId: string;
         dueDate: string;
         maxMarks: number;
-        referenceFile?: {
-            uri: string;
-            name: string;
-            type: string;
-        } | null;
+        referenceFile?: any;
     }) => {
         const formData = new FormData();
-
         formData.append("title", data.title);
         formData.append("subject", data.subject);
         formData.append("className", data.className);
         formData.append("description", data.description);
-        formData.append("classId", data.classId);
         formData.append("dueDate", data.dueDate);
-        formData.append("maxMarks", String(data.maxMarks));
-
+        formData.append(
+            "maxMarks",
+            String(data.maxMarks)
+        );
         if (data.referenceFile) {
-            formData.append("referenceFile", {
-                uri: data.referenceFile.uri,
-                name: data.referenceFile.name,
-                type: data.referenceFile.type,
-            } as any);
+            formData.append("referenceFile", data.referenceFile as any);
         }
-
         const response = await api.post("/assignments", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
+            headers: {"Content-Type": "multipart/form-data",},
         });
-
-        return response.data.data;
+    return response.data.data;
     },
 
     updateAssignment: async (
@@ -88,28 +75,19 @@ const assignmentApi = {
     },
 
     getAssignmentSubmissions: async (assignmentId: string) => {
-        const response = await api.get(
-            `/assignment-submission/assignment/${assignmentId}`,
-        );
-
+        const response = await api.get(`/assignment-submissions/assignment/${assignmentId}`);
         return response.data.data;
     },
 
-    getSubmission: async (submissionId: string) => {
-        const response = await api.get(
-            `/assignment-submission/${submissionId}`,
-        );
-
+    getSubmissionStatus: async (assignmentId: string) => {
+        const response = await api.get(`/assignment-submissions/status/${assignmentId}`);
         return response.data.data;
     },
 
-    /*downloadSubmission: async (submissionId: string) => {
-        const response = await api.get(
-            `/assignment-submission/download/${submissionId}`,
-        );
-
+    downloadSubmission: async (submissionId: string) => {
+        const response = await api.get(`/assignment-submissions/download/${submissionId}`);
         return response.data.data;
-    },*/
+    },
 
     gradeSubmission: async (
         submissionId: string,
@@ -130,28 +108,24 @@ const assignmentApi = {
     submitAssignment: async (
         assignmentId: string,
         notes: string,
-        attachedFile: any,
+        attachedFile: {
+            uri: string;
+            name: string;
+            type: string;
+        }
     ) => {
         const formData = new FormData();
-
         formData.append("notes", notes);
-
         formData.append("file", {
             uri: attachedFile.uri,
-            type: attachedFile.type || attachedFile.type,
             name: attachedFile.name,
+            type: attachedFile.type,
         } as any);
-
-        const response = await api.post(
-            `/assignments/${assignmentId}/submit`,
-            formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+        const response = await api.post(`/assignment-submissions/${assignmentId}`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
             },
-        );
-
+        });
         return response.data.data;
     },
 };
