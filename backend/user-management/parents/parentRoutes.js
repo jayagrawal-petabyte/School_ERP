@@ -24,17 +24,25 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Parent not found.' });
     }
 
-    const { data: linkedStudents, error } = await supabase
+    const { data: linkedRows, error: linkError } = await supabase
       .from('parent_students')
-      .select('student_id, users!parent_students_student_id_fkey(id, full_name)')
+      .select('student_id')
       .eq('parent_id', req.params.id);
 
-    if (error) throw error;
+    if (linkError) throw linkError;
 
-    const children = (linkedStudents || []).map(row => ({
-      id: row.users?.id,
-      full_name: row.users?.full_name,
-    }));
+    const studentIds = (linkedRows || []).map(r => r.student_id);
+
+    let children = [];
+    if (studentIds.length > 0) {
+      const { data: studentRows, error: studentError } = await supabase
+        .from('users')
+        .select('id, full_name')
+        .in('id', studentIds);
+
+      if (studentError) throw studentError;
+      children = (studentRows || []).map(s => ({ id: s.id, full_name: s.full_name }));
+    }
 
     return res.status(200).json({
       success: true,
@@ -49,7 +57,6 @@ router.get('/:id', async (req, res) => {
 });
 
 router.patch('/:id', authorizeRoles(ROLES.ADMIN), ctrl.update);
-
 router.delete('/:id', authorizeRoles(ROLES.ADMIN), ctrl.remove);
 
 module.exports = router;
