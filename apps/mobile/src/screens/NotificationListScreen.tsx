@@ -55,12 +55,13 @@ export default function NotificationListScreen({ navigation }: Props) {
             } else {
                 response = await notificationApi.getMyNotifications();
             }
-            setNotifications(response);
+            setNotifications(response || []);
         } catch (error: any) {
             if (__DEV__) {
                 console.log(error);
                 Alert.alert("Error",error.response?.data?.message || "Unable to load notifications.",);
             }
+            setNotifications([]);
         } finally {
             setLoading(false);
             setRefreshing(false);
