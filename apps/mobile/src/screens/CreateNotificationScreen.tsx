@@ -59,14 +59,19 @@ export default function CreateNotificationScreen({ navigation }: Props) {
             setLoading(true);
             let audience: "students" | "teachers" | "all" | "class";
             if (studentsSelected && teachersSelected) {
-                audience = "all";
-            } else if (studentsSelected) {
-                audience = "students";
-            } else {
-                audience = "teachers";
+                Alert.alert("Invalid Audience", "Please select either Students or Teachers.");
+                return;     
             }
-
-            await notificationApi.createAndSendNotification({title, message, type, targetAudience: audience,
+            if (!studentsSelected && !teachersSelected) {
+              Alert.alert("Invalid Audience","Please select an audience.");
+              return;
+            }
+            const audience: | "students" | "teachers" = studentsSelected ? "students" : "teachers";
+            await notificationApi.createAndSendNotification({
+                title,
+                message,
+                type,
+                targetAudience: audience,
             });
             Alert.alert("Success","Notification sent successfully.",[{text: "OK",onPress: () => navigation.goBack(),},],);
         } catch (error: any) {
@@ -85,20 +90,16 @@ export default function CreateNotificationScreen({ navigation }: Props) {
             setLoading(true);
             let audience: "students" | "teachers" | "all" | "class";
             if (studentsSelected && teachersSelected) {
-                audience = "all";
-            } else if (studentsSelected) {
-                audience = "students";
-            } else {
-                audience = "teachers";
+                Alert.alert("Invalid Audience", "Please select either Students or Teachers.");
+                return;     
             }
-            
+            if (!studentsSelected && !teachersSelected) {
+              Alert.alert("Invalid Audience","Please select an audience.");
+              return;
+            }
+            const audience: | "students" | "teachers" = studentsSelected ? "students" : "teachers";
             await notificationApi.createNotification({title,message,type,targetAudience: audience,});
-            Alert.alert("Success", "Draft saved successfully.", [
-                {
-                    text: "OK",
-                    onPress: () => navigation.goBack(),
-                },
-            ]);
+            Alert.alert("Success", "Draft saved successfully.", [{text: "OK", onPress: () => navigation.goBack(),},]);
         } catch (error: any) {
             Alert.alert(
                 "Error",
