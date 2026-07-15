@@ -30,28 +30,17 @@ const assignmentApi = {
         className: string;
         description: string;
         dueDate: string;
-        maxMarks: number;
-        referenceFile?: any;
     }) => {
-        const formData = new FormData();
-        formData.append("title", data.title);
-        formData.append("subject", data.subject);
-        formData.append("className", data.className);
-        formData.append("description", data.description);
-        formData.append("dueDate", data.dueDate);
-        formData.append(
-            "maxMarks",
-            String(data.maxMarks)
-        );
-        if (data.referenceFile) {
-            formData.append("referenceFile", data.referenceFile as any);
-        }
-        const response = await api.post("/assignments", formData, {
-            headers: {"Content-Type": "multipart/form-data",},
+        const response = await api.post("/assignments",{
+            title: data.title,
+            subject: data.subject,
+            className: data.className,
+            description: data.description,
+            dueDate: data.dueDate,
         });
-    return response.data.data;
+        return response.data.data;
     },
-
+    
     updateAssignment: async (
         assignmentId: string,
         data: {
@@ -76,11 +65,6 @@ const assignmentApi = {
 
     getAssignmentSubmissions: async (assignmentId: string) => {
         const response = await api.get(`/assignment-submissions/assignment/${assignmentId}`);
-        return response.data.data;
-    },
-
-    getSubmissionStatus: async (assignmentId: string) => {
-        const response = await api.get(`/assignment-submissions/status/${assignmentId}`);
         return response.data.data;
     },
 
