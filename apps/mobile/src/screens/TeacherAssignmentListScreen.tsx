@@ -22,9 +22,7 @@ import { getToken } from "../utils/security";
 import {COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS,} from "../constants/theme";
 
 type TeacherAssignmentListRouteProp = RouteProp<RootStackParamList, "TeacherAssignmentList">;
-
 type TeacherAssignmentListNavigationProp = NativeStackNavigationProp<RootStackParamList, "TeacherAssignmentList">;
-
 interface Props {
   route: TeacherAssignmentListRouteProp;
   navigation: TeacherAssignmentListNavigationProp;
@@ -62,34 +60,30 @@ export default function TeacherAssignmentListScreen({navigation,}: Props) {
     const [activeFilter, setActiveFilter] = useState<FilterStatus>("active");
 
     const loadData = async (showLoader = true) => {
-    if(showLoader){
+      if (showLoader) {
         setLoading(true);
-    }
-    try{
+      }
+      try {
         const response = await assignmentApi.getTeacherAssignments();
         const formattedAssignments = response.map(mapTeacherAssignment);
         setAssignments(formattedAssignments);
-    }catch(error){
+      } catch (error) {
         console.log(error);
         Alert.alert("Error", "Unable to load assignments.");
-
-    }finally{
+      } finally {
         setLoading(false);
         setRefreshing(false);
-    }
+      }
     };
 
     useEffect(() => {
-        loadData();
+      loadData();
     }, []);
-    
+
     const onRefresh = async () => {
-    const role = await getToken("user_role");
-    if (role === "teacher") {
-        setRefreshing(true);
-        await loadData(false);
-    }
-};
+      setRefreshing(true);
+      await loadData(false);
+    };
 
     const filteredAssignments = useMemo(()=>{
     return assignments.filter(item=>{
