@@ -23,12 +23,12 @@ import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme"
 type NotificationListRouteProp = RouteProp<RootStackParamList, "Notifications">;
 type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"Notifications">;
 interface Props {route: NotificationListRouteProp;navigation: NotificationListNavigationProp;}
-type FilterType = type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
+type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
 interface NotificationItem {
     id: string;
     title: string;
     message: string;
-    type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
+    type: | "all" | "general" | "announcement" | "reminder" | "alert";
     status: "draft" | "sent";
     createdAt: string;
     sentAt?: string;
@@ -57,56 +57,21 @@ export default function NotificationListScreen({ navigation }: Props) {
             } else {
                 response = await notificationApi.getMyNotifications();
             }
-            const formattedNotifications = (response || []).map((item: any) => {
-                const notification = item.notification || item.notifications || item;
-                return {
-                    id:
-                        notification.id ||
-                        item.notificationId,
-
-                    title:
-                        notification.title ||
-                        "",
-
-                    message:
-                        notification.message ||
-                        "",
-
-                    type:
-                        notification.type ||
-                        "general",
-
-                    status:
-                        notification.status ||
-                        "sent",
-
-                    targetAudience:
-                        notification.targetAudience ||
-                        notification.target_audience ||
-                        "students",
-
-                    createdAt:
-                        notification.createdAt ||
-                        notification.created_at ||
-                        item.deliveredAt ||
-                        item.delivered_at ||
-                        "",
-
-                    sentAt:
-                        notification.sentAt ||
-                        notification.sent_at,
-
-                    createdBy:
-                        notification.createdBy ||
-                        notification.created_by ||
-                        "",
-                };
-            });
-
-        setNotifications(formattedNotifications);
-    } catch (error: any) {
-        if (__DEV__) {
-            console.log(error);
+            const formattedNotifications = (response || []).map((item: any) => ({
+                id: item.id,
+                title: item.title || "",
+                message: item.message || "",
+                type: item.type || "general",
+                status: item.status || "sent",
+                targetAudience: item.targetAudience || "students",
+                createdAt: item.createdAt || item.deliveredAt || "",
+                sentAt: item.sentAt,
+                createdBy: item.createdBy || "",
+            }));
+            setNotifications(formattedNotifications);
+        } catch (error: any) {
+            if (__DEV__) {
+                console.log(error);
         }
 
         Alert.alert(
