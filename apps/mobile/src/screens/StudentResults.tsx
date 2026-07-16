@@ -173,7 +173,7 @@ export default function StudentResults({
 />
       <FlatList
         data={results.subjects}
-        keyExtractor={(item) => item.subjectId}
+        keyExtractor={(item, index) => `${item.subjectId}-${index}`}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -190,7 +190,7 @@ export default function StudentResults({
               <View style={styles.tabContainer}>
                 {resultsList.map((res, index) => (
                   <TouchableOpacity
-                    key={res.exam.id}
+                    key={`${res.exam.id}-${index}`}
                     style={[
                       styles.tabButton,
                       selectedExamIndex === index && styles.activeTabButton
