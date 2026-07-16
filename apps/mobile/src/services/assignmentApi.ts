@@ -71,6 +71,7 @@ const assignmentApi = {
         className: string;
         description: string;
         dueDate: string;
+        maxMarks: number;
     }) => {
         try {
             const headers = await getAuthHeaders();
@@ -83,6 +84,7 @@ const assignmentApi = {
                     className: data.className,
                     description: data.description,
                     dueDate: data.dueDate,
+                    maxMarks: data.maxMarks,
                 }),
             });
             if (!response.ok) throw new Error('Failed to create assignment');
@@ -165,6 +167,22 @@ const assignmentApi = {
             return result.data;
         } catch (error) {
             console.error('Error downloading submission:', error);
+            throw error;
+        }
+    },
+
+    downloadReferenceMaterial: async (assignmentId: string) => {
+        try {
+            const headers = await getAuthHeaders();
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/assignments/download/${assignmentId}`, {
+                method: 'GET',
+                headers,
+            });
+            if (!response.ok) throw new Error('Failed to download reference material');
+            const result = await response.json();
+            return result.data;
+        } catch (error) {
+            console.error('Error downloading reference material:', error);
             throw error;
         }
     },

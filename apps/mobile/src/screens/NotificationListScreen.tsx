@@ -22,7 +22,7 @@ import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme"
 
 type NotificationListRouteProp = RouteProp<RootStackParamList, "Notifications">;
 type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"Notifications">;
-interface Props {route: NotificationListRouteProp;navigation: NotificationListNavigationProp;}
+interface Props {route?: any;navigation?: any;}
 type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
 interface NotificationItem {
     id: string;
@@ -242,7 +242,7 @@ export default function NotificationListScreen({ navigation }: Props) {
                             <View
                                 style={[
                                     styles.typeBadge,
-                                    styles[`${item.type}Badge`],
+                                    (styles as any)[`${item.type}Badge`],
                                 ]}
                             >
                                 <Text style={styles.typeBadgeText}>
@@ -522,13 +522,6 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "flex-start",
     },
-
-    emptyContainer: {
-        paddingVertical: SPACING.xl * 2,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
     emptyText: {
         fontSize: FONT_SIZE.md,
         color: COLORS.textSecondary,

@@ -170,7 +170,7 @@ export interface Assignment {
   dueDate: string;
   maxMarks: number;
   assignedBy: string;
-  status: 'pending' | 'submitted' | 'graded';
+  status: 'pending' | 'submitted' | 'graded' | 'late';
   obtainedMarks?: number;
   feedback?: string;
   attachmentUrl?: string;

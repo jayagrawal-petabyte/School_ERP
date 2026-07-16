@@ -89,11 +89,6 @@ export default function TeacherAssignmentDetailsScreen({route, navigation,}: Pro
       } catch (error) {
         Alert.alert("Error", "Unable to download reference material.");
       }
-    const handleDownload = () => {if (!assignment?.referenceFile) {
-        Alert.alert("No File", "No reference material available.");
-        return;
-    }
-    Alert.alert("Coming Soon");
     };
 
     const submissionPercentage = assignment && assignment.totalStudents > 0 ? Math.round((assignment.submittedStudents / assignment.totalStudents) * 100) : 0;

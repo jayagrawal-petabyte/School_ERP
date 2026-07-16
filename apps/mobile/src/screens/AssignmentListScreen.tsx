@@ -89,31 +89,6 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
         });
         return unsubscribe;
     }, [navigation, classId]);
-  // Reload assignments when screen gains focus or mounts
-  const loadData = async (showLoader = true) => {
-  if (showLoader) {
-    setLoading(true);
-  }
-  try {
-    const response = await assignmentApi.getAssignments();
-    console.log("Assignments:", response);
-    const formattedAssignments = response
-      .filter(
-        (item: any) =>
-          !classId || String(item.classId) === String(classId)
-      )
-      .map(mapAssignment);
-    setAssignments(formattedAssignments || []);
-  } catch (error) {
-    console.log(error);
-    Alert.alert(
-      "Unable to load assignments",
-    );
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-  };
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -246,104 +221,7 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
         );
     };
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Visual Header */}
-            <View style={styles.customHeader}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text style={styles.backButtonText}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Assignments</Text>
-                <TouchableOpacity style={styles.bellButton}>
-                    <View style={styles.bellOutline}>
-                        <View style={styles.bellCap} />
-                        <View style={styles.bellBody} />
-                        <View style={styles.bellClapper} />
-                    </View>
-                </TouchableOpacity>
-            </View>
-
-            {/* Search Input Bar */}
-            <View style={styles.searchSection}>
-                <View style={styles.searchBox}>
-                    <Text style={styles.searchIcon}>🔍</Text>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search assignments..."
-                        value={searchQuery}
-                        onChangeText={setSearchQuery}
-                        placeholderTextColor={COLORS.textMuted}
-                    />
-                </View>
-            </View>
-
-            {/* Status Filter Tabs (Pills) */}
-            <View style={styles.filterTabsRow}>
-                {(
-                    ["all", "pending", "submitted", "late", "graded"] as FilterStatus[]
-                ).map((filter) => (
-                    <TouchableOpacity
-                        key={filter}
-                        style={[
-                            styles.filterTabButton,
-                            activeFilter === filter &&
-                                styles.filterTabButtonActive,
-                        ]}
-                        onPress={() => setActiveFilter(filter)}
-                        activeOpacity={0.7}
-                    >
-                        <Text
-                            style={[
-                                styles.filterTabLabel,
-                                activeFilter === filter &&
-                                    styles.filterTabLabelActive,
-                            ]}
-                        >
-                            {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
-                    <Text style={styles.loadingText}>
-                        Fetching assignments...
-                    </Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={filteredAssignments}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderAssignmentCard}
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>
-                                No assignments found in this section.
-                            </Text>
-                        </View>
-                    }
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[COLORS.primary]}
-                            tintColor={COLORS.primary}
-                        />
-                    }
-                />
-            )}
-        </SafeAreaView>
-    );
-  };
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>

@@ -14,7 +14,6 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
-import { DashboardCard } from '../types';
 import { DashboardCard, AppUser } from '../types';
 import { DashboardService, ProfileService } from '../services/profileApi';
 import { Ionicons } from '@expo/vector-icons';
@@ -430,12 +429,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
     height: 56,
-  },
-  headerTitleText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: '#FFFFFF',
-  },
   },
   headerTitleText: {
     fontSize: FONT_SIZE.md,

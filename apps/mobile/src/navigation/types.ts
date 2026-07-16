@@ -20,7 +20,7 @@ export type RootStackParamList = {
   TeacherAssignmentDetails: {assignmentId: string;};
   CreateAssignment: undefined;
   StudentSubmissionList: {assignmentId: string;};
-  GradeSubmission: {submissionId: string;};
+  GradeSubmission: {submissionId: string; submission?: any;};
 
   //Notification Module
   Notifications: undefined;
@@ -51,7 +51,4 @@ export type RootStackParamList = {
 
   // Notifications Module
   NotificationList: undefined;
-  NotificationDetails: { notification: any };
-  CreateNotification: undefined;
-  NotificationHistory: undefined;
 };
