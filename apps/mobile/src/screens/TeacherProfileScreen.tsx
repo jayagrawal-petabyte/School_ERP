@@ -112,12 +112,12 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
               <Text style={styles.infoValue}>
                 {isClassTeacher
                   ? classTeacherFor.map((c) => `${c.class_name} - ${c.section}`).join(', ')
-                  : 'No'}
+                  : 'NA'}
               </Text>
             </View>
             <View style={styles.divider} />
             {profile.classes.length === 0 ? (
-              <Text style={styles.emptyText}>No classes assigned yet</Text>
+              <Text style={styles.emptyText}>No classes assigned.</Text>
             ) : (
               <View style={styles.chipWrap}>
                 {profile.classes.map((c) => (
