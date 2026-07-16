@@ -23,13 +23,12 @@ import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme"
 type NotificationListRouteProp = RouteProp<RootStackParamList, "Notifications">;
 type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"Notifications">;
 interface Props {route: NotificationListRouteProp;navigation: NotificationListNavigationProp;}
-type FilterType = "all" | "notification" | "announcement";
-
+type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
 interface NotificationItem {
     id: string;
     title: string;
     message: string;
-    type: "notification" | "announcement";
+    type: | "all" | "general" | "announcement" | "reminder" | "alert";
     status: "draft" | "sent";
     createdAt: string;
     sentAt?: string;
@@ -44,7 +43,10 @@ export default function NotificationListScreen({ navigation }: Props) {
     const [searchQuery, setSearchQuery] = useState("");
     const [activeFilter, setActiveFilter] = useState<FilterType>("all");
     const [role, setRole] = useState<"teacher" | "student">("student");
-    const loadNotifications = async (userRole: string, showLoader = true) => {
+    const loadNotifications = async (
+        userRole: string,
+        showLoader = true
+    ) => {
         try {
             if (showLoader) {
                 setLoading(true);
@@ -55,17 +57,34 @@ export default function NotificationListScreen({ navigation }: Props) {
             } else {
                 response = await notificationApi.getMyNotifications();
             }
-            setNotifications(response);
+            const formattedNotifications = (response || []).map((item: any) => ({
+                id: item.id,
+                title: item.title || "",
+                message: item.message || "",
+                type: item.type || "general",
+                status: item.status || "sent",
+                targetAudience: item.targetAudience || "students",
+                createdAt: item.createdAt || item.deliveredAt || "",
+                sentAt: item.sentAt,
+                createdBy: item.createdBy || "",
+            }));
+            setNotifications(formattedNotifications);
         } catch (error: any) {
             if (__DEV__) {
                 console.log(error);
-                Alert.alert("Error",error.response?.data?.message || "Unable to load notifications.",);
-            }
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
         }
-    };
+
+        Alert.alert(
+            "Error",
+            "Unable to load notifications."
+        );
+
+        setNotifications([]);
+    } finally {
+        setLoading(false);
+        setRefreshing(false);
+    }
+};
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -185,7 +204,7 @@ export default function NotificationListScreen({ navigation }: Props) {
             </View>
             <FlatList
                 horizontal
-                data={["all", "notification", "announcement"]}
+                data={["all", "general", "announcement", "reminder", "alert",]}
                 keyExtractor={(item) => item}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.filterContainer}
@@ -229,9 +248,7 @@ export default function NotificationListScreen({ navigation }: Props) {
                                 ]}
                             >
                                 <Text style={styles.typeBadgeText}>
-                                    {item.type === "announcement"
-                                        ? "ANNOUNCEMENT"
-                                        : "NOTIFICATION"}
+                                    {item.type.toUpperCase()}
                                 </Text>
                             </View>
                         </View>

@@ -25,7 +25,7 @@ interface NotificationDetails {
     id: string;
     title: string;
     message: string;
-    type: "notification" | "announcement";
+    type: | "general" | "announcement" | "reminder" | "alert";
     status: "draft" | "sent";
     createdAt: string;
     sentAt?: string;
@@ -97,9 +97,7 @@ export default function NotificationDetailsScreen({route,navigation,}: Props) {
                                     : styles.notificationBadge,
                             ]}
                         >
-                            <Text style={styles.typeBadgeText}>
-                                {notificationData.type.toUpperCase()}
-                            </Text>
+                            <Text style={styles.typeBadgeText}>{notificationData.type.toUpperCase()}</Text>
                         </View>
                         {notificationData.status === "draft" && (
                             <View
