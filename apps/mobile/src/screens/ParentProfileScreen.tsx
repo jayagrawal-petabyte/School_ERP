@@ -6,9 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
-  
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -88,12 +87,7 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
                 {profile.account_status === 'active' ? 'Active' : 'Inactive'}
               </Text>
             </View>
-            <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>🕐</Text>
-              <Text style={styles.infoLabel}>Last Login</Text>
-              <Text style={styles.infoValue}>{formatDate(profile.last_login_at)}</Text>
-            </View>
+
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <Text style={styles.infoIcon}>📅</Text>
@@ -112,7 +106,7 @@ export default function ParentProfileScreen({ route, navigation }: Props) {
                   key={child.id}
                   style={styles.childRow}
                   activeOpacity={0.7}
-                  onPress={() => navigation.navigate('StudentProfile', { userId: child.id })}
+                  onPress={() => navigation.navigate('StudentProfile', { userId: child.id, title: `${child.full_name}'s Profile` })}
                 >
                   <Avatar initials={getInitials(child.full_name)} size="small" />
                   <Text style={styles.childName}>{child.full_name}</Text>

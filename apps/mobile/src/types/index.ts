@@ -55,8 +55,12 @@ export interface ClassRecord {
   created_at: string;
 }
 
+export interface TeacherClassRecord extends ClassRecord {
+  is_class_teacher: boolean;
+}
+
 export interface TeacherProfileView extends AppUser {
-  classes: ClassRecord[];
+  classes: TeacherClassRecord[];
 }
 
 export interface ParentProfileView extends AppUser {

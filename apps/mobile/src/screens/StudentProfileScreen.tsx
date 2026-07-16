@@ -6,8 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -37,7 +37,7 @@ const formatDate = (iso: string | null) => {
 };
 
 export default function StudentProfileScreen({ route, navigation }: Props) {
-  const { userId } = route.params;
+  const { userId, title } = route.params;
   const [profile, setProfile] = useState<StudentProfileView | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +52,7 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader
-  title="My Profile"
+  title={title || "My Profile"}
   showBackButton
 />
 
@@ -87,12 +87,7 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
                 {profile.account_status === 'active' ? 'Active' : 'Inactive'}
               </Text>
             </View>
-            <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>🕐</Text>
-              <Text style={styles.infoLabel}>Last Login</Text>
-              <Text style={styles.infoValue}>{formatDate(profile.last_login_at)}</Text>
-            </View>
+
             <View style={styles.divider} />
             <View style={styles.infoRow}>
               <Text style={styles.infoIcon}>📅</Text>

@@ -161,7 +161,7 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No marks available.',
           route: 'Results'
         },
-        { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7', section: 'services', emptyLabel: 'No linked student record found.' },
+        { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7', section: 'services', emptyLabel: 'No linked student record found.', route: 'ParentProfile', params: { userId } },
         ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
       ];
     } else {
