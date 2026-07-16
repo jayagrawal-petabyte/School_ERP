@@ -23,6 +23,10 @@ import {COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS,} from "../constants/th
 
 type TeacherAssignmentListRouteProp = RouteProp<RootStackParamList, "TeacherAssignmentList">;
 type TeacherAssignmentListNavigationProp = NativeStackNavigationProp<RootStackParamList, "TeacherAssignmentList">;
+import {COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS,} from "../constants/theme";
+
+type TeacherAssignmentListRouteProp = RouteProp<RootStackParamList, "TeacherAssignmentList">;
+type TeacherAssignmentListNavigationProp = NativeStackNavigationProp<RootStackParamList, "TeacherAssignmentList">;
 interface Props {
   route: TeacherAssignmentListRouteProp;
   navigation: TeacherAssignmentListNavigationProp;
@@ -61,6 +65,29 @@ export default function TeacherAssignmentListScreen({navigation,}: Props) {
 
     const loadData = async (showLoader = true) => {
       if (showLoader) {
+        setLoading(true);
+      }
+      try {
+        const response = await assignmentApi.getTeacherAssignments();
+        const formattedAssignments = response.map(mapTeacherAssignment);
+        setAssignments(formattedAssignments);
+      } catch (error) {
+        console.log(error);
+        Alert.alert("Error", "Unable to load assignments.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    };
+
+    useEffect(() => {
+      loadData();
+    }, []);
+
+    const onRefresh = async () => {
+      setRefreshing(true);
+      await loadData(false);
+    if(showLoader){
         setLoading(true);
       }
       try {

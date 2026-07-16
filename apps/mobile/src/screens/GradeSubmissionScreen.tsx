@@ -58,6 +58,13 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
       setLoading(false);
     }, [submissionId, routeSubmission]);
 
+    const handleDownload = async () => {
+      if (!submission) return;
+      try {
+        await assignmentApi.downloadSubmission(submission.id);
+      } catch {
+        Alert.alert("Error", "Unable to download submission.");
+      }
     const loadSubmission = async () => {
   setLoading(true);
 
@@ -204,6 +211,10 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Submitted File</Text>
                         {submission.attachment ? (
+                            <TouchableOpacity style={[styles.fileCard, { opacity: 0.5 }, ]} onPress={handleDownload}>
+                                <View>
+                                    <Text style={styles.fileName}>{submission.attachment.name}</Text>
+                                    <Text style={styles.fileSubtitle}>Submitted File</Text>
                             <TouchableOpacity style={styles.fileCard} onPress={handleDownload}>
                                 <View>
                                     <Text style={styles.fileName}>{submission.attachment.name}</Text>
@@ -237,6 +248,7 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                             placeholderTextColor={COLORS.textSecondary}
                             textAlignVertical="top"/>
                     </View>
+                    <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled,]} disabled={submitting} onPress={() => Alert.alert("Backend Pending","Submission grading will be enabled once the backend grading API is available.")}>
                     <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled,]} disabled={submitting} onPress={handleSubmit}>
                         {submitting ? (
                             <ActivityIndicator color="#FFFFFF"/>
