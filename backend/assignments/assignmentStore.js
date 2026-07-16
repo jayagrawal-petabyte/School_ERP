@@ -1,50 +1,71 @@
-const assignments = [];
+const {
+  getClientForUser,
+} = require("../services/database.service");
 
-let nextId = 1;
-
-function now() {
-  return new Date().toISOString();
-}
-
-function addAssignment(data) {
-  const assignment = {
-    id: String(nextId++),
-
-    title: data.title,
-    description: data.description,
-    subject: data.subject,
-
-    // Transition support
-    classId: data.classId || null,
-    className: data.className || null,
-
-    dueDate: data.dueDate,
-
-    createdBy: data.createdBy,
-
-    createdAt: now(),
-    updatedAt: now(),
+function toDatabase(assignment) {
+  return {
+    title: assignment.title,
+    description: assignment.description,
+    subject: assignment.subject,
+    class_id: assignment.classId,
+    class_name: assignment.className,
+    due_date: assignment.dueDate,
+    created_by: assignment.createdBy,
   };
-
-  assignments.push(assignment);
-
-  return assignment;
 }
 
-function findAssignment(id) {
-  return assignments.find(
-    (assignment) => assignment.id === String(id)
-  );
+function toModel(row) {
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    subject: row.subject,
+    classId: row.class_id,
+    className: row.class_name,
+    dueDate: row.due_date,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
-function updateAssignment(id, changes) {
-  const assignment = findAssignment(id);
+async function addAssignment(token, data) {
+  const supabase = getClientForUser(token);
 
-  if (!assignment) {
-    return null;
+  const { data: insertedAssignment, error } = await supabase
+    .from("assignments")
+    .insert(toDatabase(data))
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
   }
 
-  // Never allow these fields to be overwritten
+  return toModel(insertedAssignment);
+}
+
+async function findAssignment(token, id) {
+  const supabase = getClientForUser(token);
+
+  const { data, error } = await supabase
+    .from("assignments")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return toModel(data);
+}
+
+async function updateAssignment(token, id, changes) {
+  const supabase = getClientForUser(token);
+
   const {
     id: ignoredId,
     createdBy,
@@ -52,43 +73,59 @@ function updateAssignment(id, changes) {
     ...allowedChanges
   } = changes;
 
-  Object.assign(assignment, allowedChanges, {
-    updatedAt: now(),
-  });
+  const { data, error } = await supabase
+    .from("assignments")
+    .update(toDatabase(allowedChanges))
+    .eq("id", id)
+    .select()
+    .maybeSingle();
 
-  return assignment;
-}
-
-function removeAssignment(id) {
-  const index = assignments.findIndex(
-    (assignment) => assignment.id === String(id)
-  );
-
-  if (index === -1) {
-    return null;
+  if (error) {
+    throw error;
   }
 
-  const [removedAssignment] = assignments.splice(index, 1);
-
-  return removedAssignment;
+  return toModel(data);
 }
 
-function listAssignments(filters = {}) {
-  let result = [...assignments];
+async function removeAssignment(token, id) {
+  const supabase = getClientForUser(token);
+
+  const { data, error } = await supabase
+    .from("assignments")
+    .delete()
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return toModel(data);
+}
+
+async function listAssignments(token, filters = {}) {
+  const supabase = getClientForUser(token);
+
+  let query = supabase
+    .from("assignments")
+    .select("*");
 
   if (filters.classId) {
-    result = result.filter(
-      (assignment) => assignment.classId === filters.classId
-    );
+    query = query.eq("class_id", filters.classId);
   }
 
   if (filters.subject) {
-    result = result.filter(
-      (assignment) => assignment.subject === filters.subject
-    );
+    query = query.eq("subject", filters.subject);
   }
 
-  return result;
+  const { data, error } = await query;
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(toModel);
 }
 
 module.exports = {
