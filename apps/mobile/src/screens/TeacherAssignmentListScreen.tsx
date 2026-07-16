@@ -18,6 +18,11 @@ import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import assignmentApi from "../services/assignmentApi";
+import { getToken } from "../utils/security";
+import {COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS,} from "../constants/theme";
+
+type TeacherAssignmentListRouteProp = RouteProp<RootStackParamList, "TeacherAssignmentList">;
+type TeacherAssignmentListNavigationProp = NativeStackNavigationProp<RootStackParamList, "TeacherAssignmentList">;
 import {COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS,} from "../constants/theme";
 
 type TeacherAssignmentListRouteProp = RouteProp<RootStackParamList, "TeacherAssignmentList">;
@@ -61,6 +66,29 @@ export default function TeacherAssignmentListScreen({navigation,}: Props) {
     const [activeFilter, setActiveFilter] = useState<FilterStatus>("active");
 
     const loadData = async (showLoader = true) => {
+      if (showLoader) {
+        setLoading(true);
+      }
+      try {
+        const response = await assignmentApi.getTeacherAssignments();
+        const formattedAssignments = response.map(mapTeacherAssignment);
+        setAssignments(formattedAssignments);
+      } catch (error) {
+        console.log(error);
+        Alert.alert("Error", "Unable to load assignments.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    };
+
+    useEffect(() => {
+      loadData();
+    }, []);
+
+    const onRefresh = async () => {
+      setRefreshing(true);
+      await loadData(false);
     if(showLoader){
         setLoading(true);
     }

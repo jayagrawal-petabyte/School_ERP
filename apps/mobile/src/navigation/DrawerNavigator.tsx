@@ -42,7 +42,7 @@ function AttendanceScreenWrapper({ route, navigation }: any) {
     return <AttendanceHistoryScreen route={route} navigation={navigation} />;
   }
 }
-
+        
 export default function DrawerNavigator() {
   const route: any = useRoute();
   const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(
@@ -88,6 +88,10 @@ export default function DrawerNavigator() {
       />
 
       <Drawer.Screen
+  name="Attendance"
+  component={AttendanceListScreen}
+  initialParams={route.params}
+/>
         name="Attendance"
         component={AttendanceScreenWrapper}
         initialParams={route.params}

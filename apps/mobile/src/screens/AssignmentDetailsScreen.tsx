@@ -58,6 +58,7 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
       const submission =
         await assignmentApi.getSubmissionStatus(assignmentId);
       if (submission) {
+        const status = submission.status === "submitted" ? "submitted" : submission.status === "late" ? "late" : submission.status === "graded" ? "graded" : "pending";
         assignmentData.status = submission.status;
         assignmentData.submission = submission;
       }
@@ -87,6 +88,8 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
         return { bg: COLORS.absentLight, text: COLORS.absent, border: 'rgba(240, 68, 56, 0.15)' };
       case 'submitted':
         return { bg: COLORS.presentLight, text: COLORS.present, border: 'rgba(18, 183, 106, 0.15)' };
+      case 'late':
+        return {bg: COLORS.festivalLight, text: COLORS.festival, border: 'rgba(245, 158, 11, 0.15)',};
       case 'graded':
         return { bg: COLORS.festivalLight, text: COLORS.festival, border: 'rgba(46, 144, 250, 0.15)' };
       default:
@@ -167,16 +170,8 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
           {/* Reference files */}
           <View style={styles.textSection}>
             <Text style={styles.sectionTitle}>Reference Files</Text>
-            <View style={styles.attachmentBox}>
-              <Text style={styles.attachmentIcon}>📄</Text>
-              <View style={styles.attachmentTextCol}>
-                <Text style={styles.attachmentName}>{assignment.subject}_Guidelines.pdf</Text>
-                <Text style={styles.attachmentSize}>2.4 MB • PDF Document</Text>
-              </View>
-              <Text style={styles.downloadArrow}>↓</Text>
-            </View>
+            <Text style={styles.instructionsText}>No reference files available.</Text>
           </View>
-        </View>
 
         {/* Submission log or Grade Details */}
         {assignment.submission && (
