@@ -1,78 +1,95 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AttendanceOverview } from "../components/AttendanceOverview";
 import { SubjectAttendance } from "../components/SubjectAttendance";
 import { MonthlyAttendance } from "../components/MonthlyAttendance";
 import { AttendanceInsights } from "../components/AttendanceInsights";
-
-// Dummy data
-const dummyOverview = {
-  overall: 82,
-  present: 164,
-  absent: 36,
-  late: 12,
-};
-
-const dummySubjects = [
-  { name: "Mathematics", present: 38, absent: 4, percentage: 90 },
-  { name: "Science", present: 35, absent: 7, percentage: 83 },
-  { name: "English", present: 32, absent: 10, percentage: 76 },
-  { name: "History", present: 30, absent: 12, percentage: 71 },
-  { name: "Geography", present: 29, absent: 13, percentage: 69 },
-];
-
-const dummyMonthly = [
-  { month: "Jan", present: 22, absent: 3, percentage: 88 },
-  { month: "Feb", present: 20, absent: 5, percentage: 80 },
-  { month: "Mar", present: 18, absent: 6, percentage: 75 },
-  { month: "Apr", present: 23, absent: 2, percentage: 92 },
-  { month: "May", present: 21, absent: 4, percentage: 84 },
-  { month: "Jun", present: 20, absent: 4, percentage: 83 },
-];
-
-const dummyInsights = [
-  {
-    icon: "📈",
-    title: "Trend Upward",
-    description: "Your attendance has improved by 8% compared to last month.",
-  },
-  {
-    icon: "⚠️",
-    title: "At Risk Subjects",
-    description: "History and Geography need immediate attention.",
-  },
-  {
-    icon: "💯",
-    title: "Perfect Streak",
-    description: "You had a 15-day perfect attendance streak in April.",
-  },
-  {
-    icon: "⏰",
-    title: "Late Arrivals",
-    description: "Most late arrivals are on Monday mornings.",
-  },
-  {
-    icon: "🏆",
-    title: "Best Subject",
-    description: "Mathematics has your highest attendance at 90%.",
-  },
-  {
-    icon: "📅",
-    title: "Monthly Goal",
-    description: "Aim for 90% attendance in July to cross the 85% threshold.",
-  },
-];
+import {
+  getAttendanceOverview,
+  getSubjectAttendance,
+  getMonthlyAttendanceReport,
+  getAttendanceInsights,
+  downloadAttendanceReport,
+} from "../../api";
 
 export const AttendanceReports: React.FC = () => {
-  const handleDownload = () => {
-    // Dummy function
-    alert("Report download initiated (dummy)");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [overview, setOverview] = useState({
+    overall: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+  });
+  const [subjects, setSubjects] = useState<Array<{ name: string; present: number; absent: number; percentage: number }>>([]);
+  const [monthlyData, setMonthlyData] = useState<Array<{ month: string; present: number; absent: number; percentage: number }>>([]);
+  const [insights, setInsights] = useState<Array<{ icon: string; title: string; description: string }>>([]);
+
+  useEffect(() => {
+    const fetchReportData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch all report data in parallel
+        const [overviewData, subjectsData, monthlyData, insightsData] = await Promise.all([
+          getAttendanceOverview(),
+          getSubjectAttendance(),
+          getMonthlyAttendanceReport(),
+          getAttendanceInsights(),
+        ]);
+
+        setOverview(overviewData || { overall: 0, present: 0, absent: 0, late: 0 });
+        setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
+        setMonthlyData(Array.isArray(monthlyData) ? monthlyData : []);
+        setInsights(Array.isArray(insightsData) ? insightsData : []);
+      } catch (err) {
+        setError('Failed to load attendance reports. Please try again later.');
+        console.error('Error fetching attendance reports:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, []);
+
+  const handleDownload = async () => {
+    try {
+      const blob = await downloadAttendanceReport('pdf');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'attendance-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert('Failed to download report. Please try again.');
+      console.error('Error downloading report:', err);
+    }
   };
 
   const handlePrint = () => {
-    // Dummy function
     window.print();
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12 text-gray-500">Loading attendance reports...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="text-center py-12 text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -102,17 +119,17 @@ export const AttendanceReports: React.FC = () => {
       </div>
 
       <AttendanceOverview
-        overall={dummyOverview.overall}
-        present={dummyOverview.present}
-        absent={dummyOverview.absent}
-        late={dummyOverview.late}
+        overall={overview.overall}
+        present={overview.present}
+        absent={overview.absent}
+        late={overview.late}
       />
 
-      <SubjectAttendance subjects={dummySubjects} />
+      <SubjectAttendance subjects={subjects} />
 
-      <MonthlyAttendance monthlyData={dummyMonthly} />
+      <MonthlyAttendance monthlyData={monthlyData} />
 
-      <AttendanceInsights insights={dummyInsights} />
+      <AttendanceInsights insights={insights} />
     </div>
   );
 };

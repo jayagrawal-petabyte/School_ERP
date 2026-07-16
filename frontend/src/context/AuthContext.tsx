@@ -5,10 +5,13 @@ import {
   useEffect,
 } from "react";
 import type { ReactNode } from "react";
+import { logout as apiLogout, getStoredUser, clearAuthData } from "../api/authService";
 
 type User = {
   role: string;
   isAuthenticated: boolean;
+  email?: string;
+  id?: string;
 };
 
 type AuthContextType = {
@@ -29,35 +32,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    // Check for stored user data on mount
+    const storedUser = getStoredUser();
+    
+    if (storedUser) {
+      setUser({
+        role: storedUser.role,
+        isAuthenticated: true,
+        email: storedUser.email,
+        id: storedUser.id,
+      });
     }
 
     setLoading(false);
   }, []);
 
-  const login = (role: string, rememberMe: boolean) => {
-  
+  const login = async (role: string, rememberMe: boolean) => {
+    // For backward compatibility with existing UI (which passes role directly)
+    // This is a simplified login that maintains the existing flow
+    // In production, this would call the actual API with email/password
+    
+    const loggedInUser: User = {
+      role,
+      isAuthenticated: true,
+    };
 
-  const loggedInUser: User = {
-    role,
-    isAuthenticated: true,
+    setUser(loggedInUser);
+
+    if (rememberMe) {
+      localStorage.setItem("user", JSON.stringify(loggedInUser));
+    } else {
+      localStorage.removeItem("user");
+    }
   };
 
-  setUser(loggedInUser);
-
-  if (rememberMe) {
-    localStorage.setItem("user", JSON.stringify(loggedInUser));
-  } else {
-    localStorage.removeItem("user");
-  }
-};
-
-  const logout = () => {
+  const logout = async () => {
+    // Call API logout if token exists
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await apiLogout();
+      } catch (error) {
+        console.error('API logout failed, clearing local data:', error);
+      }
+    }
+    
+    // Clear local state
     setUser(null);
-    localStorage.removeItem("user");
+    clearAuthData();
   };
 
   return (

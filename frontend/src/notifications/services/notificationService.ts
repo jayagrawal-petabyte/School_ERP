@@ -1,76 +1,78 @@
+import apiClient from '../../services/apiClient';
 import type { Notification } from "../types/notification";
 
-// Dummy static notifications data
-const dummyNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "Math Assignment Due",
-    message: "Complete exercises 5-10 on page 42.",
-    type: "assignment",
-    read: false,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2h ago
-  },
-  {
-    id: "2",
-    title: "Science Exam Scheduled",
-    message: "Physics exam on Friday, 10 AM.",
-    type: "exam",
-    read: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-  },
-  {
-    id: "3",
-    title: "Attendance Alert",
-    message: "You missed 2 classes this week.",
-    type: "attendance",
-    read: false,
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3h ago
-  },
-  {
-    id: "4",
-    title: "School Holiday",
-    message: "No classes on Monday due to public holiday.",
-    type: "announcement",
-    read: true,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-  },
-  {
-    id: "5",
-    title: "History Assignment",
-    message: "Write a short essay on World War II.",
-    type: "assignment",
-    read: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 mins ago
-  },
-  {
-    id: "6",
-    title: "Exam Results",
-    message: "Your Math exam scores are now available.",
-    type: "exam",
-    read: true,
-    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
-  },
-  {
-    id: "7",
-    title: "Attendance Reminder",
-    message: "Please sign in for today's class.",
-    type: "attendance",
-    read: false,
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1h ago
-  },
-  {
-    id: "8",
-    title: "New Announcement",
-    message: "Parent-teacher meeting scheduled for next week.",
-    type: "announcement",
-    read: false,
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12h ago
-  },
-];
+// API endpoint
+const NOTIFICATIONS_ENDPOINT = '/student/notifications';
 
+/**
+ * Helper function to ensure we always return an array
+ */
+const ensureArray = (data: any): Notification[] => {
+  // If data is already an array, return it
+  if (Array.isArray(data)) {
+    return data;
+  }
+  
+  // If data is null or undefined, return empty array
+  if (data === null || data === undefined) {
+    return [];
+  }
+  
+  // If data is wrapped in an object (e.g., { data: [...] } or { notifications: [...] })
+  if (typeof data === 'object') {
+    if (Array.isArray(data.data)) {
+      return data.data;
+    }
+    if (Array.isArray(data.notifications)) {
+      return data.notifications;
+    }
+    if (Array.isArray(data.results)) {
+      return data.results;
+    }
+  }
+  
+  // Fallback to empty array
+  console.warn('API response is not an array:', data);
+  return [];
+};
+
+/**
+ * Fetch notifications for the current student
+ * GET /student/notifications
+ */
 export const getNotifications = async (): Promise<Notification[]> => {
-  // Simulate async fetch with a short delay
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(dummyNotifications), 200);
-  });
+  try {
+    const response = await apiClient.get(NOTIFICATIONS_ENDPOINT);
+    return ensureArray(response.data);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    // Return empty array on error instead of throwing
+    return [];
+  }
+};
+
+/**
+ * Mark a notification as read
+ * PUT /student/notifications/:id/read
+ */
+export const markNotificationAsRead = async (notificationId: string): Promise<void> => {
+  try {
+    await apiClient.put(`${NOTIFICATIONS_ENDPOINT}/${notificationId}/read`);
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+    throw error;
+  }
+};
+
+/**
+ * Mark all notifications as read
+ * PUT /student/notifications/read-all
+ */
+export const markAllNotificationsAsRead = async (): Promise<void> => {
+  try {
+    await apiClient.put(`${NOTIFICATIONS_ENDPOINT}/read-all`);
+  } catch (error) {
+    console.error('Error marking all notifications as read:', error);
+    throw error;
+  }
 };

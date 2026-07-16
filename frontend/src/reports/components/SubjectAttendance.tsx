@@ -9,12 +9,14 @@ type Subject = {
 };
 
 type SubjectAttendanceProps = {
-  subjects: Subject[];
+  subjects?: Subject[];
 };
 
 export const SubjectAttendance: React.FC<SubjectAttendanceProps> = ({
-  subjects,
+  subjects = [],
 }) => {
+  const safeSubjects = Array.isArray(subjects) ? subjects : [];
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
       <h2 className="text-xl font-semibold text-gray-800 mb-6">
@@ -39,7 +41,7 @@ export const SubjectAttendance: React.FC<SubjectAttendanceProps> = ({
             </tr>
           </thead>
           <tbody>
-            {subjects.map((subject, index) => (
+            {safeSubjects.map((subject, index) => (
               <tr
                 key={index}
                 className="border-b border-gray-100 hover:bg-gray-50 transition-colors"

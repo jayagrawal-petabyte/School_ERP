@@ -1,26 +1,30 @@
 import React from "react";
 
-// Helper to generate dummy attendance status for each day
-const getDummyStatus = (day: number) => {
-  // Deterministic dummy data: every 7th day is holiday, every 5th day absent, otherwise present
-  if (day % 7 === 0) return "holiday";
-  if (day % 5 === 0) return "absent";
-  return "present";
+type CalendarDay = {
+  day: number;
+  status: "present" | "absent" | "late" | "holiday";
 };
 
-const AttendanceCalendar: React.FC = () => {
+type AttendanceCalendarProps = {
+  year?: number;
+  month?: number;
+  days?: CalendarDay[];
+  rollNo?: string;
+};
+
+const AttendanceCalendar: React.FC<AttendanceCalendarProps> = ({ 
+  year = new Date().getFullYear(), 
+  month = new Date().getMonth(), 
+  days = [], 
+  rollNo = "21" 
+}) => {
+  const monthName = new Date(year, month).toLocaleString("default", { month: "long" });
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth(); // 0‑based index
-  const monthName = today.toLocaleString("default", { month: "long" });
 
-  // Number of days in the current month
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  // Build an array of days with dummy status
-  const days = Array.from({ length: daysInMonth }, (_, i) => ({
+  // Generate dummy data if no days provided (for backward compatibility)
+  const calendarDays = Array.isArray(days) && days.length > 0 ? days : Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, i) => ({
     day: i + 1,
-    status: getDummyStatus(i + 1),
+    status: (i + 1) % 7 === 0 ? "holiday" : (i + 1) % 5 === 0 ? "absent" : "present" as const,
   }));
 
   // Weekday of the first of the month (Monday = 0, Sunday = 6)
@@ -28,7 +32,7 @@ const AttendanceCalendar: React.FC = () => {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Roll No. 21 – {monthName} {year}</h2>
+      <h2 className="text-xl font-semibold mb-4">Roll No. {rollNo} – {monthName} {year}</h2>
       {/* Header row with weekdays */}
       <div className="grid grid-cols-7 gap-2 text-center font-medium text-gray-600 mb-2">
         {"Mon Tue Wed Thu Fri Sat Sun".split(" ").map((d) => (
@@ -41,7 +45,7 @@ const AttendanceCalendar: React.FC = () => {
           <div key={`empty-${i}`} />
         ))}
         {/* Actual day cells */}
-        {days.map(({ day, status }) => {
+        {calendarDays.map(({ day, status }) => {
           const isToday =
             day === today.getDate() &&
             month === today.getMonth() &&
@@ -51,6 +55,8 @@ const AttendanceCalendar: React.FC = () => {
               ? "bg-green-500"
               : status === "absent"
               ? "bg-red-500"
+              : status === "late"
+              ? "bg-yellow-500"
               : "bg-gray-400";
           return (
             <div
