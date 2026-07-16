@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
@@ -52,6 +53,7 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader
+  title="My Profile"
   title={title || "My Profile"}
   showBackButton
 />

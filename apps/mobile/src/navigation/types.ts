@@ -16,6 +16,17 @@ export type RootStackParamList = {
   AssignmentDetails: { assignmentId: string };
   SubmitAssignment: { assignmentId: string; title: string; subject: string };
   LeaveRequest: undefined;
+  TeacherAssignmentList: undefined;
+  TeacherAssignmentDetails: {assignmentId: string;};
+  CreateAssignment: undefined;
+  StudentSubmissionList: {assignmentId: string;};
+  GradeSubmission: {submissionId: string;};
+
+  //Notification Module
+  Notifications: undefined;
+  NotificationDetails: {notification: any;};
+  CreateNotification: undefined;
+  NotificationHistory: undefined;
   
   // Drawer Navigation Routes
   Attendance: undefined;

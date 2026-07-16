@@ -35,14 +35,28 @@ export default function TeacherAssignmentDetailsScreen({route, navigation,}: Pro
         try{
             setLoading(true);
             const response = await assignmentApi.getAssignment(assignmentId);
+            const details: AssignmentDetails = {
+              id: response.id,
+              title: response.title,
+              subject: response.subject,
+              className: response.className ?? "-",
+              description: response.description ?? "",
+              dueDate: response.dueDate,
+              maxMarks: response.maxMarks ?? 0,
+              submittedStudents: response.submittedStudents ?? 0,
+              totalStudents: response.totalStudents ?? 0,
+              referenceFile: response.referenceFile,
+            };
+
+            setAssignment(details);
             setAssignment(response);
-        }catch(error){
+          }catch(error){
             console.log(error);
             Alert.alert("Error", "Unable to load assignment.");
-        }finally{
+          }finally{
             setLoading(false);
-        }
-    };
+          }
+      };
 
     useEffect(() => {
     loadAssignment();}, [assignmentId]);
@@ -65,6 +79,16 @@ export default function TeacherAssignmentDetailsScreen({route, navigation,}: Pro
         ]);
     };
 
+    const handleDownload = async () => {
+      if (!assignment?.referenceFile) {
+        Alert.alert("No File", "No reference material available.");
+        return;
+      }
+      try {
+        await assignmentApi.downloadReferenceMaterial(assignment.id);
+      } catch (error) {
+        Alert.alert("Error", "Unable to download reference material.");
+      }
     const handleDownload = () => {if (!assignment?.referenceFile) {
         Alert.alert("No File", "No reference material available.");
         return;
