@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -50,6 +51,9 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
     });
   }, [userId]);
 
+  const classTeacherFor = profile?.classes.filter((c) => c.is_class_teacher) || [];
+  const isClassTeacher = classTeacherFor.length > 0;
+
   return (
     <SafeAreaView style={styles.container}>
      <AppHeader
@@ -71,6 +75,11 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
             <View style={styles.roleBadge}>
               <Text style={styles.roleBadgeText}>🧑‍🏫  TEACHER</Text>
             </View>
+            {isClassTeacher && (
+              <View style={styles.classTeacherBadge}>
+                <Text style={styles.classTeacherBadgeText}>⭐  CLASS TEACHER</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.infoCard}>
@@ -89,12 +98,7 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
               </Text>
             </View>
             <View style={styles.divider} />
-            <View style={styles.infoRow}>
-              <Text style={styles.infoIcon}>🕐</Text>
-              <Text style={styles.infoLabel}>Last Login</Text>
-              <Text style={styles.infoValue}>{formatDate(profile.last_login_at)}</Text>
-            </View>
-            <View style={styles.divider} />
+
             <View style={styles.infoRow}>
               <Text style={styles.infoIcon}>📅</Text>
               <Text style={styles.infoLabel}>Member Since</Text>
@@ -103,17 +107,29 @@ export default function TeacherProfileScreen({ route, navigation }: Props) {
           </View>
 
           <View style={styles.infoCard}>
-            <Text style={styles.cardTitle}>Classes Taught</Text>
+            <Text style={styles.cardTitle}>Classes Handling</Text>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoIcon}>{isClassTeacher ? '⭐' : 'ℹ️'}</Text>
+              <Text style={styles.infoLabel}>Class Teacher</Text>
+              <Text style={styles.infoValue}>
+                {isClassTeacher
+                  ? classTeacherFor.map((c) => `${c.class_name} - ${c.section}`).join(', ')
+                  : 'NA'}
+              </Text>
+            </View>
+            <View style={styles.divider} />
             {profile.classes.length === 0 ? (
-              <Text style={styles.emptyText}>No classes assigned yet</Text>
+              <Text style={styles.emptyText}>No classes assigned.</Text>
             ) : (
               <View style={styles.chipWrap}>
                 {profile.classes.map((c) => (
-                  <View key={c.id} style={styles.classChip}>
-                    <Text style={styles.classChipText}>{c.class_name} - {c.section}</Text>
+                  <View key={c.id} style={[styles.classChip, c.is_class_teacher && styles.classChipHighlighted]}>
+                    <Text style={styles.classChipText}>
+                      {c.is_class_teacher ? '⭐ ' : ''}{c.class_name} - {c.section}
+                    </Text>
                   </View>
                 ))}
-              </View>
+            </View>
             )}
           </View>
 
@@ -142,6 +158,8 @@ const styles = StyleSheet.create({
   name: { fontSize: FONT_SIZE.lg, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF', marginTop: SPACING.sm },
   roleBadge: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 12, paddingHorizontal: SPACING.md, paddingVertical: 4, marginTop: SPACING.xs },
   roleBadgeText: { fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#FFFFFF', letterSpacing: 0.5 },
+  classTeacherBadge: { backgroundColor: '#FBBF24', borderRadius: 12, paddingHorizontal: SPACING.md, paddingVertical: 4, marginTop: SPACING.xs },
+  classTeacherBadgeText: { fontSize: 11, fontWeight: FONT_WEIGHT.bold, color: '#7C2D12', letterSpacing: 0.5 },
   infoCard: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: SPACING.md, borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.md, ...SHADOWS.sm },
   cardTitle: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.bold, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: SPACING.sm },
   infoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: SPACING.sm },
@@ -152,6 +170,7 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: FONT_SIZE.xs, color: COLORS.textMuted, fontStyle: 'italic' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.xs },
   classChip: { backgroundColor: COLORS.primaryLight, borderRadius: 8, paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md },
+  classChipHighlighted: { backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FBBF24' },
   classChipText: { fontSize: FONT_SIZE.xs, fontWeight: FONT_WEIGHT.semibold, color: COLORS.primary },
   editButton: { backgroundColor: COLORS.primary, borderRadius: 10, paddingVertical: SPACING.md, alignItems: 'center', marginTop: SPACING.xs, ...SHADOWS.sm },
   editButtonText: { color: COLORS.textLight, fontSize: FONT_SIZE.sm, fontWeight: FONT_WEIGHT.bold },

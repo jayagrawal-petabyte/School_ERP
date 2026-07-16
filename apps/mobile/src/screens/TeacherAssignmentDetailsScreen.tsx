@@ -35,27 +35,28 @@ export default function TeacherAssignmentDetailsScreen({route, navigation,}: Pro
         try{
             setLoading(true);
             const response = await assignmentApi.getAssignment(assignmentId);
-const details: AssignmentDetails = {
-    id: response.id,
-    title: response.title,
-    subject: response.subject,
-    className: response.className ?? "-",
-    description: response.description ?? "",
-    dueDate: response.dueDate,
-    maxMarks: response.maxMarks ?? 0,
-    submittedStudents: response.submittedStudents ?? 0,
-    totalStudents: response.totalStudents ?? 0,
-    referenceFile: response.referenceFile,
-};
+            const details: AssignmentDetails = {
+              id: response.id,
+              title: response.title,
+              subject: response.subject,
+              className: response.className ?? "-",
+              description: response.description ?? "",
+              dueDate: response.dueDate,
+              maxMarks: response.maxMarks ?? 0,
+              submittedStudents: response.submittedStudents ?? 0,
+              totalStudents: response.totalStudents ?? 0,
+              referenceFile: response.referenceFile,
+            };
 
-setAssignment(details);
-        }catch(error){
+            setAssignment(details);
+            setAssignment(response);
+          }catch(error){
             console.log(error);
             Alert.alert("Error", "Unable to load assignment.");
-        }finally{
+          }finally{
             setLoading(false);
-        }
-    };
+          }
+      };
 
     useEffect(() => {
     loadAssignment();}, [assignmentId]);
@@ -88,6 +89,11 @@ setAssignment(details);
       } catch (error) {
         Alert.alert("Error", "Unable to download reference material.");
       }
+    const handleDownload = () => {if (!assignment?.referenceFile) {
+        Alert.alert("No File", "No reference material available.");
+        return;
+    }
+    Alert.alert("Coming Soon");
     };
 
     const submissionPercentage = assignment && assignment.totalStudents > 0 ? Math.round((assignment.submittedStudents / assignment.totalStudents) * 100) : 0;

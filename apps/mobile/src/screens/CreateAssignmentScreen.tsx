@@ -104,6 +104,7 @@ export default function CreateAssignmentScreen({navigation,}: Props) {
         setIsSubmitting(true);
         try{
             await assignmentApi.createAssignment({title, subject, className, description, dueDate,});
+            await assignmentApi.createAssignment({title, subject, className, description, dueDate, maxMarks:Number(maxMarks), referenceFile: attachedFile,});
             Alert.alert("Success", "Assignment created successfully.", [{
                 text:"OK", onPress:()=>{
                     navigation.goBack();
@@ -451,4 +452,5 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.md,
     fontWeight: FONT_WEIGHT.bold,
   },
+});
 });

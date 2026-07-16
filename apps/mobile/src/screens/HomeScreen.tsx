@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
 import { DashboardCard } from '../types';
+import { DashboardCard, AppUser } from '../types';
 import { DashboardService, ProfileService } from '../services/profileApi';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -37,6 +38,7 @@ interface AcademicItem {
   emptyLabel: string;
   route?: keyof RootStackParamList;
   params?: any;
+  subtitle?: string;
 }
 
 const ROLE_LABEL: Record<'teacher' | 'student' | 'parent', string> = {
@@ -55,6 +57,7 @@ export default function HomeScreen({ route, navigation }: Props) {
   const [accountCards, setAccountCards] = useState<DashboardCard[]>([]);
   const [displayName, setDisplayName] = useState('');
   const [profileLoading, setProfileLoading] = useState(!!userId);
+  const [children, setChildren] = useState<AppUser[]>([]);
 
   useEffect(() => {
     const loadRole = async () => {
@@ -95,8 +98,11 @@ export default function HomeScreen({ route, navigation }: Props) {
         ? ProfileService.getParentProfile(userId)
         : ProfileService.getStudentProfile(userId);
 
-    fetchProfile.then((profile) => {
+  fetchProfile.then((profile) => {
       if (profile) setDisplayName(profile.full_name);
+      if (profile && role === 'parent' && 'children' in profile) {
+        setChildren(profile.children || []);
+      }
       setProfileLoading(false);
     });
   }, [role, userId]);
@@ -161,7 +167,21 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No marks available.',
           route: 'Results'
         },
-        { id: 'p0', title: 'My Child', emoji: '🧒', color: '#FEF3C7', section: 'services', emptyLabel: 'No linked student record found.' },
+        {
+          id: 'p0',
+          title: 'My Child',
+          emoji: '🧒',
+          color: '#FEF3C7',
+          section: 'services',
+          emptyLabel: 'No linked student record found.',
+          ...(children[0]
+            ? {
+                route: 'StudentProfile',
+                params: { userId: children[0].id, title: `${children[0].full_name}'s Profile` },
+                subtitle: children[0].full_name,
+              }
+            : {}),
+        },
         ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
       ];
     } else {
@@ -238,7 +258,7 @@ export default function HomeScreen({ route, navigation }: Props) {
         </View>
         {item.route ? (
           <View style={styles.cardEmptyState}>
-            <Text style={styles.cardReadyLabel}>View details</Text>
+            <Text style={styles.cardReadyLabel}>{item.subtitle || 'View details'}</Text>
             <Text style={styles.cardArrow}>→</Text>
           </View>
         ) : (
@@ -408,6 +428,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
     height: 56,
+  },
+  headerTitleText: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: '#FFFFFF',
+  },
   },
   headerTitleText: {
     fontSize: FONT_SIZE.md,
