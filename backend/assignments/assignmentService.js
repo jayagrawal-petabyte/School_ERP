@@ -24,21 +24,21 @@ function requireTeacherOrAdmin(user) {
   }
 }
 
-function createAssignment(payload, user) {
+async function createAssignment(token, payload, user) {
   requireTeacherOrAdmin(user);
 
   const assignment = validateAssignment(payload);
 
-  return store.addAssignment({
+  return await store.addAssignment(token, {
     ...assignment,
     createdBy: String(user.id || user._id || user.email || 'unknown'),
   });
 }
 
-function updateAssignment(id, payload, user) {
+async function updateAssignment(token, id, payload, user) {
   requireTeacherOrAdmin(user);
 
-  const existing = store.findAssignment(id);
+  const existing = await store.findAssignment(token, id);
 
   if (!existing) {
     throw createError(404, 'Assignment not found.');
@@ -49,28 +49,40 @@ function updateAssignment(id, payload, user) {
     ...payload,
   });
 
-  return store.updateAssignment(id, updated);
+  const saved = await store.updateAssignment(token, id, updated);
+
+  if (!saved) {
+    throw createError(404, 'Assignment not found.');
+  }
+
+  return saved;
 }
 
-function deleteAssignment(id, user) {
+async function deleteAssignment(token, id, user) {
   requireTeacherOrAdmin(user);
 
-  const assignment = store.findAssignment(id);
+  const assignment = await store.findAssignment(token, id);
 
   if (!assignment) {
     throw createError(404, 'Assignment not found.');
   }
 
-  return store.removeAssignment(id);
+  const removed = await store.removeAssignment(token, id);
+
+  if (!removed) {
+    throw createError(404, 'Assignment not found.');
+  }
+
+  return removed;
 }
 
-function listAssignments(user) {
+async function listAssignments(token, user) {
   // Reserved for future role/class-based filtering
-  return store.listAssignments();
+  return await store.listAssignments(token);
 }
 
-function getAssignment(id) {
-  const assignment = store.findAssignment(id);
+async function getAssignment(token, id) {
+  const assignment = await store.findAssignment(token, id);
 
   if (!assignment) {
     throw createError(404, 'Assignment not found.');
