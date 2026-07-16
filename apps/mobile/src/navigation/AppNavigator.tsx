@@ -157,6 +157,26 @@ export default function AppNavigator() {
         component={SettingsScreen}
         options={{ title: 'Settings' }}
       />
+      <Stack.Screen
+        name="NotificationList"
+        component={require('../screens/NotificationListScreen').default}
+        options={{ title: 'Notifications' }}
+      />
+      <Stack.Screen
+        name="NotificationDetails"
+        component={require('../screens/NotificationDetailsScreen').default}
+        options={{ title: 'Notification Details' }}
+      />
+      <Stack.Screen
+        name="CreateNotification"
+        component={require('../screens/CreateNotificationScreen').default}
+        options={{ title: 'Create Notification' }}
+      />
+      <Stack.Screen
+        name="NotificationHistory"
+        component={require('../screens/NotificationHistoryScreen').default}
+        options={{ title: 'Notification History' }}
+      />
     </Stack.Navigator>
   );
 }

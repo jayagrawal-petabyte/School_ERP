@@ -194,6 +194,7 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No attendance records available.',
           route: 'Attendance'
         },
+        /*
         {
           id: 's_leave',
           title: 'Apply Leave',
@@ -203,6 +204,7 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No leave requests submitted.',
           route: 'Leave'
         },
+        */
         ...baseItems
       ];
     }
@@ -289,7 +291,7 @@ export default function HomeScreen({ route, navigation }: Props) {
 
         <TouchableOpacity
           style={styles.headerBellButton}
-          onPress={() => Alert.alert('Notifications', 'No new notifications.')}
+          onPress={() => navigation.navigate('NotificationList')}
           activeOpacity={0.7}
         >
           <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />

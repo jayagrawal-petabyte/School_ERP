@@ -37,4 +37,10 @@ export type RootStackParamList = {
   PasswordSuccess: undefined;
   MFA: { role: Role };
   Dashboard: { role: Role };
+
+  // Notifications Module
+  NotificationList: undefined;
+  NotificationDetails: { notification: any };
+  CreateNotification: undefined;
+  NotificationHistory: undefined;
 };
