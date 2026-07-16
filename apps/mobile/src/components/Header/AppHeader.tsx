@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import {
   DrawerActions,
@@ -24,6 +25,9 @@ export default function AppHeader({
 
   return (
     <View style={styles.header}>
+      <StatusBar barStyle="light-content" backgroundColor="#2F2D84" translucent />
+      <View style={styles.statusBarBackdrop} />
+
       <TouchableOpacity
         style={styles.iconBtn}
         onPress={() => {
@@ -85,5 +89,14 @@ const styles = StyleSheet.create({
     width: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  statusBarBackdrop: {
+    position: 'absolute',
+    top: -100,
+    left: 0,
+    right: 0,
+    height: 100,
+    backgroundColor: '#2F2D84',
   },
 });

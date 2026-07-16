@@ -18,6 +18,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+import React, { useEffect, useState, useMemo } from 'react';
+import AppHeader from '../components/Header/AppHeader';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  TextInput,
+  
+  Alert,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import assignmentApi from "../services/assignmentApi";
 import { Assignment } from "../services/api";
 import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme";
@@ -89,6 +108,31 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
         });
         return unsubscribe;
     }, [navigation, classId]);
+  // Reload assignments when screen gains focus or mounts
+  const loadData = async (showLoader = true) => {
+  if (showLoader) {
+    setLoading(true);
+  }
+  try {
+    const response = await assignmentApi.getAssignments();
+    console.log("Assignments:", response);
+    const formattedAssignments = response
+      .filter(
+        (item: any) =>
+          !classId || String(item.classId) === String(classId)
+      )
+      .map(mapAssignment);
+    setAssignments(formattedAssignments || []);
+  } catch (error) {
+    console.log(error);
+    Alert.alert(
+      "Unable to load assignments",
+    );
+  } finally {
+    setLoading(false);
+    setRefreshing(false);
+  }
+  };
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -534,7 +578,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: COLORS.textSecondary,
     marginTop: 4,
->>>>>>> 0c08a02 (feat: unify app navigation header across all screens)
   },
   statusCol: {
     alignItems: 'flex-end',
@@ -566,5 +609,4 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     color: COLORS.textSecondary,
   },
->>>>>>> 62f2be6 (Fix attendance and login flow bugs)
 });

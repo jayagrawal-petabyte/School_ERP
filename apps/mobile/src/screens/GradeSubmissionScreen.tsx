@@ -43,6 +43,23 @@ interface SubmissionDetails {
 
 export default function GradeSubmissionScreen({route, navigation,}: Props) {
     const { submissionId, submission: routeSubmission } = route.params;
+  studentName: string;
+  rollNumber: string;
+  assignmentTitle: string;
+  submittedAt: string;
+  status: string;
+  remarks?: string;
+  attachment?: {
+    name: string;
+    url?: string;
+  };
+  maxMarks: number;
+  obtainedMarks?: number;
+  teacherFeedback?: string;
+}
+
+export default function GradeSubmissionScreen({route, navigation,}: Props) {
+    const { submissionId } = route.params;
     const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
     const [marks, setMarks] = useState("");
     const [feedback, setFeedback] = useState("");
@@ -65,6 +82,44 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
       } catch {
         Alert.alert("Error", "Unable to download submission.");
       }
+    const loadSubmission = async () => {
+  setLoading(true);
+
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  const response: SubmissionDetails = {
+    id: submissionId,
+    studentName: "Rahul Sharma",
+    rollNumber: "01",
+    assignmentTitle: "Mathematics Assignment",
+    submittedAt: "10 Jul 2026",
+    status: "Submitted",
+    remarks: "Please check my assignment.",
+    attachment: {
+      name: "Rahul_Assignment.pdf",
+    },
+    maxMarks: 100,
+    obtainedMarks: 92,
+    teacherFeedback: "Excellent work.",
+  };
+
+  setSubmission(response);
+  setMarks(response.obtainedMarks.toString());
+  setFeedback(response.teacherFeedback ?? "");
+
+  setLoading(false);
+};
+
+    useEffect(() => {loadSubmission();}, [submissionId]);
+
+    const handleDownload = async () => {
+        if (!submission) return;
+        try {
+            await assignmentApi.downloadSubmission(submission.id);
+            Alert.alert("Success", "Download started.");
+        } catch (error) {
+            Alert.alert("Error", "Unable to download file.");
+        }
     };
 
     const handleSubmit = async () => {
@@ -80,6 +135,13 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
         }
         try {
             Alert.alert("Pending", "Submission grading will be enabled once the backend grading API is available.");
+            setSubmitting(true);
+            await assignmentApi.gradeSubmission(submission.id, numericMarks, feedback); //Backend API not supported for Grading yet
+            Alert.alert("Success", "Submission graded successfully.");
+            navigation.goBack();
+        } catch (error) {
+            console.log(error);
+            Alert.alert("Error", "Unable to submit grade.");
         } finally {
             setSubmitting(false);
         }
@@ -102,6 +164,11 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
           </TouchableOpacity>
         </SafeAreaView>
       );
+        return (
+            <SafeAreaView style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Submission not found.</Text>
+            </SafeAreaView>
+        );
     }
 
     return (
@@ -113,6 +180,11 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Grade Submission</Text>
               <View style={{ width: 40 }} /></View>
+                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                    <Text style={styles.backButtonText}>←</Text>
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Grade Submission</Text>
+                <View style={{ width: 40 }} /></View>
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Student Details</Text>
@@ -136,6 +208,19 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                       <Text style={styles.infoValue}>{submission.status}</Text>
                     </View>
                   </View>
+                        <Text style={styles.sectionTitle}>Assignment</Text>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Title</Text>
+                            <Text style={styles.infoValue}>{submission.assignmentTitle}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Submitted On</Text>
+                            <Text style={styles.infoValue}>{submission.submittedAt}</Text>
+                        </View>
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Status</Text>
+                            <Text style={styles.infoValue}>{submission.status}</Text>
+                        </View>
 
                     </View>
                     <View style={styles.card}>
@@ -150,6 +235,10 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                                 <View>
                                     <Text style={styles.fileName}>{submission.attachment.name}</Text>
                                     <Text style={styles.fileSubtitle}>Submitted File</Text>
+                            <TouchableOpacity style={styles.fileCard} onPress={handleDownload}>
+                                <View>
+                                    <Text style={styles.fileName}>{submission.attachment.name}</Text>
+                                    <Text style={styles.fileSubtitle}>Tap to download</Text>
                                 </View>
                                 <Text style={styles.downloadText}>Download</Text>
                             </TouchableOpacity>
@@ -180,6 +269,7 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                             textAlignVertical="top"/>
                     </View>
                     <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled,]} disabled={submitting} onPress={() => Alert.alert("Backend Pending","Submission grading will be enabled once the backend grading API is available.")}>
+                    <TouchableOpacity style={[styles.submitButton, submitting && styles.submitButtonDisabled,]} disabled={submitting} onPress={handleSubmit}>
                         {submitting ? (
                             <ActivityIndicator color="#FFFFFF"/>
                         ) : (

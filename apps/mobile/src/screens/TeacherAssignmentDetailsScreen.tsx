@@ -49,6 +49,7 @@ const details: AssignmentDetails = {
 };
 
 setAssignment(details);
+            setAssignment(response);
         }catch(error){
             console.log(error);
             Alert.alert("Error", "Unable to load assignment.");
@@ -88,6 +89,11 @@ setAssignment(details);
       } catch (error) {
         Alert.alert("Error", "Unable to download reference material.");
       }
+    const handleDownload = () => {if (!assignment?.referenceFile) {
+        Alert.alert("No File", "No reference material available.");
+        return;
+    }
+    Alert.alert("Coming Soon");
     };
 
     const submissionPercentage = assignment && assignment.totalStudents > 0 ? Math.round((assignment.submittedStudents / assignment.totalStudents) * 100) : 0;
