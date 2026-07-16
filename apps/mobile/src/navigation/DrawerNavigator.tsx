@@ -19,6 +19,7 @@ import DrawerContent from './DrawerContent';
 
 const Drawer = createDrawerNavigator();
 
+
 function AttendanceScreenWrapper({ route, navigation }: any) {
   const [role, setRole] = useState<'teacher' | 'student' | 'parent' | null>(null);
 
@@ -88,6 +89,10 @@ export default function DrawerNavigator() {
       />
 
       <Drawer.Screen
+  name="Attendance"
+  component={AttendanceListScreen}
+  initialParams={route.params}
+/>
         name="Attendance"
         component={AttendanceScreenWrapper}
         initialParams={route.params}
