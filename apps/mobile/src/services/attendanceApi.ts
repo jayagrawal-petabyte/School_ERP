@@ -194,7 +194,21 @@ export const attendanceApi = {
 
     try {
       const students = await attendanceApi.getStudents(classId);
-      const records = await attendanceApi.viewAttendance(classId);
+      const recordsGrouped = await attendanceApi.viewAttendance(classId);
+      
+      // Flatten the grouped days to get a flat list of individual records
+      const records: any[] = [];
+      recordsGrouped.forEach((day: any) => {
+        if (day.records) {
+          day.records.forEach((rec: any) => {
+            records.push({
+              student_id: rec.studentId,
+              status: rec.status,
+              date: day.date,
+            });
+          });
+        }
+      });
       
       const studentMap: Record<string, { present: number; absent: number; late: number; total: number }> = {};
       students.forEach((s) => {

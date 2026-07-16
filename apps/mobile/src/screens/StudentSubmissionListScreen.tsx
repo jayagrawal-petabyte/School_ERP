@@ -78,13 +78,6 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
         setRefreshing(false);
     };
     useEffect(() => {loadSubmissions();}, [assignmentId]);
-    const handleDownload = async (
-      submissionId: string) => {
-      try {
-        await assignmentApi.downloadSubmission(submissionId);
-      } catch {
-        Alert.alert("Error", "Unable to download file.");
-      }
     const handleDownload = async (submissionId: string) => {
         try {
             await assignmentApi.downloadSubmission(submissionId);
@@ -98,7 +91,6 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
     };
     const handleGrade = (item: StudentSubmission) => {
         navigation.navigate("GradeSubmission", {submissionId: item.id, submission: item,});
-        navigation.navigate("GradeSubmission", {submissionId: item.id,});
     };
     if (loading) {
         return (
@@ -162,9 +154,6 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
                         <View>
                             <Text style={styles.fileName}>{item.attachment.name}</Text>
                             <Text style={styles.fileSubtitle}>{item.attachment?.size? `${(item.attachment.size / 1024).toFixed(1)} KB` : "Submitted File"}</Text>
-                        </View>
-                        <TouchableOpacity style={{ opacity: 0.5 }} onPress={handleDownload}>
-                            <Text style={styles.fileSubtitle}>Submitted File</Text>
                         </View>
                         <TouchableOpacity onPress={() => handleDownload(item.id)}>
                             <Text style={styles.downloadText}>Download</Text>

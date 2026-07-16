@@ -37,9 +37,9 @@ function AttendanceScreenWrapper({ route, navigation }: any) {
   }
 
   if (role === 'teacher') {
-    return <AttendanceListScreen route={route} navigation={navigation} />;
+    return <AttendanceListScreen navigation={navigation as any} />;
   } else {
-    return <AttendanceHistoryScreen route={route} navigation={navigation} />;
+    return <AttendanceHistoryScreen route={route as any} navigation={navigation as any} />;
   }
 }
         
@@ -88,10 +88,6 @@ export default function DrawerNavigator() {
       />
 
       <Drawer.Screen
-  name="Attendance"
-  component={AttendanceListScreen}
-  initialParams={route.params}
-/>
         name="Attendance"
         component={AttendanceScreenWrapper}
         initialParams={route.params}

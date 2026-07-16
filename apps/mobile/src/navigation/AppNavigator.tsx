@@ -208,6 +208,11 @@ export default function AppNavigator() {
                 component={NotificationListScreen}
                 options={{ title: "Notifications" }}
             />
+            <Stack.Screen
+                name="NotificationList"
+                component={NotificationListScreen}
+                options={{ title: "Notifications" }}
+            />
 
             <Stack.Screen
                 name="NotificationDetails"

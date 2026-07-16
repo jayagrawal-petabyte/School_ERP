@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  StatusBar,
 } from 'react-native';
 import {
   DrawerActions,
@@ -53,6 +54,7 @@ export default function AppHeader({
 
       <TouchableOpacity
         style={styles.iconBtn}
+        onPress={() => navigation.navigate('NotificationList')}
       >
         <Ionicons
           name="notifications-outline"

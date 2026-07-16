@@ -14,7 +14,6 @@ import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../constants/theme';
-import { DashboardCard } from '../types';
 import { DashboardCard, AppUser } from '../types';
 import { DashboardService, ProfileService } from '../services/profileApi';
 import { Ionicons } from '@expo/vector-icons';
@@ -195,6 +194,7 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No attendance records available.',
           route: 'Attendance'
         },
+        /*
         {
           id: 's_leave',
           title: 'Apply Leave',
@@ -204,6 +204,7 @@ export default function HomeScreen({ route, navigation }: Props) {
           emptyLabel: 'No leave requests submitted.',
           route: 'Leave'
         },
+        */
         ...baseItems
       ];
     }
@@ -290,7 +291,7 @@ export default function HomeScreen({ route, navigation }: Props) {
 
         <TouchableOpacity
           style={styles.headerBellButton}
-          onPress={() => Alert.alert('Notifications', 'No new notifications.')}
+          onPress={() => navigation.navigate('NotificationList')}
           activeOpacity={0.7}
         >
           <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
@@ -428,12 +429,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.lg,
     height: 56,
-  },
-  headerTitleText: {
-    fontSize: FONT_SIZE.md,
-    fontWeight: FONT_WEIGHT.bold,
-    color: '#FFFFFF',
-  },
   },
   headerTitleText: {
     fontSize: FONT_SIZE.md,

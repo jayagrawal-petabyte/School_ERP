@@ -1,4 +1,3 @@
-import axios from "axios";
 import { API_CONFIG, getAuthHeaders } from '../config/apiConfig';
 import {
   Student,
@@ -8,43 +7,6 @@ import {
   DailyAttendance,
   StudentHistoryRecord,
 } from "../types";
-
-import { getToken } from "../utils/security";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("EXPO_PUBLIC_API_URL is not defined. Please configure your .env file.");
-}
-export const api = axios.create({
-  baseURL: API_URL,
-  timeout: 30000,
-  headers: {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  },
-});
-
-api.interceptors.request.use(
-  async (config) => {
-    const token = await getToken("auth_token");
-    if (token && config.headers) {
-      config.headers.Authorization =
-        `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-api.interceptors.response.use(
-  (response) => response,(error) => {
-    if (__DEV__) {console.log("Something went wrong. Please try again.");}
-    return Promise.reject(error);
-  }
-);
 
 export {
   Student,
@@ -208,7 +170,7 @@ export interface Assignment {
   dueDate: string;
   maxMarks: number;
   assignedBy: string;
-  status: 'pending' | 'submitted' | 'graded';
+  status: 'pending' | 'submitted' | 'graded' | 'late';
   obtainedMarks?: number;
   feedback?: string;
   attachmentUrl?: string;

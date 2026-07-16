@@ -172,6 +172,7 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
             <Text style={styles.sectionTitle}>Reference Files</Text>
             <Text style={styles.instructionsText}>No reference files available.</Text>
           </View>
+        </View>
 
         {/* Submission log or Grade Details */}
         {assignment.submission && (
