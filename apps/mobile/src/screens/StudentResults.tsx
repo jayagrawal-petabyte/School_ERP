@@ -1,16 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AppHeader from '../components/Header/AppHeader';
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
