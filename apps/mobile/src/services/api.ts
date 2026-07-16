@@ -11,11 +11,7 @@ import {
 
 import { getToken } from "../utils/security";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("EXPO_PUBLIC_API_URL is not defined. Please configure your .env file.");
-}
+const API_URL = process.env.EXPO_PUBLIC_API_URL || API_CONFIG.BASE_URL;
 export const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
