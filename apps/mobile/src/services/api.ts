@@ -26,7 +26,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(
-  async (config) => {
+  async (config: any) => {
     const token = await getToken("auth_token");
     if (token && config.headers) {
       config.headers.Authorization =
@@ -34,13 +34,14 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error);
   }
 );
 
 api.interceptors.response.use(
-  (response) => response,(error) => {
+  (response: any) => response,
+  (error: any) => {
     if (__DEV__) {console.log("Something went wrong. Please try again.");}
     return Promise.reject(error);
   }

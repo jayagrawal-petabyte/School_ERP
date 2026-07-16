@@ -89,10 +89,6 @@ export default function DrawerNavigator() {
       />
 
       <Drawer.Screen
-  name="Attendance"
-  component={AttendanceListScreen}
-  initialParams={route.params}
-/>
         name="Attendance"
         component={AttendanceScreenWrapper}
         initialParams={route.params}

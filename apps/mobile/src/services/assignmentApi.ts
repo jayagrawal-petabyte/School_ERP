@@ -112,6 +112,11 @@ const assignmentApi = {
         });
         return response.data.data;
     },
+
+    downloadReferenceMaterial: async (assignmentId: string) => {
+        const response = await api.get(`/assignments/download/${assignmentId}`);
+        return response.data.data;
+    },
 };
 
 export default assignmentApi;

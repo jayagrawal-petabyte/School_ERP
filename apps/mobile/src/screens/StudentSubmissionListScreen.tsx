@@ -78,13 +78,6 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
         setRefreshing(false);
     };
     useEffect(() => {loadSubmissions();}, [assignmentId]);
-    const handleDownload = async (
-      submissionId: string) => {
-      try {
-        await assignmentApi.downloadSubmission(submissionId);
-      } catch {
-        Alert.alert("Error", "Unable to download file.");
-      }
     const handleDownload = async (submissionId: string) => {
         try {
             await assignmentApi.downloadSubmission(submissionId);
