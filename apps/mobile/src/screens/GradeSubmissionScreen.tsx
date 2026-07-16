@@ -43,24 +43,7 @@ interface SubmissionDetails {
 
 export default function GradeSubmissionScreen({route, navigation,}: Props) {
     const { submissionId, submission: routeSubmission } = route.params;
-  studentName: string;
-  rollNumber: string;
-  assignmentTitle: string;
-  submittedAt: string;
-  status: string;
-  remarks?: string;
-  attachment?: {
-    name: string;
-    url?: string;
-  };
-  maxMarks: number;
-  obtainedMarks?: number;
-  teacherFeedback?: string;
-}
-
-export default function GradeSubmissionScreen({route, navigation,}: Props) {
-    const { submissionId } = route.params;
-    const [submission, setSubmission] = useState<SubmissionDetails | null>(null);
+    const [submission, setSubmission] = useState<any | null>(null);
     const [marks, setMarks] = useState("");
     const [feedback, setFeedback] = useState("");
     const [loading, setLoading] = useState(true);
@@ -87,7 +70,7 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
 
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  const response: SubmissionDetails = {
+  const response: any = {
     id: submissionId,
     studentName: "Rahul Sharma",
     rollNumber: "01",
@@ -179,13 +162,9 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                 <Text style={styles.backButtonText}>←</Text>
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Grade Submission</Text>
-              <View style={{ width: 40 }} /></View>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Text style={styles.backButtonText}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Grade Submission</Text>
-                <View style={{ width: 40 }} /></View>
-                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+              <View style={{ width: 40 }} />
+            </View>
+            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Student Details</Text>
                         <View style={styles.infoRow}>
@@ -208,6 +187,7 @@ export default function GradeSubmissionScreen({route, navigation,}: Props) {
                       <Text style={styles.infoValue}>{submission.status}</Text>
                     </View>
                   </View>
+                    <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Assignment</Text>
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Title</Text>
@@ -463,3 +443,4 @@ const styles = StyleSheet.create({
         fontWeight: FONT_WEIGHT.bold,
     },
 });
+

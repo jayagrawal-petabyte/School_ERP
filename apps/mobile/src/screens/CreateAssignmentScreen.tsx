@@ -103,8 +103,7 @@ export default function CreateAssignmentScreen({navigation,}: Props) {
         }
         setIsSubmitting(true);
         try{
-            await assignmentApi.createAssignment({title, subject, className, description, dueDate,});
-            await assignmentApi.createAssignment({title, subject, className, description, dueDate, maxMarks:Number(maxMarks), referenceFile: attachedFile,});
+            await assignmentApi.createAssignment({title, subject, className, description, dueDate, maxMarks:Number(maxMarks), referenceFile: attachedFile,} as any);
             Alert.alert("Success", "Assignment created successfully.", [{
                 text:"OK", onPress:()=>{
                     navigation.goBack();

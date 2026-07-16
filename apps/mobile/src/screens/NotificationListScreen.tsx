@@ -22,7 +22,7 @@ import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme"
 
 type NotificationListRouteProp = RouteProp<RootStackParamList, "Notifications">;
 type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"Notifications">;
-interface Props {route: NotificationListRouteProp;navigation: NotificationListNavigationProp;}
+interface Props {route?: any;navigation?: any;}
 type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
 interface NotificationItem {
     id: string;
@@ -167,14 +167,6 @@ export default function NotificationListScreen({ navigation }: Props) {
         );
     }
 
-    if (!loading && filteredNotifications.length === 0) {
-        return (
-            <SafeAreaView style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>No notifications found.</Text>
-            </SafeAreaView>
-        );
-    }
-
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -207,6 +199,7 @@ export default function NotificationListScreen({ navigation }: Props) {
                 data={["all", "general", "announcement", "reminder", "alert",]}
                 keyExtractor={(item) => item}
                 showsHorizontalScrollIndicator={false}
+                style={styles.filterList}
                 contentContainerStyle={styles.filterContainer}
                 renderItem={({ item }) => (
                     <TouchableOpacity
@@ -235,6 +228,11 @@ export default function NotificationListScreen({ navigation }: Props) {
                 onRefresh={onRefresh}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <Text style={styles.emptyText}>No notifications found.</Text>
+                    </View>
+                }
                 renderItem={({ item }) => (
                     <TouchableOpacity
                         style={[styles.card]}
@@ -244,7 +242,7 @@ export default function NotificationListScreen({ navigation }: Props) {
                             <View
                                 style={[
                                     styles.typeBadge,
-                                    styles[`${item.type}Badge`],
+                                    (styles as any)[`${item.type}Badge`],
                                 ]}
                             >
                                 <Text style={styles.typeBadgeText}>
@@ -340,10 +338,15 @@ const styles = StyleSheet.create({
         color: COLORS.textPrimary,
     },
 
+    filterList: {
+        flexGrow: 0,
+        height: 48,
+        marginBottom: SPACING.sm,
+    },
+
     filterContainer: {
         paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.md,
-        gap: SPACING.sm,
+        height: 48,
     },
 
     filterChip: {
@@ -352,7 +355,7 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
         borderRadius: 20,
         paddingHorizontal: SPACING.md,
-        paddingVertical: 8,
+        height: 36,
         marginRight: SPACING.sm,
         alignItems: "center",
         justifyContent: "center",
@@ -518,5 +521,11 @@ const styles = StyleSheet.create({
     notificationRow: {
         flexDirection: "row",
         alignItems: "flex-start",
+    },
+    emptyText: {
+        fontSize: FONT_SIZE.md,
+        color: COLORS.textSecondary,
+        fontWeight: FONT_WEIGHT.medium,
+        textAlign: "center",
     },
 });

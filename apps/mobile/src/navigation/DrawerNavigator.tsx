@@ -38,12 +38,12 @@ function AttendanceScreenWrapper({ route, navigation }: any) {
   }
 
   if (role === 'teacher') {
-    return <AttendanceListScreen route={route} navigation={navigation} />;
+    return <AttendanceListScreen navigation={navigation as any} />;
   } else {
-    return <AttendanceHistoryScreen route={route} navigation={navigation} />;
+    return <AttendanceHistoryScreen route={route as any} navigation={navigation as any} />;
   }
 }
-
+        
 export default function DrawerNavigator() {
   const route: any = useRoute();
   const [role, setRole] = useState<'teacher' | 'student' | 'parent'>(

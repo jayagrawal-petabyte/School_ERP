@@ -53,10 +53,9 @@ export default function StudentProfileScreen({ route, navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader
-  title="My Profile"
-  title={title || "My Profile"}
-  showBackButton
-/>
+        title={title || "My Profile"}
+        showBackButton
+      />
 
       {loading ? (
         <Loader />

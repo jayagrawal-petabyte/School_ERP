@@ -54,6 +54,7 @@ export default function AppHeader({
 
       <TouchableOpacity
         style={styles.iconBtn}
+        onPress={() => navigation.navigate('NotificationList')}
       >
         <Ionicons
           name="notifications-outline"
