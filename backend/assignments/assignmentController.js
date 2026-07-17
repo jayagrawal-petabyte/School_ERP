@@ -14,10 +14,14 @@ function handleError(res, error) {
   });
 }
 
-function createAssignment(req, res) {
+async function createAssignment(req, res) {
   try {
     const user = service.readUser(req);
-    const assignment = service.createAssignment(req.body, user);
+
+    const assignment = await service.createAssignment(
+      req.body,
+      user
+    );
 
     return sendResponse(res, 201, assignment);
   } catch (error) {
@@ -25,10 +29,11 @@ function createAssignment(req, res) {
   }
 }
 
-function updateAssignment(req, res) {
+async function updateAssignment(req, res) {
   try {
     const user = service.readUser(req);
-    const assignment = service.updateAssignment(
+
+    const assignment = await service.updateAssignment(
       req.params.id,
       req.body,
       user
@@ -40,10 +45,11 @@ function updateAssignment(req, res) {
   }
 }
 
-function deleteAssignment(req, res) {
+async function deleteAssignment(req, res) {
   try {
     const user = service.readUser(req);
-    const assignment = service.deleteAssignment(
+
+    const assignment = await service.deleteAssignment(
       req.params.id,
       user
     );
@@ -54,10 +60,13 @@ function deleteAssignment(req, res) {
   }
 }
 
-function listAssignments(req, res) {
+async function listAssignments(req, res) {
   try {
     const user = service.readUser(req);
-    const assignments = service.listAssignments(user);
+
+    const assignments = await service.listAssignments(
+      user
+    );
 
     return sendResponse(res, 200, assignments);
   } catch (error) {
@@ -65,9 +74,14 @@ function listAssignments(req, res) {
   }
 }
 
-function getAssignment(req, res) {
+async function getAssignment(req, res) {
   try {
-    const assignment = service.getAssignment(req.params.id);
+    const user = service.readUser(req);
+
+    const assignment = await service.getAssignment(
+      req.params.id,
+      user
+    );
 
     return sendResponse(res, 200, assignment);
   } catch (error) {
