@@ -48,22 +48,30 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [userRole, setUserRole] = useState<string>('student');
 
   const loadDetails = async () => {
   try {
     setLoading(true);
+    const { getToken } = await import('../utils/security');
+    const role = await getToken('user_role');
+    if (role) {
+      setUserRole(role);
+    }
     const response = await assignmentApi.getAssignment(assignmentId);
     const assignmentData = mapAssignment(response);
-    try {
-      const submission =
-        await assignmentApi.getSubmissionStatus(assignmentId);
-      if (submission) {
-        const status = submission.status === "submitted" ? "submitted" : submission.status === "late" ? "late" : submission.status === "graded" ? "graded" : "pending";
-        assignmentData.status = submission.status;
-        assignmentData.submission = submission;
+    if (role === 'student') {
+      try {
+        const submission =
+          await assignmentApi.getSubmissionStatus(assignmentId);
+        if (submission) {
+          const status = submission.status === "submitted" ? "submitted" : submission.status === "late" ? "late" : submission.status === "graded" ? "graded" : "pending";
+          assignmentData.status = submission.status;
+          assignmentData.submission = submission;
+        }
+      } catch (error) {
+        console.log("Submission status not available");
       }
-    } catch (error) {
-      console.log("Submission status not available");
     }
     setAssignment(assignmentData);
   } catch (error) {
@@ -222,22 +230,37 @@ export default function AssignmentDetailsScreen({ route, navigation }: Props) {
         )}
       </ScrollView>
 
-      {/* Submit Button Bar */}
-      {assignment.status === 'pending' && (
+      {/* Footer Actions */}
+      {userRole === 'teacher' ? (
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, { backgroundColor: COLORS.primary }]}
             onPress={() =>
-              navigation.navigate('SubmitAssignment', {
+              navigation.navigate('StudentSubmissionList', {
                 assignmentId: assignment.id,
-                title: assignment.title,
-                subject: assignment.subject,
               })
             }
           >
-            <Text style={styles.submitBtnText}>Submit Assignment</Text>
+            <Text style={styles.submitBtnText}>View Student Submissions</Text>
           </TouchableOpacity>
         </View>
+      ) : (
+        assignment.status === 'pending' && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={() =>
+                navigation.navigate('SubmitAssignment', {
+                  assignmentId: assignment.id,
+                  title: assignment.title,
+                  subject: assignment.subject,
+                })
+              }
+            >
+              <Text style={styles.submitBtnText}>Submit Assignment</Text>
+            </TouchableOpacity>
+          </View>
+        )
       )}
     </SafeAreaView>
   );
