@@ -62,25 +62,32 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
             setLoading(true);
         }
         try {
+            const { getToken } = await import('../utils/security');
+            const role = await getToken('user_role');
             const response = await assignmentApi.getAssignments();
             const classAssignments = classId ? response.filter((item: any) => String(item.classId) === String(classId)) : response;
             const formattedAssignments = await Promise.all(classAssignments.map(async (item: any) => {
+                if (role !== 'student') {
+                    // For teachers/non-students, skip submission status checks (which throw 403)
+                    return mapAssignment(item, "pending");
+                }
                 try {
                     const submission = await assignmentApi.getSubmissionStatus(item.id);
                     const status = submission?.status === "submitted" ? "submitted" : submission?.status === "late" ? "late" : submission?.status === "graded" ? "graded" : "pending";
                     return mapAssignment(item, status);
                 } catch (error) {
-                  console.log(`Unable to fetch submission status for assignment ${item.id}`, error);
+                    console.log(`Unable to fetch submission status for assignment ${item.id}`, error);
                     return mapAssignment(item, "pending");
-                }}));
+                }
+            }));
             setAssignments(formattedAssignments);
-          } catch (error) {
+        } catch (error) {
             console.log(error);
             Alert.alert("Unable to load assignments", "Please try again.");
-          } finally {
+        } finally {
             setLoading(false);
             setRefreshing(false);
-          }
+        }
     };
     
     useEffect(() => {

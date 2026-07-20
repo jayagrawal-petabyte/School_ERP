@@ -109,6 +109,7 @@ export default function HomeScreen({ route, navigation }: Props) {
   const getAcademicItems = (): AcademicItem[] => {
     const baseItems: AcademicItem[] = [
       { id: '1', title: 'Teachers', emoji: '👩‍🏫', color: '#FCE7F3', section: 'services', emptyLabel: 'No teacher directory available.' },
+      { id: '2', title: 'Syllabus', emoji: '📖', color: '#F3F4F6', section: 'academic', emptyLabel: 'No syllabus available.' },
       { id: '3', title: 'Time Table', emoji: '🗓️', color: '#EFF6FF', section: 'services', emptyLabel: 'No timetable available.' },
       {
         id: '4',
@@ -121,11 +122,20 @@ export default function HomeScreen({ route, navigation }: Props) {
       },
       {
         id: '5',
-        title: 'Exams & Results',
-        emoji: '📊',
+        title: 'Exams',
+        emoji: '✍️',
         color: '#FEE4E2',
         section: 'academic',
         emptyLabel: 'No examination records available.',
+        route: role === 'teacher' ? 'TeacherMarksEntry' : 'Results'
+      },
+      {
+        id: '6',
+        title: 'Marks',
+        emoji: '📊',
+        color: '#E0F2FE',
+        section: 'academic',
+        emptyLabel: 'No marks available.',
         route: role === 'teacher' ? 'TeacherMarksEntry' : 'Results'
       },
     ];
@@ -171,7 +181,7 @@ export default function HomeScreen({ route, navigation }: Props) {
               }
             : {}),
         },
-        ...baseItems.filter((item) => item.id !== '5')
+        ...baseItems.filter((item) => item.id !== '5' && item.id !== '6')
       ];
     } else {
       return [
