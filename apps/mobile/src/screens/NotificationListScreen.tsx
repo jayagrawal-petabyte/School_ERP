@@ -20,8 +20,8 @@ import notificationApi from "../services/notificationApi";
 import { getToken } from "../utils/security";
 import {COLORS,SPACING,FONT_SIZE,FONT_WEIGHT,SHADOWS,} from "../constants/theme";
 
-type NotificationListRouteProp = RouteProp<RootStackParamList, "Notifications">;
-type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"Notifications">;
+type NotificationListRouteProp = RouteProp<RootStackParamList, "NotificationList">;
+type NotificationListNavigationProp = NativeStackNavigationProp<RootStackParamList,"NotificationList">;
 interface Props {route?: any;navigation?: any;}
 type FilterType = | "all" | "general" | "announcement" | "reminder" | "alert";
 interface NotificationItem {
