@@ -39,7 +39,7 @@ const mapAssignment = (assignment: any, status: "pending" | "submitted" | "late"
         dueDate: assignment.dueDate,
         maxMarks: assignment.maxMarks || 0,
         assignedBy: assignment.createdBy || "Teacher",
-        status: "pending",
+        status,
         obtainedMarks: undefined,
         feedback: undefined,
         submission: undefined,

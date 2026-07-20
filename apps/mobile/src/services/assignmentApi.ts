@@ -20,7 +20,7 @@ const assignmentApi = {
     },
 
     getTeacherAssignments: async () => {
-        const response = await api.get("/assignments/teacher");
+        const response = await api.get("/assignments");
         return response.data.data;
     },
     
@@ -64,12 +64,12 @@ const assignmentApi = {
     },
 
     getAssignmentSubmissions: async (assignmentId: string) => {
-        const response = await api.get(`/assignment-submissions/assignment/${assignmentId}`);
+        const response = await api.get(`/assignment-submission/assignment/${assignmentId}`);
         return response.data.data;
     },
 
     downloadSubmission: async (submissionId: string) => {
-        const response = await api.get(`/assignment-submissions/download/${submissionId}`);
+        const response = await api.get(`/assignment-submission/download/${submissionId}`);
         return response.data.data;
     },
 
