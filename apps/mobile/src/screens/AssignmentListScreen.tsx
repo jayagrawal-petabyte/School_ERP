@@ -63,7 +63,7 @@ export default function AssignmentListScreen({ route, navigation }: Props) {
         }
         try {
             const response = await assignmentApi.getAssignments();
-            const classAssignments = response.filter((item: any) => String(item.classId) === String(classId));
+            const classAssignments = classId ? response.filter((item: any) => String(item.classId) === String(classId)) : response;
             const formattedAssignments = await Promise.all(classAssignments.map(async (item: any) => {
                 try {
                     const submission = await assignmentApi.getSubmissionStatus(item.id);
