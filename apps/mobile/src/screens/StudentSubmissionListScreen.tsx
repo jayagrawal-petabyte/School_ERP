@@ -51,20 +51,20 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
             const response = await assignmentApi.getAssignmentSubmissions(assignmentId);
             const formattedSubmissions = response.map((item: any) => ({
               id: item.id,
-              studentId: item.studentId,
-              studentName: item.studentName || item.student?.name || "Unknown Student",
-              rollNumber: item.rollNumber || item.student?.rollNumber || "-",
-              submittedAt: item.submittedAt || item.submitted_at,
-              status: item.status === "late" ? "Late" : item.status === "submitted" ? "Submitted" : "Pending",
-              marks: item.marks,
-              remarks: item.notes,
-              attachment: item.fileName || item.file_name ? {
-                  name: item.fileName || item.file_name,
-                  url: item.fileUrl || item.file_url,
-                  size: item.fileSize || item.file_size,
+              studentId: item.student_id || item.studentId || '',
+              studentName: item.studentName || item.student?.name || `Student ${(item.student_id || item.studentId || 'Unknown').slice(-6)}`,
+              rollNumber: item.rollNumber || item.roll_number || item.student?.rollNumber || '-',
+              submittedAt: item.submitted_at || item.submittedAt || '-',
+              status: item.status === 'late' ? 'Late' : item.status === 'submitted' ? 'Submitted' : 'Pending',
+              marks: item.marks ?? item.obtained_marks,
+              remarks: item.notes || item.remarks,
+              attachment: (item.file_name || item.fileName) ? {
+                  name: item.file_name || item.fileName,
+                  url: item.file_url || item.fileUrl,
+                  size: item.file_size || item.fileSize,
               } : undefined,
             }));
-            setSubmissions(response);
+            setSubmissions(formattedSubmissions);
         } catch (error) {
             console.log(error);
             Alert.alert("Error", "Unable to load submissions.");
@@ -129,7 +129,7 @@ export default function StudentSubmissionListScreen({route, navigation,}: Props)
             <View style={styles.card}>
                 <View style={styles.topRow}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{item.studentName.charAt(0)}</Text>
+                        <Text style={styles.avatarText}>{(item.studentName || '?').charAt(0)}</Text>
                     </View>
                     <View style={styles.infoSection}>
                         <Text style={styles.studentName}>{item.studentName}</Text>
