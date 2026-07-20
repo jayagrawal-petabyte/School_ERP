@@ -11,7 +11,7 @@ import {
 
 import { getToken } from "../utils/security";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || API_CONFIG.BASE_URL;
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || API_CONFIG.BASE_URL).replace(/\/api\/?$/, '') + '/api';
 export const api = axios.create({
   baseURL: API_URL,
   timeout: 30000,
@@ -38,7 +38,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: any) => response,
   (error: any) => {
-    if (__DEV__) {console.log("Something went wrong. Please try again.");}
+    if (__DEV__) {
+      console.log(
+        `API Error [${error?.response?.status}]: ${error?.config?.method?.toUpperCase()} ${error?.config?.baseURL}${error?.config?.url}`
+      );
+    }
     return Promise.reject(error);
   }
 );
