@@ -36,7 +36,6 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
         "application/pdf",
         "application/msword",
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "image/*",
       ],
       copyToCacheDirectory: true,
     });
@@ -142,7 +141,7 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
                 onPress={handleAddAttachment}
                 activeOpacity={0.7}>
             <Text style={styles.uploadIcon}>📎</Text>
-            <Text style={styles.uploadText}>Attach Document (PDF, Word, or JPG)</Text>
+            <Text style={styles.uploadText}>Attach Document (PDF or Word only)</Text>
             </TouchableOpacity>
             )}
 
