@@ -13,7 +13,7 @@ const { authorizeRoles } = require('../auth/middleware/role.middleware');
 
 router.post('/mark', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), markAttendance);
 router.put('/update/:id', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), updateAttendance);
-router.get('/view', authenticateToken, viewAttendance);
+router.get('/view', authenticateToken, authorizeRoles('admin', 'teacher', 'principal', 'student', 'parent'), viewAttendance);
 
 // Alias so GET /api/attendance behaves like GET /api/attendance/view,
 // matching the convention used by assignments/exams/users.

@@ -195,6 +195,20 @@ const getStudentsByClass = async (req, res) => {
             return res.status(400).json({ error: "classId parameter is required." });
         }
 
+        const role = req.user.role ? req.user.role.toLowerCase() : '';
+        if (role === 'teacher') {
+            const { data: teacherClass, error: checkErr } = await supabase
+                .from('class_teachers')
+                .select('class_id')
+                .eq('teacher_id', req.user.id)
+                .eq('class_id', classId)
+                .maybeSingle();
+
+            if (checkErr || !teacherClass) {
+                return res.status(403).json({ error: "Access denied. You are not assigned to this class." });
+            }
+        }
+
         const { data: attendanceRows, error: attendanceError } = await supabase
             .from('attendance_records')
             .select('student_id')

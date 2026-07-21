@@ -1,7 +1,7 @@
 const store = require('./notificationStore');
 const { getClientForUser } = require('../services/database.service');
 
-const staffRoles = ['admin', 'teacher'];
+const staffRoles = ['admin', 'teacher', 'principal'];
 const allowedTargetAudiences = ['students', 'teachers', 'parents', 'all', 'class'];
 const allowedTypes = ['general', 'announcement', 'reminder', 'alert'];
 
@@ -195,7 +195,8 @@ async function deleteAnnouncement(id, user, token) {
   return store.removeNotification(id, token);
 }
 
-function notificationHistory(query, token) {
+async function notificationHistory(query, user, token) {
+  await requireStaff(user, token);
   return store.listNotifications({
     status: query.status,
     type: query.type,
