@@ -48,8 +48,6 @@ export default function AttendanceHistoryScreen({ route, navigation }: Props) {
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
   const [searchQuery, setSearchQuery] = useState<string>(defaultStudentName || ''); // Default empty or student name
   const [activeSearch, setActiveSearch] = useState<string>(defaultStudentName || ''); // Confirmed search query
-  const [standard] = useState<string>('Standard - 8');
-  const [division] = useState<string>('Division - C');
 
   // Class History mode states
   const [classHistory, setClassHistory] = useState<DailyAttendance[]>([]);
@@ -421,18 +419,6 @@ if (child) {
                   <Text style={styles.clearSearchText}>✕</Text>
                 </TouchableOpacity>
               )}
-            </View>
-
-            <View style={styles.dropdownsRow}>
-              <View style={styles.dropdownField}>
-                <Text style={styles.dropdownText}>{standard}</Text>
-                <Text style={styles.chevronIcon}>▼</Text>
-              </View>
-
-              <View style={styles.dropdownField}>
-                <Text style={styles.dropdownText}>{division}</Text>
-                <Text style={styles.chevronIcon}>▼</Text>
-              </View>
             </View>
 
             <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
