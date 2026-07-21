@@ -223,10 +223,157 @@ const getStudentsByClass = async (req, res) => {
     }
 };
 
+const getRecentAttendance = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+
+        const userId = req.user.id;
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
+        const limit = parseInt(req.query.limit) || 10;
+
+        let query = supabase
+            .from('attendance_records')
+            .select('*')
+            .order('date', { ascending: false })
+            .limit(limit);
+
+        if (normalizedRole === 'student') {
+            query = query.eq('student_id', userId);
+        } else if (normalizedRole === 'parent') {
+            const { data: linkedStudents, error: linkError } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', userId);
+            if (linkError) throw linkError;
+            const studentIds = (linkedStudents || []).map(r => r.student_id);
+            if (studentIds.length === 0) {
+                return res.status(200).json({ message: "No linked students found.", scope: "Parent", data: [] });
+            }
+            query = query.in('student_id', studentIds);
+        } else {
+            const { classId } = req.query;
+            if (classId) query = query.eq('class_id', classId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        return res.status(200).json({ data });
+    } catch (error) {
+        console.error("Error in getRecentAttendance:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+const getAttendanceSummary = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+
+        const userId = req.user.id;
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
+        const { classId, date } = req.query;
+
+        let query = supabase.from('attendance_records').select('status');
+
+        if (normalizedRole === 'student') {
+            query = query.eq('student_id', userId);
+        } else if (normalizedRole === 'parent') {
+            const { data: linkedStudents, error: linkError } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', userId);
+            if (linkError) throw linkError;
+            const studentIds = (linkedStudents || []).map(r => r.student_id);
+            if (studentIds.length === 0) {
+                return res.status(200).json({ message: "No linked students found.", scope: "Parent", data: {} });
+            }
+            query = query.in('student_id', studentIds);
+            if (date) query = query.eq('date', date);
+        } else {
+            if (classId) query = query.eq('class_id', classId);
+            if (date) query = query.eq('date', date);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const summary = (data || []).reduce((acc, row) => {
+            acc[row.status] = (acc[row.status] || 0) + 1;
+            return acc;
+        }, {});
+
+        return res.status(200).json({ data: summary });
+    } catch (error) {
+        console.error("Error in getAttendanceSummary:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+const getAttendanceCalendar = async (req, res) => {
+    try {
+        const authHeader = req.get("Authorization");
+        const token = authHeader && authHeader.split(' ')[1];
+        const supabase = getClientForUser(token);
+
+        const userId = req.user.id;
+        const role = req.user.role;
+        const normalizedRole = role ? role.toLowerCase() : '';
+        const { year, month, classId } = req.query;
+
+        if (!year || !month) {
+            return res.status(400).json({ error: "year and month query params are required." });
+        }
+
+        const start = `${year}-${String(month).padStart(2, '0')}-01`;
+        const endDateObj = new Date(year, month, 0); // last day of month
+        const end = `${year}-${String(month).padStart(2, '0')}-${String(endDateObj.getDate()).padStart(2, '0')}`;
+
+        let query = supabase
+            .from('attendance_records')
+            .select('*')
+            .gte('date', start)
+            .lte('date', end);
+
+        if (normalizedRole === 'student') {
+            query = query.eq('student_id', userId);
+        } else if (normalizedRole === 'parent') {
+            const { data: linkedStudents, error: linkError } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', userId);
+            if (linkError) throw linkError;
+            const studentIds = (linkedStudents || []).map(r => r.student_id);
+            if (studentIds.length === 0) {
+                return res.status(200).json({ message: "No linked students found.", scope: "Parent", data: [] });
+            }
+            query = query.in('student_id', studentIds);
+        } else {
+            if (classId) query = query.eq('class_id', classId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        return res.status(200).json({ data });
+    } catch (error) {
+        console.error("Error in getAttendanceCalendar:", error);
+        return res.status(500).json({ error: "Internal server error." });
+    }
+};
+
 module.exports = {
     markAttendance,
     updateAttendance,
     viewAttendance,
     getTeacherClasses,
-    getStudentsByClass
+    getStudentsByClass,
+    getRecentAttendance,
+    getAttendanceSummary,
+    getAttendanceCalendar
 };
