@@ -15,6 +15,10 @@ router.post('/mark', authenticateToken, authorizeRoles('admin', 'teacher', 'prin
 router.put('/update/:id', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), updateAttendance);
 router.get('/view', authenticateToken, viewAttendance);
 
+// Alias so GET /api/attendance behaves like GET /api/attendance/view,
+// matching the convention used by assignments/exams/users.
+router.get('/', authenticateToken, viewAttendance);
+
 router.get('/classes', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), getTeacherClasses);
 router.get('/students', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), getStudentsByClass);
 

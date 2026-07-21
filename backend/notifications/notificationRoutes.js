@@ -11,6 +11,10 @@ router.post('/:id/send', authenticateToken, controller.sendNotification);
 router.get('/history', authenticateToken, controller.notificationHistory);
 router.get('/me', authenticateToken, controller.myNotifications);
 
+// Alias so GET /api/notifications behaves like GET /api/notifications/me,
+// matching the convention used by assignments/exams/users.
+router.get('/', authenticateToken, controller.myNotifications);
+
 router.patch('/announcements/:id', authenticateToken, controller.updateAnnouncement);
 router.delete('/announcements/:id', authenticateToken, controller.deleteAnnouncement);
 
