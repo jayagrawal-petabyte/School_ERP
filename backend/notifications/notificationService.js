@@ -1,7 +1,7 @@
 const store = require('./notificationStore');
 const { getClientForUser } = require('../services/database.service');
 
-const staffRoles = ['admin', 'teacher'];
+const staffRoles = ['admin', 'teacher', 'principal'];
 const allowedTargetAudiences = ['students', 'teachers', 'parents', 'all', 'class'];
 const allowedTypes = ['general', 'announcement', 'reminder', 'alert'];
 
