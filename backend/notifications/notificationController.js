@@ -52,8 +52,9 @@ async function createAndSendNotification(req, res) {
 
 async function notificationHistory(req, res) {
   try {
+    const user = service.readUser(req);
     const token = service.readToken(req);
-    const history = await service.notificationHistory(req.query, token);
+    const history = await service.notificationHistory(req.query, user, token);
 
     return sendResponse(res, 200, history);
   } catch (error) {

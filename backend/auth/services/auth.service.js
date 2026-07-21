@@ -18,6 +18,51 @@ const supabase = createClient(
     ANON_KEY
 );
 
+const FAILED_ATTEMPTS = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes lockout
+
+function checkRateLimit(email) {
+    const key = String(email || '').toLowerCase().trim();
+    if (!key) return;
+
+    const record = FAILED_ATTEMPTS.get(key);
+    if (!record) return;
+
+    if (Date.now() > record.resetAt) {
+        FAILED_ATTEMPTS.delete(key);
+        return;
+    }
+
+    if (record.count >= MAX_FAILED_ATTEMPTS) {
+        const error = new Error(
+            "Too many failed login attempts. Account temporarily locked. Please try again after 15 minutes."
+        );
+        error.statusCode = 429;
+        throw error;
+    }
+}
+
+function recordFailedAttempt(email) {
+    const key = String(email || '').toLowerCase().trim();
+    if (!key) return;
+
+    const now = Date.now();
+    const record = FAILED_ATTEMPTS.get(key);
+
+    if (!record || now > record.resetAt) {
+        FAILED_ATTEMPTS.set(key, { count: 1, resetAt: now + LOCKOUT_MS });
+    } else {
+        record.count += 1;
+    }
+}
+
+function clearFailedAttempts(email) {
+    const key = String(email || '').toLowerCase().trim();
+    if (!key) return;
+    FAILED_ATTEMPTS.delete(key);
+}
+
 /**
  * Handle user login.
  */
@@ -57,18 +102,24 @@ async function login(credentials) {
         throw error;
     }
 
+    const normalizedEmail = String(email).toLowerCase().trim();
+    checkRateLimit(normalizedEmail);
+
     const {
         data,
         error,
     } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
     });
 
     if (error) {
+        recordFailedAttempt(normalizedEmail);
         error.statusCode = error.status || 401;
         throw error;
     }
+
+    clearFailedAttempts(normalizedEmail);
 
     return {
         message: AUTH_MESSAGES.LOGIN_SUCCESS,

@@ -195,7 +195,8 @@ async function deleteAnnouncement(id, user, token) {
   return store.removeNotification(id, token);
 }
 
-function notificationHistory(query, token) {
+async function notificationHistory(query, user, token) {
+  await requireStaff(user, token);
   return store.listNotifications({
     status: query.status,
     type: query.type,

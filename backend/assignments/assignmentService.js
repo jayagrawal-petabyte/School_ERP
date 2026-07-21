@@ -65,7 +65,16 @@ async function deleteAssignment(id, user) {
 }
 
 async function listAssignments(user) {
-  return await store.listAssignments(user.token);
+  const role = String(user.role || '').toLowerCase();
+  let filters = {};
+
+  if (role === 'student') {
+    const studentId = user.id || user._id;
+    const allowedClassIds = await store.getStudentClassIds(user.token, studentId);
+    filters.classIds = allowedClassIds;
+  }
+
+  return await store.listAssignments(user.token, filters);
 }
 
 async function getAssignment(id, user) {
@@ -73,6 +82,15 @@ async function getAssignment(id, user) {
 
   if (!assignment) {
     throw createError(404, 'Assignment not found.');
+  }
+
+  const role = String(user.role || '').toLowerCase();
+  if (role === 'student') {
+    const studentId = user.id || user._id;
+    const allowedClassIds = await store.getStudentClassIds(user.token, studentId);
+    if (!assignment.classId || !allowedClassIds.includes(assignment.classId)) {
+      throw createError(403, 'Access denied. You are not enrolled in the class for this assignment.');
+    }
   }
 
   return assignment;
