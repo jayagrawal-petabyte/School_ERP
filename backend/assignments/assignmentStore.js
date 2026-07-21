@@ -104,6 +104,12 @@ async function removeAssignment(token, id) {
   return toModel(data);
 }
 
+/**
+ * Look up the class IDs a student is enrolled in via the class_students table.
+ * NOTE: class_students migration may be pending (Member 9). If the table does
+ * not exist, this will log an error and return [], making assignments invisible
+ * to students until the migration is applied.
+ */
 async function getStudentClassIds(token, studentId) {
   const supabase = getClientForUser(token);
   const { data, error } = await supabase
@@ -112,6 +118,11 @@ async function getStudentClassIds(token, studentId) {
     .eq("student_id", studentId);
 
   if (error) {
+    console.error(
+      "getStudentClassIds failed for student %s: %s",
+      studentId,
+      error.message || error.code || "unknown error"
+    );
     return [];
   }
 

@@ -21,6 +21,7 @@ const supabase = createClient(
 const FAILED_ATTEMPTS = new Map();
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes lockout
+const MAX_TRACKED_EMAILS = 10000; // Memory cap to prevent DoS via email enumeration
 
 function checkRateLimit(email) {
     const key = String(email || '').toLowerCase().trim();
@@ -51,6 +52,20 @@ function recordFailedAttempt(email) {
     const record = FAILED_ATTEMPTS.get(key);
 
     if (!record || now > record.resetAt) {
+        // Before adding a new entry, enforce memory cap
+        if (!FAILED_ATTEMPTS.has(key) && FAILED_ATTEMPTS.size >= MAX_TRACKED_EMAILS) {
+            // Opportunistic cleanup: purge expired entries first
+            for (const [k, v] of FAILED_ATTEMPTS.entries()) {
+                if (now > v.resetAt) {
+                    FAILED_ATTEMPTS.delete(k);
+                }
+            }
+            // If still at cap, evict the oldest entry (first inserted)
+            if (FAILED_ATTEMPTS.size >= MAX_TRACKED_EMAILS) {
+                const oldestKey = FAILED_ATTEMPTS.keys().next().value;
+                FAILED_ATTEMPTS.delete(oldestKey);
+            }
+        }
         FAILED_ATTEMPTS.set(key, { count: 1, resetAt: now + LOCKOUT_MS });
     } else {
         record.count += 1;
