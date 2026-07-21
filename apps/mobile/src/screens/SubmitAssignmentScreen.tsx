@@ -95,8 +95,8 @@ export default function SubmitAssignmentScreen({ route, navigation }: Props) {
   } catch (error) {
     if (__DEV__) {
       console.error("Error submitting assignment:", error);
-      Alert.alert("Submission Failed","Please try again.");
     }
+    Alert.alert("Submission Failed", "Please try again.");
   } finally {
     setIsSubmitting(false);
   }

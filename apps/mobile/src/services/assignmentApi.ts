@@ -99,13 +99,14 @@ const assignmentApi = {
         }
     ) => {
         const formData = new FormData();
+        formData.append("assignmentId", assignmentId);
         formData.append("notes", notes);
         formData.append("file", {
             uri: attachedFile.uri,
             name: attachedFile.name,
             type: attachedFile.type,
         } as any);
-        const response = await api.post(`/assignment-submissions/${assignmentId}`, formData, {
+        const response = await api.post(`/assignment-submission/submit`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
             },
