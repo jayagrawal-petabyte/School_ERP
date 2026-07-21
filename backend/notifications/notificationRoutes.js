@@ -13,6 +13,10 @@ router.post('/:id/send', authenticateToken, authorizeRoles('admin', 'teacher', '
 router.get('/history', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), controller.notificationHistory);
 router.get('/me', authenticateToken, authorizeRoles('admin', 'teacher', 'principal', 'student', 'parent'), controller.myNotifications);
 
+// Alias so GET /api/notifications behaves like GET /api/notifications/me,
+// matching the convention used by assignments/exams/users.
+router.get('/', authenticateToken, authorizeRoles('admin', 'teacher', 'principal', 'student', 'parent'), controller.myNotifications);
+
 router.patch('/announcements/:id', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), controller.updateAnnouncement);
 router.delete('/announcements/:id', authenticateToken, authorizeRoles('admin', 'teacher', 'principal'), controller.deleteAnnouncement);
 
