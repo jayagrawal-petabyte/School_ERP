@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require('express');
+const cors = require('cors');
 
 const authRouter = require('./auth').authRouter;
 const { assignmentRoutes } = require('./assignments');
@@ -17,6 +18,39 @@ const {
 } = require('./user-management');
 
 const app = express();
+
+// Production origins from env (comma-separated)
+// e.g. CORS_ORIGIN=https://school-erp-frontend.onrender.com
+const allowedOrigins = [];
+
+if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== '*') {
+  process.env.CORS_ORIGIN.split(',').forEach((origin) => {
+    const trimmed = origin.trim();
+    if (trimmed) allowedOrigins.push(trimmed);
+  });
+}
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (process.env.CORS_ORIGIN === '*') return true;
+  // Allow any localhost or 127.0.0.1 origin (any port)
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  // Allow explicitly configured production origins
+  if (allowedOrigins.includes(origin)) return true;
+  return false;
+}
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
