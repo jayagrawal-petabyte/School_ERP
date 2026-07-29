@@ -4,6 +4,7 @@ import { API_ROUTES } from './routes';
 export interface LoginCredentials {
   email: string;
   password: string;
+  role?: string;
 }
 
 export interface LoginResponse {
@@ -33,15 +34,24 @@ export interface User {
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
     const response = await apiClient.post(API_ROUTES.auth.login, credentials);
+    const apiData = response.data?.data;
+    const normalizedRole = credentials.role || apiData?.user?.role || apiData?.user?.user_metadata?.role || 'admin';
     
     // Store access token in localStorage
-    if (response.data?.data?.access_token) {
-      localStorage.setItem('token', response.data.data.access_token);
+    const accessToken = apiData?.access_token || apiData?.accessToken || apiData?.token;
+    if (accessToken) {
+      localStorage.setItem('token', accessToken);
     }
     
     // Store user data
-    if (response.data?.data?.user) {
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    if (apiData?.user) {
+      localStorage.setItem(
+        'user',
+        JSON.stringify({
+          ...apiData.user,
+          role: normalizedRole,
+        })
+      );
     }
     
     return response.data;

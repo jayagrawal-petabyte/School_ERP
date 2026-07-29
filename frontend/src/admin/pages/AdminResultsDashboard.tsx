@@ -132,17 +132,121 @@
 // export default AdminResultsDashboard;
 
 
-import React, { useState } from 'react';
-import { mockSchoolResults } from '../mockSchoolData';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getResultReport } from '../../api/reportService';
+
+type StudentRow = {
+  name: string;
+  score: number;
+};
+
+type SectionRow = {
+  name: string;
+  classAvg: number;
+  students: StudentRow[];
+};
+
+type GradeRow = {
+  grade: string;
+  sections: SectionRow[];
+  gradeTopStudents?: StudentRow[];
+};
+
+const normalizeResultReport = (payload: any): GradeRow[] => {
+  const data = payload?.data ?? payload;
+  const source = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.grades)
+      ? data.grades
+      : Array.isArray(data?.results)
+        ? data.results
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
+
+  return source.map((grade: any, gradeIndex: number) => {
+    const sectionsSource = Array.isArray(grade.sections) ? grade.sections : [];
+    const sections = sectionsSource.map((section: any, sectionIndex: number) => {
+      const studentsSource = Array.isArray(section.students)
+        ? section.students
+        : Array.isArray(section.rankedStudents)
+          ? section.rankedStudents
+          : [];
+
+      const students = studentsSource.map((student: any) => ({
+        name: student.name ?? student.studentName ?? `Student ${sectionIndex + 1}`,
+        score: Number(student.score ?? student.marks ?? student.total ?? 0),
+      }));
+
+      return {
+        name: section.name ?? section.section ?? `Section ${sectionIndex + 1}`,
+        classAvg: Number(section.classAvg ?? section.average ?? section.avg ?? 0),
+        students,
+      };
+    });
+
+    const gradeTopStudents = Array.isArray(grade.gradeTopStudents)
+      ? grade.gradeTopStudents.map((student: any) => ({
+          name: student.name ?? student.studentName ?? 'Student',
+          score: Number(student.score ?? student.marks ?? student.total ?? 0),
+        }))
+      : sections.flatMap((section) => section.students).sort((a, b) => b.score - a.score).slice(0, 5);
+
+    return {
+      grade: grade.grade ?? grade.class ?? grade.name ?? `Grade ${gradeIndex + 1}`,
+      sections,
+      gradeTopStudents,
+    };
+  });
+};
 
 const AdminResultsDashboard: React.FC = () => {
-  const [selectedGrade, setSelectedGrade] = useState(mockSchoolResults[0].grade);
+  const [results, setResults] = useState<GradeRow[]>([]);
+  const [selectedGrade, setSelectedGrade] = useState<string>('');
   const [isPublished, setIsPublished] = useState(false);
-  
-  const currentGradeData = mockSchoolResults.find(g => g.grade === selectedGrade);
-  const [selectedSection, setSelectedSection] = useState(currentGradeData?.sections[0].name || "");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const currentSection = currentGradeData?.sections.find(s => s.name === selectedSection);
+  useEffect(() => {
+    const loadResults = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getResultReport();
+        const normalized = normalizeResultReport(response);
+        setResults(normalized);
+        setSelectedGrade((current) => current || normalized[0]?.grade || '');
+      } catch (fetchError) {
+        console.error('Failed to load admin results report:', fetchError);
+        setError('Failed to load exam analytics from the API.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResults();
+  }, []);
+  
+  const currentGradeData = useMemo(() => results.find((grade) => grade.grade === selectedGrade), [results, selectedGrade]);
+  const [selectedSection, setSelectedSection] = useState('');
+
+  useEffect(() => {
+    setSelectedSection(currentGradeData?.sections[0]?.name || '');
+  }, [currentGradeData]);
+
+  const currentSection = currentGradeData?.sections.find((section) => section.name === selectedSection);
+
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading exam analytics...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
+
+  if (results.length === 0) {
+    return <div className="p-6 text-gray-500">No exam analytics returned by the API.</div>;
+  }
   
   return (
     <div className="p-6">
@@ -165,10 +269,10 @@ const AdminResultsDashboard: React.FC = () => {
           value={selectedGrade}
           onChange={(e) => {
             setSelectedGrade(e.target.value);
-            setSelectedSection(mockSchoolResults.find(g => g.grade === e.target.value)?.sections[0].name || "");
+              setSelectedSection(results.find((grade) => grade.grade === e.target.value)?.sections[0]?.name || '');
           }}
         >
-          {mockSchoolResults.map(g => <option key={g.grade} value={g.grade}>{g.grade}</option>)}
+          {results.map((grade) => <option key={grade.grade} value={grade.grade}>{grade.grade}</option>)}
         </select>
 
         <select 
@@ -184,9 +288,8 @@ const AdminResultsDashboard: React.FC = () => {
       <div className="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 rounded-lg shadow-lg mb-8 text-white">
         <h2 className="text-xl font-bold mb-4">🏆 {selectedGrade} - School Toppers (Overall)</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {mockSchoolResults
-            .find(g => g.grade === selectedGrade)
-            ?.gradeTopStudents.slice(0, 5)
+          {currentGradeData
+            ?.gradeTopStudents?.slice(0, 5)
             .map((student, idx) => (
               <div key={idx} className="bg-white/10 p-3 rounded-lg text-center backdrop-blur-sm">
                 <p className="text-xs text-indigo-200 uppercase font-bold">Rank {idx + 1}</p>

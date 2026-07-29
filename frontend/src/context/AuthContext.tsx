@@ -5,19 +5,26 @@ import {
   useEffect,
 } from "react";
 import type { ReactNode } from "react";
-import { logout as apiLogout, getStoredUser, clearAuthData } from "../api/authService";
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  getCurrentUser,
+  getStoredUser,
+  clearAuthData,
+} from "../api/authService";
 
 type User = {
   role: string;
   isAuthenticated: boolean;
   email?: string;
   id?: string;
+  name?: string;
 };
 
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (role: string, rememberMe: boolean) => void;
+  login: (email: string, password: string, role?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 };
 
@@ -32,42 +39,79 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user data on mount
-    const storedUser = getStoredUser();
-    
-    if (storedUser) {
-      setUser({
-        role: storedUser.role,
-        isAuthenticated: true,
-        email: storedUser.email,
-        id: storedUser.id,
-      });
-    }
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = getStoredUser();
+      
+      if (token) {
+        try {
+          // Try to get current user from backend
+          const currentUser = await getCurrentUser();
+          if (currentUser) {
+            const normalizedRole =
+              currentUser.role && currentUser.role !== 'authenticated'
+                ? currentUser.role
+                : storedUser?.role || currentUser.user_metadata?.role || 'admin';
 
-    setLoading(false);
-  }, []);
+            setUser({
+              role: normalizedRole,
+              isAuthenticated: true,
+              email: currentUser.email,
+              id: currentUser.id,
+              name: currentUser.name || currentUser.email,
+            });
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          // If API fails, fall back to stored user data
+          console.warn('Failed to fetch current user from API, using stored data:', err);
+        }
+      }
 
-  const login = async (role: string, rememberMe: boolean) => {
-    // For backward compatibility with existing UI (which passes role directly)
-    // This is a simplified login that maintains the existing flow
-    // In production, this would call the actual API with email/password
-    
-    const loggedInUser: User = {
-      role,
-      isAuthenticated: true,
+      // Fallback to localStorage user data
+      if (storedUser) {
+        setUser({
+          role: storedUser.role || storedUser.user_metadata?.role || 'admin',
+          isAuthenticated: true,
+          email: storedUser.email,
+          id: storedUser.id,
+        });
+      }
+
+      setLoading(false);
     };
 
-    setUser(loggedInUser);
+    initAuth();
+  }, []);
 
-    if (rememberMe) {
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-    } else {
-      localStorage.removeItem("user");
+  const login = async (email: string, password: string, role?: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await apiLogin({ email, password, role });
+      
+      if (response.success && response.data) {
+        const userData = response.data.user;
+        const userRole = role || userData.role || userData.user_metadata?.role || 'admin';
+        
+        setUser({
+          role: userRole,
+          isAuthenticated: true,
+          email: userData.email,
+          id: userData.id,
+          name: userData.name || userData.email,
+        });
+        
+        return { success: true };
+      }
+      
+      return { success: false, error: 'Invalid response from server' };
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Login failed';
+      return { success: false, error: errorMsg };
     }
   };
 
   const logout = async () => {
-    // Call API logout if token exists
     const token = localStorage.getItem('token');
     if (token) {
       try {
@@ -77,7 +121,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     }
     
-    // Clear local state
     setUser(null);
     clearAuthData();
   };

@@ -10,38 +10,53 @@ export interface Submission {
   [key: string]: any;
 }
 
-export const getSubmissions = async () => {
-  const response = await apiClient.get(API_ROUTES.submission.list);
-  return response.data;
-};
-
-export const getSubmissionById = async (id: string) => {
-  const response = await apiClient.get(API_ROUTES.submission.byId(id));
-  return response.data;
-};
-
-export const createSubmission = async (submissionData: any) => {
+/**
+ * Submit assignment (with file upload)
+ * POST /api/assignment-submission/submit
+ */
+export const submitAssignment = async (formData: FormData) => {
   const response = await apiClient.post(
-    API_ROUTES.submission.list,
-    submissionData
+    API_ROUTES.submission.submit,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
   );
   return response.data;
 };
 
-export const updateSubmission = async (
-  id: string,
-  submissionData: any
-) => {
-  const response = await apiClient.put(
-    API_ROUTES.submission.byId(id),
-    submissionData
-  );
+/**
+ * Get submission status for a specific assignment (student)
+ * GET /api/assignment-submission/status/:assignmentId
+ */
+export const getSubmissionStatus = async (assignmentId: string) => {
+  const response = await apiClient.get(API_ROUTES.submission.status(assignmentId));
   return response.data;
 };
 
-export const deleteSubmission = async (id: string) => {
-  const response = await apiClient.delete(
-    API_ROUTES.submission.byId(id)
-  );
+/**
+ * Get all submissions for the current student
+ * GET /api/assignment-submission/student
+ */
+export const getStudentSubmissions = async () => {
+  const response = await apiClient.get(API_ROUTES.submission.student);
+  return response.data;
+};
+
+/**
+ * Get all submissions for a specific assignment (teacher/admin)
+ * GET /api/assignment-submission/assignment/:assignmentId
+ */
+export const getAssignmentSubmissions = async (assignmentId: string) => {
+  const response = await apiClient.get(API_ROUTES.submission.assignment(assignmentId));
+  return response.data;
+};
+
+/**
+ * Download a submission file
+ * GET /api/assignment-submission/download/:submissionId
+ */
+export const downloadSubmission = async (submissionId: string) => {
+  const response = await apiClient.get(API_ROUTES.submission.download(submissionId), {
+    responseType: "blob",
+  });
   return response.data;
 };

@@ -13,6 +13,7 @@ import { NotificationsPage } from "./notifications/pages/Notifications";
 import { AttendanceReports } from "./reports/pages/AttendanceReports";
 import TeacherLayout from "./teachers/components/TeacherLayout";
 import Login from "./auth/Login";
+import Register from "./auth/Register";
 import ForgotPassword from "./auth/ForgotPassword";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CommonNavbar from "./components/layout/CommonNavbar";
@@ -69,6 +70,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
 
        

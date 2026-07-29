@@ -1,4 +1,3 @@
-
 export const API_ROUTES = {
   auth: {
     login: "/api/auth/login",
@@ -21,18 +20,21 @@ export const API_ROUTES = {
       insights: "/student/attendance-reports/insights",
       download: "/student/attendance-reports/download"
     },
-    list: "/api/students",
-    byId: (id: string) => `/api/students/${id}`,
+    list: "/api/users/students",
+    byId: (id: string) => `/api/users/students/${id}`,
+    status: (id: string) => `/api/users/students/${id}/status`,
   },
 
   teacher: {
-    list: "/api/teachers",
-    byId: (id: string) => `/api/teachers/${id}`,
+    list: "/api/users/teachers",
+    byId: (id: string) => `/api/users/teachers/${id}`,
+    status: (id: string) => `/api/users/teachers/${id}/status`,
   },
 
   parent: {
-    list: "/api/parents",
-    byId: (id: string) => `/api/parents/${id}`,
+    list: "/api/users/parents",
+    byId: (id: string) => `/api/users/parents/${id}`,
+    status: (id: string) => `/api/users/parents/${id}/status`,
   },
 
   assignment: {
@@ -41,14 +43,23 @@ export const API_ROUTES = {
   },
 
   submission: {
-    list: "/api/submissions",
-    byId: (id: string) => `/api/submissions/${id}`,
+    submit: "/api/assignment-submission/submit",
+    status: (assignmentId: string) => `/api/assignment-submission/status/${assignmentId}`,
+    student: "/api/assignment-submission/student",
+    assignment: (assignmentId: string) => `/api/assignment-submission/assignment/${assignmentId}`,
+    download: (submissionId: string) => `/api/assignment-submission/download/${submissionId}`,
   },
 
   exam: {
     list: "/api/exams",
     me: "/api/exams/me",
     byId: (id: string) => `/api/exams/${id}`,
+  },
+
+  notification: {
+    list: "/api/notifications",
+    me: "/api/notifications/me",
+    byId: (id: string) => `/api/notifications/${id}`,
   },
 
   report: {

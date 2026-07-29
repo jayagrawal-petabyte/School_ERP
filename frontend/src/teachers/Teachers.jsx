@@ -265,6 +265,8 @@ const sanitizeForm = (form) => ({
   address:     normalizeSpaces(form.address),
 });
 
+const toInputValue = (value) => (value == null ? "" : String(value));
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Badge({ status }) {
@@ -438,17 +440,17 @@ export default function Teachers() {
 
   const handleEdit = useCallback((teacher) => {
     setForm({
-      name:         teacher.name,
-      subject:      teacher.subject,
-      qualification: teacher.qualification,
-      previousOrg:  teacher.previousOrg,
-      totalExp:     teacher.totalExp,
-      currentExp:   teacher.currentExp,
-      phone:        teacher.phone,
-      email:        teacher.email,
-      joiningDate:  teacher.joiningDate,
-      status:       teacher.status,
-      address:      teacher.address,
+      name:         toInputValue(teacher.name),
+      subject:      toInputValue(teacher.subject),
+      qualification: toInputValue(teacher.qualification),
+      previousOrg:  toInputValue(teacher.previousOrg),
+      totalExp:     toInputValue(teacher.totalExp),
+      currentExp:   toInputValue(teacher.currentExp),
+      phone:        toInputValue(teacher.phone),
+      email:        toInputValue(teacher.email),
+      joiningDate:  toInputValue(teacher.joiningDate),
+      status:       toInputValue(teacher.status) || "Full-Time",
+      address:      toInputValue(teacher.address),
     });
     setEditingId(teacher.id);
     setErrors({});
@@ -456,7 +458,8 @@ export default function Teachers() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback((e) => {
+    e?.preventDefault();
     const validationErrors = validate(form, editingId, teachers);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -480,6 +483,14 @@ export default function Teachers() {
     setShowForm(false);
     setErrors({});
   }, [form, editingId, teachers, addTeacher, updateTeacher, showToast]);
+
+  const openTeacherForm = useCallback(() => {
+    setShowForm(true);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setErrors({});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const handleCancel = useCallback(() => {
     setForm(EMPTY_FORM);
@@ -561,7 +572,7 @@ export default function Teachers() {
             <div style={{ fontSize: "11px", color: "#7a7f8e", marginTop: "1px", fontWeight: 500 }}>Human Resources · Academic Staff</div>
           </div>
           {!showForm && (
-            <button onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM); setErrors({}); }} style={btnPrimary}>
+            <button type="button" onClick={openTeacherForm} style={btnPrimary}>
               + Add Teacher
             </button>
           )}
@@ -579,7 +590,7 @@ export default function Teachers() {
 
         {/* ── Add / Edit Form ── */}
         {showForm && (
-          <div style={{ background: "#fff", border: "1px solid #e8eaf0", borderRadius: "10px", marginBottom: "28px", overflow: "hidden", boxShadow: "0 2px 12px rgba(57,73,171,0.08)" }}>
+          <form onSubmit={handleSubmit} style={{ background: "#fff", border: "1px solid #e8eaf0", borderRadius: "10px", marginBottom: "28px", overflow: "hidden", boxShadow: "0 2px 12px rgba(57,73,171,0.08)" }}>
             <div style={{ padding: "16px 24px", borderBottom: "1px solid #e8eaf0", background: "#fafbff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: "15px", color: "#1a1f36" }}>
@@ -589,7 +600,7 @@ export default function Teachers() {
                   {editingId ? "Modify the details below and save." : "All fields marked * are required."}
                 </div>
               </div>
-              <button onClick={handleCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#7a7f8e", fontSize: "20px", lineHeight: 1 }}>✕</button>
+              <button type="button" onClick={handleCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "#7a7f8e", fontSize: "20px", lineHeight: 1 }}>✕</button>
             </div>
 
             <div style={{ padding: "24px" }}>
@@ -695,13 +706,13 @@ export default function Teachers() {
               </FormField>
 
               <div style={{ display: "flex", gap: "12px", marginTop: "24px", paddingTop: "20px", borderTop: "1px solid #e8eaf0" }}>
-                <button onClick={handleSubmit} style={btnPrimary}>
+                <button type="submit" style={btnPrimary}>
                   {editingId ? "Save Changes" : "Register Teacher"}
                 </button>
-                <button onClick={handleCancel} style={btnSecondary}>Cancel</button>
+                <button type="button" onClick={handleCancel} style={btnSecondary}>Cancel</button>
               </div>
             </div>
-          </div>
+          </form>
         )}
 
         {/* ── Tabs ── */}

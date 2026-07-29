@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AssignmentCard } from '../components/AssignmentCard';
+import { getAssignments } from '../../api/assignmentService';
+import { getAssignmentSubmissions } from '../../api/submissionService';
 
 interface Assignment {
   id: string;
@@ -10,25 +12,78 @@ interface Assignment {
   submissionCount: number;
 }
 
+const normalizeAssignments = (payload: any): Array<Record<string, any>> => {
+  const data = payload?.data ?? payload;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.assignments)) return data.assignments;
+  if (Array.isArray(data?.results)) return data.results;
+  return [];
+};
+
 export const TeacherDashboard: React.FC = () => {
-  const mockCreatedAssignments: Assignment[] = [
-    {
-      id: '1',
-      title: 'Quadratic Equations Homework',
-      description: 'Solve problems 1 to 10 from Chapter 4. Show all steps neatly in your notebook and upload a PDF scan.',
-      dueDate: '2026-07-05',
-      maxMarks: 100,
-      submissionCount: 14,
-    },
-    {
-      id: '2',
-      title: 'Physics Lab Report',
-      description: 'Submit your practical experiment report on Ohm\'s Law. Include the circuit diagram, observations table, and conclusion.',
-      dueDate: '2026-06-28',
-      maxMarks: 50,
-      submissionCount: 28,
-    }
-  ];
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getAssignments();
+        const assignmentList = normalizeAssignments(response);
+
+        const enrichedAssignments = await Promise.all(
+          assignmentList.map(async (assignment: any) => {
+            let submissionCount = Number(assignment.submissionCount ?? assignment.submissionsCount ?? 0);
+
+            if (!submissionCount && assignment.id) {
+              try {
+                const submissionsResponse = await getAssignmentSubmissions(String(assignment.id));
+                const submissionsData = submissionsResponse?.data ?? submissionsResponse;
+                submissionCount = Array.isArray(submissionsData)
+                  ? submissionsData.length
+                  : Array.isArray(submissionsData?.submissions)
+                    ? submissionsData.submissions.length
+                    : 0;
+              } catch {
+                submissionCount = 0;
+              }
+            }
+
+            return {
+              id: String(assignment.id),
+              title: assignment.title ?? assignment.name ?? 'Assignment',
+              description: assignment.description ?? assignment.details ?? 'No description provided.',
+              dueDate: assignment.dueDate ?? assignment.deadline ?? '',
+              maxMarks: Number(assignment.maxMarks ?? assignment.marks ?? 0),
+              submissionCount,
+            };
+          })
+        );
+
+        setAssignments(enrichedAssignments);
+      } catch (fetchError) {
+        console.error('Failed to load teacher dashboard assignments:', fetchError);
+        setError('Failed to load assignments from the API.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAssignments();
+  }, []);
+
+  const totalAssignments = useMemo(() => assignments.length, [assignments]);
+
+  if (loading) {
+    return <div className="max-w-5xl mx-auto p-6 text-gray-500">Loading assignments...</div>;
+  }
+
+  if (error) {
+    return <div className="max-w-5xl mx-auto p-6 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6">
@@ -46,13 +101,13 @@ export const TeacherDashboard: React.FC = () => {
         </button>
       </div>
 
-      {mockCreatedAssignments.length === 0 ? (
+      {assignments.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
           <p className="text-gray-500 text-lg">You haven't posted any assignments yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockCreatedAssignments.map((assignment) => (
+          {assignments.map((assignment) => (
             <div key={assignment.id} className="relative">
               <AssignmentCard
                 title={assignment.title}

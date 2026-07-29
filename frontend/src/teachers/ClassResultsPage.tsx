@@ -143,8 +143,9 @@
 
 // export default ClassResultsPage;
 
-import { useMemo, useState, type FC } from 'react';
-import { mockClassResults } from './mockData';
+import { useEffect, useMemo, useState, type FC } from 'react';
+import { getStudents } from '../api/studentService';
+import { getStudentPerformance } from '../api/reportService';
 
 interface SubjectDetail {
   name: string;
@@ -163,20 +164,83 @@ interface StudentResult {
 const ClassResultsPage: FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(null);
+  const [results, setResults] = useState<StudentResult[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Process data: Calculate total, avg, and status for each student
-  const processedData = useMemo(() => {
-    return mockClassResults.map(student => {
-      const total = student.subjects.reduce((sum, s) => sum + s.m, 0);
-      const avg = parseFloat((total / student.subjects.length).toFixed(2));
-      return {
-        ...student,
-        total,
-        avg,
-        status: avg >= 33 ? 'pass' : 'fail'
-      };
-    }).sort((a, b) => b.total - a.total);
+  useEffect(() => {
+    const normalizeSubjects = (payload: any): SubjectDetail[] => {
+      const data = payload?.data ?? payload;
+      const source = Array.isArray(data?.subjects)
+        ? data.subjects
+        : Array.isArray(data)
+          ? data
+          : Array.isArray(data?.results)
+            ? data.results
+            : [];
+
+      return source.map((subject: any) => ({
+        name: subject.name ?? subject.subject ?? subject.title ?? 'Subject',
+        m: Number(subject.m ?? subject.marks ?? subject.score ?? subject.value ?? 0),
+      }));
+    };
+
+    const loadResults = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const studentsResponse = await getStudents();
+        const studentList = Array.isArray(studentsResponse?.data)
+          ? studentsResponse.data
+          : Array.isArray(studentsResponse)
+            ? studentsResponse
+            : Array.isArray(studentsResponse?.data?.data)
+              ? studentsResponse.data.data
+              : [];
+
+        const studentResults = await Promise.all(
+          studentList.map(async (student: any) => {
+            try {
+              const performanceResponse = await getStudentPerformance(String(student.id));
+              const subjects = normalizeSubjects(performanceResponse);
+              const total = subjects.reduce((sum, subject) => sum + subject.m, 0);
+              const avg = subjects.length > 0 ? parseFloat((total / subjects.length).toFixed(2)) : Number(performanceResponse?.data?.avg ?? performanceResponse?.avg ?? 0);
+
+              return {
+                id: Number.isNaN(Number(student.id)) ? student.id : Number(student.id),
+                name: student.name ?? performanceResponse?.data?.name ?? performanceResponse?.name ?? `Student ${student.id}`,
+                subjects,
+                total,
+                avg,
+                status: avg >= 33 ? 'pass' : 'fail',
+              } as StudentResult;
+            } catch {
+              return {
+                id: Number.isNaN(Number(student.id)) ? student.id : Number(student.id),
+                name: student.name ?? `Student ${student.id}`,
+                subjects: [],
+                total: 0,
+                avg: 0,
+                status: 'fail',
+              } as StudentResult;
+            }
+          })
+        );
+
+        setResults(studentResults.sort((a, b) => b.total - a.total));
+      } catch (fetchError) {
+        console.error('Failed to load class results:', fetchError);
+        setError('Failed to load class results from the API.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResults();
   }, []);
+
+  const processedData = useMemo(() => results, [results]);
 
   // Calculate Distribution for the Chart
   const distribution = useMemo(() => {
@@ -202,6 +266,14 @@ const ClassResultsPage: FC = () => {
   // Calculate Class Summary
   const classAvg = (processedData.reduce((sum, s) => sum + s.avg, 0) / processedData.length).toFixed(2);
   const failCount = processedData.filter(s => s.status === 'fail').length;
+
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading class results...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-6">

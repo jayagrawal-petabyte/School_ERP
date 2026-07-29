@@ -46,20 +46,102 @@
 
 // export default TeacherAttendancePage;
 
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockClassResults } from './mockData';
-import { mockTeacherAttendance } from './mockAttendanceData';
+import { getStudents } from '../api/studentService';
+import { viewAttendance } from '../api/attendanceService';
+
+type AttendanceRow = {
+  id: string;
+  name: string;
+  attendance?: {
+    overall: number;
+    present: number;
+    absent: number;
+    late: number;
+  };
+};
 
 const TeacherAttendancePage: React.FC = () => {
-  // 1. INITIALIZE THE HOOK HERE
   const navigate = useNavigate();
+  const [rows, setRows] = useState<AttendanceRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Combine data by ID so we have both name and attendance stats
-  const classData = mockClassResults.map((student) => ({
-    ...student,
-    attendance: mockTeacherAttendance.find((a) => a.id === student.id),
-  }));
+  useEffect(() => {
+    const loadAttendance = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [studentsResponse, attendanceResponse] = await Promise.all([
+          getStudents(),
+          viewAttendance(),
+        ]);
+
+        const studentList = Array.isArray(studentsResponse?.data)
+          ? studentsResponse.data
+          : Array.isArray(studentsResponse)
+            ? studentsResponse
+            : Array.isArray(studentsResponse?.data?.data)
+              ? studentsResponse.data.data
+              : [];
+
+        const attendanceRecords = Array.isArray(attendanceResponse)
+          ? attendanceResponse
+          : Array.isArray(attendanceResponse?.records)
+            ? attendanceResponse.records
+            : [];
+
+        const groupedAttendance = attendanceRecords.reduce((acc: Record<string, any[]>, record: any) => {
+          const key = String(record.studentId ?? record.student_id ?? record.id ?? '');
+          if (!key) return acc;
+          acc[key] = acc[key] || [];
+          acc[key].push(record);
+          return acc;
+        }, {});
+
+        const attendanceRows = studentList.map((student: any) => {
+          const studentKey = String(student.id);
+          const records = groupedAttendance[studentKey] || [];
+          const present = records.filter((record) => String(record.status).toLowerCase() === 'present').length;
+          const absent = records.filter((record) => String(record.status).toLowerCase() === 'absent').length;
+          const late = records.filter((record) => String(record.status).toLowerCase() === 'late').length;
+          const overall = records.length > 0 ? Math.round((present / records.length) * 100) : 0;
+
+          return {
+            id: studentKey,
+            name: student.name ?? `Student ${student.id}`,
+            attendance: {
+              overall,
+              present,
+              absent,
+              late,
+            },
+          };
+        });
+
+        setRows(attendanceRows);
+      } catch (fetchError) {
+        console.error('Failed to load attendance overview:', fetchError);
+        setError('Failed to load attendance data from the API.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAttendance();
+  }, []);
+
+  const classData = useMemo(() => rows, [rows]);
+
+  if (loading) {
+    return <div className="p-6 text-gray-500">Loading attendance overview...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-6">
@@ -84,7 +166,6 @@ const TeacherAttendancePage: React.FC = () => {
                 <td className="p-4">
                   <button
                     onClick={() => {
-                      console.log("Navigating to:", `/teacher/attendance/${student.id}`);
                       navigate(`/teacher/attendance/${student.id}`);
                     }}
                     className="text-indigo-600 font-semibold hover:underline"
